@@ -1,17 +1,14 @@
 package com.litvy.carteleria.domain.propaganda
 
-import androidx.compose.runtime.Composable
-import com.litvy.carteleria.R
-import com.litvy.carteleria.slides.ImageSlide
+import com.litvy.carteleria.slides.ChargersSlide
+import com.litvy.carteleria.slides.HeadphonesSlide
 import com.litvy.carteleria.slides.Slide
-import com.litvy.carteleria.slides.slideChargers
-
 
 class Propaganda1 : Propaganda {
-    override fun slides(): List<@Composable () -> Unit> {
+    override fun slides(): List<Slide> {
         return listOf(
-            {slideChargers()}
+            ChargersSlide(durationMs = 2500, transitionKey = "fade"),
+            HeadphonesSlide(durationMs = 2500, transitionKey = "scale")
         )
     }
-
 }
