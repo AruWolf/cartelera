@@ -18,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.litvy.carteleria.domain.propaganda.Propaganda1
 import com.litvy.carteleria.slides.slideChargers
 import com.litvy.carteleria.slides.slideHeadphones
 import kotlinx.coroutines.delay
@@ -31,12 +32,17 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+
 @Composable
 fun SlideShow() {
-    val slides = listOf<@Composable () -> Unit>(
-        { slideHeadphones() },
-        { slideChargers() }
-    )
+    val generator = remember {
+        GenerateSlide(
+            propaganda = Propaganda1(),
+            TimeLength = 2500
+        )
+    }
+
+    var slides = remember { generator.generate() }
 
     var currentSlide by remember { mutableStateOf(0) }
 
