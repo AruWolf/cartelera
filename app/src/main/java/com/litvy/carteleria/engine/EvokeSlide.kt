@@ -1,10 +1,14 @@
-package com.litvy.carteleria.util
+package com.litvy.carteleria.engine
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.litvy.carteleria.animations.TvTransition
 import com.litvy.carteleria.slides.Slide
@@ -21,7 +25,7 @@ class EvokeSlide(
     }
 
     @Composable
-    fun Render(modifier: Modifier = Modifier) {
+    fun Render(modifier: Modifier = Modifier.Companion) {
         var currentIndex by remember { mutableStateOf(0) }
 
         // IMPORTANT: targetState type is Slide, so transitionSpec scope is Slide ✅
