@@ -1,120 +1,87 @@
 package com.litvy.carteleria.ui.slideshow
 
 import android.view.KeyEvent
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.domain.propaganda.Propaganda1
 import com.litvy.carteleria.engine.EvokeSlide
-import com.litvy.carteleria.ui.menu.MenuAction
+import com.litvy.carteleria.slides.Slide
 import com.litvy.carteleria.ui.menu.SideMenu
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-
 
 @Composable
 fun SlideShowScreen() {
 
-    //Estado del menu - cerrado por defecto
     var menuVisible by remember { mutableStateOf(false) }
-    var currentAnimation by remember {mutableStateOf("fade")}
+    var selectedAnimation by remember { mutableStateOf("fade") }
 
-    val rootFocusRequester = remember { FocusRequester() }
-    LaunchedEffect(Unit) {
-        rootFocusRequester.requestFocus()
+    val transitions = remember {
+        mapOf(
+            "fade" to TvTransitions.fade<Slide>(),
+            "scale" to TvTransitions.scale<Slide>(),
+            "left" to TvTransitions.slideLeft<Slide>(),
+            "up" to TvTransitions.slideUp<Slide>()
+        )
     }
 
-    val playlist = remember { Propaganda1().slides()}
+    val slides = remember { Propaganda1().slides() }
 
-    val engine = remember(currentAnimation) {
+    val engine = remember(selectedAnimation) {
         EvokeSlide(
-            slides = playlist,
-            transitions = mapOf(
-                "fade" to TvTransitions.fade(ms = 700),
-                "scale" to TvTransitions.scale(ms = 700),
-                "left" to TvTransitions.slideLeft(ms = 700),
-                "up" to TvTransitions.slideUp(ms = 700),
-            ),
-            defaultTransition = TvTransitions.fade(ms = 700)
-            )
+            slides = slides,
+            transition = transitions[selectedAnimation]!!
+        )
     }
 
-    // Contenedor Raiz(Slides + menu) + Manejo con control remoto
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .focusRequester(rootFocusRequester)
+            .focusRequester(focusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
-                if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP) {
-                    return@onPreviewKeyEvent false
-                }
+                if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP) return@onPreviewKeyEvent false
 
                 when (event.nativeKeyEvent.keyCode) {
-
-                    // MENU físico (si existe)
-                    KeyEvent.KEYCODE_MENU -> {
-                        menuVisible = !menuVisible
-                        true
-                    }
-
-                    // Flecha izquierda
+                    KeyEvent.KEYCODE_MENU,
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
                         menuVisible = !menuVisible
                         true
                     }
 
-                    // BACK cierra menú
                     KeyEvent.KEYCODE_BACK -> {
                         if (menuVisible) {
                             menuVisible = false
                             true
-                        } else {
-                            false
-                        }
+                        } else false
                     }
 
                     else -> false
                 }
-
             }
-    ){
-        engine.Render(modifier = Modifier.fillMaxSize())
+    ) {
+        engine.Render(Modifier.fillMaxSize())
+
         if (menuVisible) {
             SideMenu(
-                onAction = { action ->
-                    when (action) {
-                        MenuAction.ChangeAnimation -> {
-                            currentAnimation = when (currentAnimation) {
-                                "fade" -> "scale"
-                                "scale" -> "left"
-                                "left" -> "up"
-                                else -> "fade"
-                            }
-                        }
-
-                        MenuAction.ChangeSpeed -> {
-                            // lo vemos después
-                        }
-
-                        MenuAction.Restart -> {
-                            // lo vemos después
-                        }
-                    }
+                currentAnimation = selectedAnimation,
+                onAnimationSelected = {
+                    selectedAnimation = it
+                    menuVisible = false
                 },
                 onClose = { menuVisible = false }
             )
         }
     }
-
 }

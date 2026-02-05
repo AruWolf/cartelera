@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
-
+/*
 @Composable
 fun SlideShow() {
     val playlist = Propaganda1().slides()
@@ -36,4 +36,4 @@ fun SlideShow() {
     )
 
     engine.Render()
-}
+}*/
