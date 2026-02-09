@@ -9,9 +9,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalContext
 import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.domain.propaganda.Propaganda1
 import com.litvy.carteleria.engine.EvokeSlide
+import com.litvy.carteleria.slides.AssetSlideProvider
 import com.litvy.carteleria.slides.Slide
 import com.litvy.carteleria.ui.menu.SideMenu
 
@@ -20,6 +22,8 @@ fun SlideShowScreen() {
 
     var menuVisible by remember { mutableStateOf(false) }
     var selectedAnimation by remember { mutableStateOf("fade") }
+
+    val context = LocalContext.current
 
     val transitions = remember {
         mapOf(
@@ -30,7 +34,19 @@ fun SlideShowScreen() {
         )
     }
 
-    val slides = remember { Propaganda1().slides() }
+    val slideProvider = remember(context){
+        AssetSlideProvider(context)
+    }
+
+    val propaganda = remember(slideProvider){
+        Propaganda1(slideProvider)
+    }
+
+    val slides = remember(propaganda){
+        propaganda.slides().also{
+            println("SLIDES SIZE = ${it.size}")
+        }
+    }
 
     val engine = remember(selectedAnimation) {
         EvokeSlide(

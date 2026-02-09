@@ -23,12 +23,11 @@ class EvokeSlide(
         var index by remember { mutableStateOf(0) }
         val currentSlide = slides[index]
 
-        LaunchedEffect(slides) {
-            while (true) {
-                delay(currentSlide.durationMs)
-                index = (index + 1) % slides.size
-            }
+        LaunchedEffect(index) {
+            delay(slides[index].durationMs)
+            index = (index + 1) % slides.size
         }
+
 
         Box(modifier = modifier.fillMaxSize()) {
             AnimatedContent(
