@@ -8,11 +8,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.ui.menu.SubMenues.AnimationSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.ContentSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.ExternalContentSubMenu
 
 @Composable
 fun SideMenu(
     currentAnimation: String,
+    folders: List<String>,
+    externalFolders: List<String>,
+    currentFolder: String,
+    currentExternalFolder: String,
     onAnimationSelected: (String) -> Unit,
+    onFolderSelected: (String) -> Unit,
+    onExternalFolderSelected: (String) -> Unit,
+    onPickExternalFolder: () -> Unit,
     onClose: () -> Unit
 ) {
     var subMenu by remember { mutableStateOf(SubMenu.NONE) }
@@ -29,6 +38,16 @@ fun SideMenu(
                 .padding(24.dp)
         ) {
             MenuItemView(
+                text = "Contenido",
+                onClick = { subMenu = SubMenu.CONTENT }
+            )
+
+            MenuItemView(
+                text = "Contenido Externo",
+                onClick = { subMenu = SubMenu.EXTERNAL_CONTENT }
+            )
+
+            MenuItemView(
                 text = "Animación",
                 onClick = { subMenu = SubMenu.ANIMATION }
             )
@@ -42,6 +61,7 @@ fun SideMenu(
                 text = "Cerrar",
                 onClick = onClose
             )
+
         }
 
         AnimatedVisibility(
@@ -55,5 +75,36 @@ fun SideMenu(
                 }
             )
         }
+
+        AnimatedVisibility(
+            visible = subMenu == SubMenu.CONTENT
+        ) {
+            ContentSubMenu(
+                folders = folders,
+                selected = currentFolder,
+                onSelect = {
+                    onFolderSelected(it)
+                    subMenu = SubMenu.NONE
+                }
+            )
+        }
+
+        AnimatedVisibility(
+            visible = subMenu == SubMenu.EXTERNAL_CONTENT
+        ) {
+            ExternalContentSubMenu(
+                folders = externalFolders,
+                selected = currentExternalFolder,
+                onSelect = {
+                    onExternalFolderSelected(it)
+                    subMenu = SubMenu.NONE
+                },
+                onPickFolder = onPickExternalFolder
+            )
+        }
+
+
+
+
     }
 }

@@ -3,10 +3,6 @@ package com.litvy.carteleria
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.runtime.Composable
-import com.litvy.carteleria.animations.TvTransitions
-import com.litvy.carteleria.domain.propaganda.Propaganda1
-import com.litvy.carteleria.engine.EvokeSlide
 import com.litvy.carteleria.ui.slideshow.SlideShowScreen
 
 class MainActivity : ComponentActivity() {

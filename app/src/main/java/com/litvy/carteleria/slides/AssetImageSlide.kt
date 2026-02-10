@@ -21,8 +21,6 @@ class AssetImageSlide(
     override fun Render(){
         val context = LocalContext.current
 
-
-
         val bitmap = remember(assetPath) {
             runCatching {
                 context.assets.open(assetPath).use {
@@ -39,8 +37,6 @@ class AssetImageSlide(
                 contentScale = ContentScale.Fit
             )
         }
-
-
 
     }
 }

@@ -20,14 +20,14 @@ class EvokeSlide(
 
     @Composable
     fun Render(modifier: Modifier = Modifier) {
-        var index by remember { mutableStateOf(0) }
+
+        var index by remember(slides) { mutableStateOf(0) }
         val currentSlide = slides[index]
 
-        LaunchedEffect(index) {
-            delay(slides[index].durationMs)
+        LaunchedEffect(index, slides) {
+            delay(currentSlide.durationMs)
             index = (index + 1) % slides.size
         }
-
 
         Box(modifier = modifier.fillMaxSize()) {
             AnimatedContent(
@@ -41,4 +41,5 @@ class EvokeSlide(
             }
         }
     }
+
 }

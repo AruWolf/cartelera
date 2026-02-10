@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun MenuItemView(
     text: String,
+    selected: Boolean = false,
     onClick: () -> Unit
 ) {
     var focused by remember { mutableStateOf(false) }

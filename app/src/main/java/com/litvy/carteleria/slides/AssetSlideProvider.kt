@@ -3,24 +3,44 @@ package com.litvy.carteleria.slides
 import android.content.Context
 
 class AssetSlideProvider(
-    private val context: Context,
+    private val context: Context
 ) {
 
+    private val ROOT = "content"
+
     fun loadFrom(folder: String): List<Slide> {
-        val files = context.assets.list(folder) ?: emptyArray()
-    /* TODO{ Busqueda de archivos png, jpg o webp en carpeta assets.
-        Se consume en propaganda1 el cual especifica la carpeta a consumir}*/
+        val path = "$ROOT/$folder"
+        val files = context.assets.list(path) ?: emptyArray()
+
         return files
-            .filter { it.endsWith("png") || it.endsWith("jpg") || it.endsWith("webp") }
+            .filter {
+                it.endsWith(".png") ||
+                        it.endsWith(".jpg") ||
+                        it.endsWith(".webp")
+            }
             .sorted()
             .mapIndexed { index, fileName ->
                 AssetImageSlide(
                     id = "$folder-$index",
-                    assetPath = "$folder/$fileName",
+                    assetPath = "$path/$fileName",
                     durationMs = 3000,
                     transitionKey = "fade"
                 )
             }
     }
 
+    fun listFolders(): List<String> {
+        return context.assets.list(ROOT)
+            ?.filter { folder ->
+                context.assets.list("$ROOT/$folder")
+                    ?.any { file ->
+                        file.endsWith(".png") ||
+                                file.endsWith(".jpg") ||
+                                file.endsWith(".webp")
+                    } == true
+            }
+            ?.sorted()
+            ?: emptyList()
+    }
 }
+
