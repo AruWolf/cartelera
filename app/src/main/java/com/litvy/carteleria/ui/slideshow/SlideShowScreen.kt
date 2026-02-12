@@ -1,9 +1,9 @@
 package com.litvy.carteleria.ui.slideshow
 
-import android.content.Intent
+import android.content.Context
 import android.view.KeyEvent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,8 +17,11 @@ import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.domain.propaganda.AssetPropaganda
 import com.litvy.carteleria.engine.EvokeSlide
 import com.litvy.carteleria.slides.AssetSlideProvider
+import com.litvy.carteleria.slides.DcimSlideProvider
+import com.litvy.carteleria.slides.ExternalSlideProvider
 import com.litvy.carteleria.slides.Slide
 import com.litvy.carteleria.ui.menu.SideMenu
+import java.io.File
 
 enum class ContentMode {
     INTERNAL,
@@ -32,35 +35,24 @@ fun SlideShowScreen() {
     var selectedAnimation by remember { mutableStateOf("fade") }
 
     var contentMode by remember { mutableStateOf(ContentMode.INTERNAL) }
+    val context: Context = LocalContext.current
 
     var selectedFolder by remember { mutableStateOf("promos") }
-    var selectedExternalFolder by remember { mutableStateOf<String?>(null) }
 
-    val context = LocalContext.current
+    var externalFolders by remember { mutableStateOf<List<File>>(emptyList()) }
+    var selectedExternalFolder by remember { mutableStateOf<File?>(null) }
 
-    val folderPickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocumentTree(),
-        onResult = { uri ->
-            uri ?: return@rememberLauncherForActivityResult
+    /* ---------- PROVIDERS ---------- */
 
-            context.contentResolver.takePersistableUriPermission(
-                uri,
-                Intent.FLAG_GRANT_READ_URI_PERMISSION
-            )
-            selectedExternalFolder = uri.toString()
-            contentMode = ContentMode.EXTERNAL
-            menuVisible = false
-        }
-    )
-
-
-    /* ---------- PROVIDER ---------- */
-
-    val assetProvider = remember(context) {
+    val assetProvider = remember {
         AssetSlideProvider(context)
     }
 
-    val internalFolders = remember(assetProvider) {
+    val dcimProvider = remember {
+        DcimSlideProvider()
+    }
+
+    val internalFolders = remember {
         assetProvider.listFolders()
     }
 
@@ -72,11 +64,11 @@ fun SlideShowScreen() {
                 AssetPropaganda(assetProvider, selectedFolder).slides()
 
             ContentMode.EXTERNAL ->
-                emptyList() // se completa cuando implementemos SAF / USB
+                selectedExternalFolder?.let {
+                    dcimProvider.loadFromFolder(it)
+                } ?: emptyList()
         }
     }
-
-    if (slides.isEmpty()) return
 
     /* ---------- TRANSITIONS ---------- */
 
@@ -136,34 +128,68 @@ fun SlideShowScreen() {
                 }
             }
     ) {
+
         engine.Render(Modifier.fillMaxSize())
 
         if (menuVisible) {
+
+            val currentExternalFolderName =
+                selectedExternalFolder?.name ?: ""
+
             SideMenu(
                 currentAnimation = selectedAnimation,
                 folders = internalFolders,
-                externalFolders = emptyList(), // se llena después
+                externalFolders = externalFolders.map { it.name },
                 currentFolder = selectedFolder,
-                currentExternalFolder = selectedExternalFolder ?: "",
+                currentExternalFolder = currentExternalFolderName,
+
                 onAnimationSelected = {
                     selectedAnimation = it
                     menuVisible = false
                 },
+
                 onFolderSelected = {
                     contentMode = ContentMode.INTERNAL
                     selectedFolder = it
                     menuVisible = false
                 },
-                onExternalFolderSelected = {
-                    contentMode = ContentMode.EXTERNAL
-                    selectedExternalFolder = it
+
+                onExternalFolderSelected = { folderName ->
+                    val folder = externalFolders.find { it.name == folderName }
+                    folder?.let {
+                        selectedExternalFolder = it
+                        contentMode = ContentMode.EXTERNAL
+                    }
                     menuVisible = false
                 },
+
                 onPickExternalFolder = {
-                    folderPickerLauncher.launch(null)
+
+                    val debug = dcimProvider.debugInfo()
+
+                    Toast.makeText(
+                        context,
+                        debug,
+                        Toast.LENGTH_LONG
+                    ).show()
+
+                    externalFolders = dcimProvider.listFolders()
+
+                    // Si no hay carpetas pero hay imágenes sueltas:
+                    if (externalFolders.isEmpty()) {
+                        val slidesFromRoot = dcimProvider.loadSlidesFromRoot()
+
+                        if (slidesFromRoot.isNotEmpty()) {
+                            selectedExternalFolder = dcimProvider.getRoot()
+                            contentMode = ContentMode.EXTERNAL
+                        }
+                    }
                 },
-                onClose = { menuVisible = false }
+
+
+                        onClose = { menuVisible = false }
             )
         }
     }
 }
+

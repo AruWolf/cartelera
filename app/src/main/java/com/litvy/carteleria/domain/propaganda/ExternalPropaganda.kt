@@ -9,5 +9,6 @@ class ExternalPropaganda(
     private val folder: File
 ): Propaganda{
     override fun slides(): List<Slide> =
-        provider.loadFrom(folder)
+        provider.loadFromFolder(folder)
 }
+

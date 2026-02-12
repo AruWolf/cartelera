@@ -1,12 +1,12 @@
 package com.litvy.carteleria.slides
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import java.io.File
-import android.graphics.BitmapFactory
-import androidx.compose.runtime.remember
 
 class ExternalImageSlide(
     override val id: String,
@@ -17,6 +17,7 @@ class ExternalImageSlide(
 
     @Composable
     override fun Render() {
+
         val bitmap = remember(file) {
             BitmapFactory.decodeFile(file.absolutePath)
         }
