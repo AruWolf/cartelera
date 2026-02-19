@@ -2,33 +2,28 @@ package com.litvy.carteleria.ui.menu
 
 import android.view.KeyEvent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
-
 import androidx.compose.ui.unit.dp
-
-
 import androidx.compose.ui.unit.sp
-
 
 @Composable
 fun MenuItemView(
     text: String,
     selected: Boolean = false,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onFocus: (() -> Unit)? = null,
+    focusRequester: FocusRequester? = null
 ) {
     var focused by remember { mutableStateOf(false) }
 
@@ -40,7 +35,17 @@ fun MenuItemView(
                 if (focused) Color.White.copy(alpha = 0.2f)
                 else Color.Transparent
             )
-            .onFocusChanged { focused = it.isFocused }
+            .then(
+                if (focusRequester != null)
+                    Modifier.focusRequester(focusRequester)
+                else Modifier
+            )
+            .onFocusChanged {
+                focused = it.isFocused
+                if (it.isFocused) {
+                    onFocus?.invoke()
+                }
+            }
             .focusable()
             .onPreviewKeyEvent { event ->
                 if (event.nativeKeyEvent.action == KeyEvent.ACTION_UP &&

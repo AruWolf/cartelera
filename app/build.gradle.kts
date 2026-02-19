@@ -53,7 +53,9 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     //Prueba Servidor local
-    //implementation("org.nanohttpd:nanohttpd:2.3.1")
+    implementation("org.nanohttpd:nanohttpd:2.3.1")
+    //QR
+    implementation("com.google.zxing:core:3.5.1")
 
     // Material
     implementation("androidx.compose.material3:material3")
