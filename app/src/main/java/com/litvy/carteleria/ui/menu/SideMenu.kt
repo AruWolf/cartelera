@@ -31,8 +31,9 @@ fun SideMenu(
     onExternalFolderSelected: (String) -> Unit,
     onPickExternalFolder: () -> Unit,
     onShowQr: () -> Unit,
-    onClose: () -> Unit
-) {
+    onClose: () -> Unit,
+    onForceUsbScan: () -> Unit,
+    ) {
 
     var subMenu by remember { mutableStateOf(SubMenu.NONE) }
 
@@ -95,6 +96,15 @@ fun SideMenu(
                 onFocus = { subMenu = SubMenu.NONE },
                 onClick = { onShowQr() }
             )
+
+            MenuItemView(
+                text = "Actualizar desde USB",
+                onFocus = { subMenu = SubMenu.NONE },
+                onClick = {
+                    onForceUsbScan()
+                }
+            )
+
 
             MenuItemView(
                 text = "Cerrar",

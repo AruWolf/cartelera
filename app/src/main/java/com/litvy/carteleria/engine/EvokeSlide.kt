@@ -21,19 +21,32 @@ class EvokeSlide(
     }
 
     @Composable
-    fun Render(modifier: Modifier = Modifier) {
+    fun Render(
+        modifier: Modifier = Modifier,
+        currentIndex: Int,
+        isPaused: Boolean,
+        onAutoNext: () -> Unit
+    ) {
 
-        var index by remember(slides) { mutableStateOf(0) }
-        val currentSlide = slides[index]
+        val currentSlide = slides[currentIndex]
 
-        LaunchedEffect(index, slides, speed) {
-            val duration = (currentSlide.durationMs * speed.multiplier).toLong()
+        // 🔥 Timer controlado correctamente
+        LaunchedEffect(currentIndex, isPaused, speed) {
+
+            if (isPaused) return@LaunchedEffect
+
+            val duration =
+                (currentSlide.durationMs * speed.multiplier).toLong()
+
             delay(duration)
-            index = (index + 1) % slides.size
+
+            if (!isPaused) {
+                onAutoNext()
+            }
         }
 
-
         Box(modifier = modifier.fillMaxSize()) {
+
             AnimatedContent(
                 targetState = currentSlide,
                 transitionSpec = {
@@ -45,5 +58,4 @@ class EvokeSlide(
             }
         }
     }
-
 }

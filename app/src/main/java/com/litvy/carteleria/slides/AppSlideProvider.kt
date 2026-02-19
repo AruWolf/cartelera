@@ -1,6 +1,8 @@
 package com.litvy.carteleria.slides
 
 import android.content.Context
+import android.widget.Toast
+import androidx.compose.material3.Text
 import java.io.File
 
 class AppStorageSlideProvider(
@@ -35,5 +37,6 @@ class AppStorageSlideProvider(
                     transitionKey = "fade"
                 )
             } ?: emptyList()
+        Toast.makeText(context, "Archivos en carpeta: ${folder.listFiles()?.map { it.name }}", Toast.LENGTH_LONG).show()
     }
 }

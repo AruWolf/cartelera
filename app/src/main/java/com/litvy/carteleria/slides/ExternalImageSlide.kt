@@ -1,11 +1,13 @@
 package com.litvy.carteleria.slides
 
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import java.io.File
 
 class ExternalImageSlide(
@@ -18,15 +20,16 @@ class ExternalImageSlide(
     @Composable
     override fun Render() {
 
-        val bitmap = remember(file) {
-            BitmapFactory.decodeFile(file.absolutePath)
-        }
-
-        bitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            AsyncImage(
+                model = file,
                 contentDescription = null,
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
             )
         }
     }

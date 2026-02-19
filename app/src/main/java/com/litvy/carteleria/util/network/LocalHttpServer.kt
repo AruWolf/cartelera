@@ -105,11 +105,9 @@ class LocalHttpServer(
 
         val newFolderName = params["newFolder"]?.firstOrNull()?.trim()
         val selectedFolder = params["folder"]?.firstOrNull()?.trim()
-        val uploadedFilePath = files["file"]
 
         var targetFolder: File? = null
 
-        // Crear nueva carpeta si se indicó
         if (!newFolderName.isNullOrEmpty()) {
             targetFolder = File(resourcesDir, newFolderName)
             if (!targetFolder.exists()) targetFolder.mkdirs()
@@ -117,14 +115,21 @@ class LocalHttpServer(
             targetFolder = File(resourcesDir, selectedFolder)
         }
 
-        if (uploadedFilePath != null && targetFolder != null) {
+        val tempFilePath = files["file"]
+        val originalFileName = params["file"]?.firstOrNull()
 
-            val uploadedFile = File(uploadedFilePath)
-            val targetFile = File(targetFolder, uploadedFile.name)
+        if (tempFilePath != null && targetFolder != null && originalFileName != null) {
 
-            FileOutputStream(targetFile).use { output ->
-                uploadedFile.inputStream().copyTo(output)
+            val tempFile = File(tempFilePath)
+            val targetFile = File(targetFolder, originalFileName)
+
+            tempFile.inputStream().use { input ->
+                FileOutputStream(targetFile).use { output ->
+                    input.copyTo(output)
+                }
             }
+
+            tempFile.delete()
 
             return newFixedLengthResponse(
                 Response.Status.OK,
@@ -135,4 +140,5 @@ class LocalHttpServer(
 
         return newFixedLengthResponse("Error al subir archivo")
     }
+
 }
