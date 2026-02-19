@@ -58,6 +58,8 @@ dependencies {
     implementation("com.google.zxing:core:3.5.1")
     // COIL
     implementation("io.coil-kt:coil-compose:2.5.0")
+    // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Material
     implementation("androidx.compose.material3:material3")

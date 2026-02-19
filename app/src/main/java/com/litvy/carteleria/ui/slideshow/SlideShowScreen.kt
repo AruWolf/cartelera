@@ -20,6 +20,8 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.animations.TvTransitions
+import com.litvy.carteleria.data.CartelPreferences
+import com.litvy.carteleria.data.ContentSource
 import com.litvy.carteleria.engine.EvokeSlide
 import com.litvy.carteleria.slides.*
 import com.litvy.carteleria.ui.menu.SideMenu
@@ -75,6 +77,9 @@ fun SlideShowScreen() {
         }
     }
 
+    val scope = rememberCoroutineScope()
+    val prefs = remember { CartelPreferences(context) }
+
     // Arranque de servidor LAN y escaneo USB
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -87,6 +92,33 @@ fun SlideShowScreen() {
             e.printStackTrace()
         }
     }
+
+    LaunchedEffect(Unit) {
+        prefs.preferencesFlow.collect { config ->
+
+            config?.let {
+
+                when (it.source) {
+
+                    is ContentSource.Internal -> {
+                        contentMode = ContentMode.INTERNAL
+                        selectedInternalFolder = it.source.folder
+                        selectedExternalFolder = null
+                    }
+
+                    is ContentSource.External -> {
+                        contentMode = ContentMode.EXTERNAL
+                        selectedExternalFolder = File(it.source.path)
+                        selectedInternalFolder = null
+                    }
+                }
+
+                currentAnimation = it.animation
+                slideSpeed = it.speed
+            }
+        }
+    }
+
 
     // Selección de contenido (slides)
     val slides = remember(
