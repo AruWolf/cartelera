@@ -5,6 +5,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -37,11 +39,21 @@ fun SideMenu(
 
     var subMenu by remember { mutableStateOf(SubMenu.NONE) }
 
-    val firstItemFocusRequester = remember { FocusRequester() }
+    val contentRequester = remember { FocusRequester() }
+    val externalRequester = remember { FocusRequester() }
+    val animationRequester = remember { FocusRequester() }
+    val speedRequester = remember { FocusRequester() }
+    val qrRequester = remember { FocusRequester() }
+    val usbRequester = remember { FocusRequester() }
+    val closeRequester = remember { FocusRequester() }
+
+    val menuListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
-        firstItemFocusRequester.requestFocus()
         subMenu = SubMenu.CONTENT
+        kotlinx.coroutines.delay(100)
+        contentRequester.requestFocus()
     }
 
     Row(
@@ -60,57 +72,76 @@ fun SideMenu(
             }
     ) {
 
-        Column(
+        LazyColumn(
+            state = menuListState,
             modifier = Modifier
                 .width(260.dp)
                 .padding(24.dp)
         ) {
+            item {
+                MenuItemView(
+                    text = "Contenido",
+                    onFocus = { subMenu = SubMenu.CONTENT },
+                    onClick = {},
+                    focusRequester = contentRequester
+                )
+            }
 
-            MenuItemView(
-                text = "Contenido",
-                onFocus = { subMenu = SubMenu.CONTENT },
-                onClick = {},
-                focusRequester = firstItemFocusRequester
-            )
+            item {
+                MenuItemView(
+                    text = "Contenido Externo",
+                    onFocus = { subMenu = SubMenu.EXTERNAL_CONTENT },
+                    onClick = {},
+                    focusRequester = externalRequester
+                )
+            }
 
-            MenuItemView(
-                text = "Contenido Externo",
-                onFocus = { subMenu = SubMenu.EXTERNAL_CONTENT },
-                onClick = {}
-            )
+            item {
+                MenuItemView(
+                    text = "Animación",
+                    onFocus = { subMenu = SubMenu.ANIMATION },
+                    onClick = {},
+                    focusRequester = animationRequester
+                )
+            }
 
-            MenuItemView(
-                text = "Animación",
-                onFocus = { subMenu = SubMenu.ANIMATION },
-                onClick = {}
-            )
+            item {
+                MenuItemView(
+                    text = "Velocidad",
+                    onFocus = { subMenu = SubMenu.SPEED },
+                    onClick = {},
+                    focusRequester = speedRequester
+                )
+            }
 
-            MenuItemView(
-                text = "Velocidad",
-                onFocus = { subMenu = SubMenu.SPEED },
-                onClick = {}
-            )
+            item {
+                MenuItemView(
+                    text = "Cargar contenido (QR)",
+                    onFocus = { subMenu = SubMenu.NONE },
+                    onClick = { onShowQr() },
+                    focusRequester = qrRequester
+                )
+            }
 
-            MenuItemView(
-                text = "Cargar contenido (QR)",
-                onFocus = { subMenu = SubMenu.NONE },
-                onClick = { onShowQr() }
-            )
+            item {
+                MenuItemView(
+                    text = "Actualizar desde USB",
+                    onFocus = { subMenu = SubMenu.NONE },
+                    onClick = {
+                        onForceUsbScan()
+                    },
+                    focusRequester = usbRequester
+                )
+            }
 
-            MenuItemView(
-                text = "Actualizar desde USB",
-                onFocus = { subMenu = SubMenu.NONE },
-                onClick = {
-                    onForceUsbScan()
-                }
-            )
-
-
-            MenuItemView(
-                text = "Cerrar",
-                onFocus = { subMenu = SubMenu.NONE },
-                onClick = onClose
-            )
+            item {
+                MenuItemView(
+                    text = "Cerrar",
+                    onFocus = { subMenu = SubMenu.NONE },
+                    onClick = onClose,
+                    focusRequester = closeRequester
+                )
+            }
         }
 
         AnimatedVisibility(visible = subMenu == SubMenu.ANIMATION) {
@@ -119,6 +150,7 @@ fun SideMenu(
                 onSelect = {
                     onAnimationSelected(it)
                     subMenu = SubMenu.NONE
+                    animationRequester.requestFocus()
                 }
             )
         }
@@ -130,6 +162,7 @@ fun SideMenu(
                 onSelect = {
                     onFolderSelected(it)
                     subMenu = SubMenu.NONE
+                    contentRequester.requestFocus()
                 }
             )
         }
@@ -141,8 +174,13 @@ fun SideMenu(
                 onSelect = {
                     onExternalFolderSelected(it)
                     subMenu = SubMenu.NONE
+                    externalRequester.requestFocus()
                 },
-                onPickFolder = onPickExternalFolder
+                onShowQr = {
+                    subMenu = SubMenu.NONE
+                    externalRequester.requestFocus()
+                    onShowQr()
+                }
             )
         }
 
@@ -152,6 +190,7 @@ fun SideMenu(
                 onSelect = {
                     onSpeedSelected(it)
                     subMenu = SubMenu.NONE
+                    speedRequester.requestFocus()
                 }
             )
         }

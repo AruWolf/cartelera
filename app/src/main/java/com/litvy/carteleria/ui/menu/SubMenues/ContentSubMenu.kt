@@ -1,6 +1,7 @@
 package com.litvy.carteleria.ui.menu.SubMenues
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -30,6 +31,22 @@ fun ContentSubMenu(
             listState.scrollToItem(selectedIndex)
         }
     }
+
+    if (folders.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .width(240.dp)
+                .fillMaxHeight()
+                .padding(24.dp)
+        ) {
+            MenuItemView(
+                text = "No hay carpetas disponibles",
+                onClick = {}
+            )
+        }
+        return
+    }
+
 
     LazyColumn(
         state = listState,

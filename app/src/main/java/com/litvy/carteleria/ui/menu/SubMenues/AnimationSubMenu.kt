@@ -45,7 +45,7 @@ fun AnimationSubMenu(
         itemsIndexed(animations) { index, (key, label) ->
 
             MenuItemView(
-                text = if (key == selected) "✔ $label" else label,
+                text = if (key == selected) "▶ $label" else label,
                 onClick = { onSelect(key) },
 
                 onFocus = {

@@ -21,11 +21,12 @@ fun ExternalContentSubMenu(
     folders: List<String>,
     selected: String,
     onSelect: (String) -> Unit,
-    onPickFolder: () -> Unit
+    onShowQr: () -> Unit
 ) {
 
     var listState = rememberLazyListState()
     var coroutineScope = rememberCoroutineScope()
+
 
     LaunchedEffect(folders, selected) {
         val selectedIndex = folders.indexOf(selected)
@@ -33,6 +34,31 @@ fun ExternalContentSubMenu(
             listState.scrollToItem(selectedIndex)
         }
     }
+
+    if (folders.isEmpty()) {
+
+        Column(
+            modifier = Modifier
+                .width(260.dp)
+                .padding(24.dp)
+        ) {
+
+            MenuItemView(
+                text = "No hay contenido externo",
+                onClick = {}
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            MenuItemView(
+                text = "Cargar contenido (QR)",
+                onClick = { onShowQr() }
+            )
+        }
+
+        return
+    }
+
 
     LazyColumn(
         state = listState,
