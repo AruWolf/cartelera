@@ -24,12 +24,14 @@ fun MenuItemView(
     onClick: () -> Unit,
     onFocus: (() -> Unit)? = null,
     focusRequester: FocusRequester? = null,
-    modifier: Modifier = Modifier // 👈 agregado (clave)
+    modifier: Modifier = Modifier,
+    onLongPress: (() -> Unit)? = null,
 ) {
     var focused by remember { mutableStateOf(false) }
+    var longPressTriggered by remember { mutableStateOf(false) }
 
     Box(
-        modifier = modifier // 👈 ahora el modifier viene desde afuera
+        modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 12.dp)
             .background(
@@ -49,15 +51,28 @@ fun MenuItemView(
             }
             .focusable()
             .onPreviewKeyEvent { event ->
-                if (event.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
-                    (event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
-                            event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER)
+
+                if (event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_CENTER ||
+                    event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_ENTER
                 ) {
-                    onClick()
-                    true
-                } else {
-                    false
+
+                    // LONG PRESS
+                    if (event.nativeKeyEvent.action == KeyEvent.ACTION_DOWN &&
+                        event.nativeKeyEvent.isLongPress &&
+                        onLongPress != null
+                    ) {
+                        onLongPress()
+                        return@onPreviewKeyEvent true
+                    }
+
+                    // CLICK NORMAL
+                    if (event.nativeKeyEvent.action == KeyEvent.ACTION_UP) {
+                            onClick()
+                        return@onPreviewKeyEvent true
+                    }
                 }
+
+                false
             }
             .padding(12.dp)
     ) {

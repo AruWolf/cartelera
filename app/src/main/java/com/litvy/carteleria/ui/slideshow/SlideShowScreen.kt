@@ -41,6 +41,7 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.documentfile.provider.DocumentFile
+import com.litvy.carteleria.ui.menu.model.ClipboardItem
 
 enum class ContentMode {
     INTERNAL,
@@ -87,6 +88,8 @@ fun SlideShowScreen() {
 
     val scope = rememberCoroutineScope()
     val prefs = remember { CartelPreferences(context) }
+
+    var clipboardItem by remember { mutableStateOf<ClipboardItem?>(null) }
 
     var selectedUsbUri by remember { mutableStateOf<Uri?>(null) }
 
@@ -415,9 +418,13 @@ fun SlideShowScreen() {
                 currentAnimation = currentAnimation,
                 currentSpeed = slideSpeed,
                 folders = assetProvider.listFolders(),
-                externalFolders = externalProvider.listFolders().map { it.name },
+                externalFolders = externalProvider.listFolders(),
+                externalStorageProvider = externalProvider,
+                onExternalContentChanged = { reloadTrigger++ },
                 currentFolder = selectedInternalFolder ?: "",
                 currentExternalFolder = selectedExternalFolder?.name ?: "",
+                clipboardItem = clipboardItem,
+                onClipboardChange = { clipboardItem = it },
 
                 onAnimationSelected = {
                     currentAnimation = it
@@ -437,18 +444,12 @@ fun SlideShowScreen() {
                     menuVisible = false
                 },
 
-                onExternalFolderSelected = { folderName ->
+                onExternalFolderSelected = { folderFile ->
 
-                    val folderFile =
-                        externalProvider.listFolders()
-                            .firstOrNull { it.name == folderName }
-
-                    if (folderFile != null) {
-                        contentMode = ContentMode.EXTERNAL
-                        selectedExternalFolder = folderFile
-                        selectedInternalFolder = null
-                        saveCurrentConfig()
-                    }
+                    contentMode = ContentMode.EXTERNAL
+                    selectedExternalFolder = folderFile
+                    selectedInternalFolder = null
+                    saveCurrentConfig()
 
                     menuVisible = false
                 },

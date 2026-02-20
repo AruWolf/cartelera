@@ -16,8 +16,11 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.slides.SlideSpeed
 import com.litvy.carteleria.ui.menu.SubMenues.*
+import com.litvy.carteleria.ui.menu.model.ClipboardItem
+import java.io.File
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -25,16 +28,20 @@ fun SideMenu(
     currentAnimation: String,
     currentSpeed: SlideSpeed,
     folders: List<String>,
-    externalFolders: List<String>,
+    externalFolders: List<File>,
     currentFolder: String,
     currentExternalFolder: String,
     onAnimationSelected: (String) -> Unit,
     onSpeedSelected: (SlideSpeed) -> Unit,
     onFolderSelected: (String) -> Unit,
-    onExternalFolderSelected: (String) -> Unit,
+    onExternalFolderSelected: (File) -> Unit,
     onShowQr: () -> Unit,
     onClose: () -> Unit,
     onForceUsbScan: () -> Unit,
+    externalStorageProvider: AppStorageSlideProvider,
+    onExternalContentChanged: () -> Unit,
+    clipboardItem: ClipboardItem?,
+    onClipboardChange: (ClipboardItem?) -> Unit,
 ) {
 
     var subMenu by remember { mutableStateOf(SubMenu.NONE) }
@@ -181,9 +188,12 @@ fun SideMenu(
         AnimatedVisibility(visible = subMenu == SubMenu.EXTERNAL_CONTENT) {
             ExternalContentSubMenu(
                 folders = externalFolders,
+                storageProvider = externalStorageProvider,
+                onContentChanged = onExternalContentChanged,
                 selected = currentExternalFolder,
                 parentFocusRequester = externalRequester,
-                firstItemFocusRequester = externalFirstItemRequester,
+                clipboardItem = clipboardItem,
+                onClipboardChange = onClipboardChange,
                 onSelect = {
                     onExternalFolderSelected(it)
                     subMenu = SubMenu.NONE
@@ -193,7 +203,8 @@ fun SideMenu(
                     subMenu = SubMenu.NONE
                     externalRequester.requestFocus()
                     onShowQr()
-                }
+                },
+                firstItemFocusRequester = externalFirstItemRequester
             )
         }
 
