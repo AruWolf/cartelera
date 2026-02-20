@@ -1,9 +1,9 @@
 package com.litvy.carteleria.ui.menu
 
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -14,10 +14,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.slides.SlideSpeed
-import com.litvy.carteleria.ui.menu.SubMenues.AnimationSubMenu
-import com.litvy.carteleria.ui.menu.SubMenues.ContentSubMenu
-import com.litvy.carteleria.ui.menu.SubMenues.ExternalContentSubMenu
-import com.litvy.carteleria.ui.menu.SubMenues.SpeedSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.*
 
 @Composable
 fun SideMenu(
@@ -35,7 +32,7 @@ fun SideMenu(
     onShowQr: () -> Unit,
     onClose: () -> Unit,
     onForceUsbScan: () -> Unit,
-    ) {
+) {
 
     var subMenu by remember { mutableStateOf(SubMenu.NONE) }
 
@@ -48,11 +45,11 @@ fun SideMenu(
     val closeRequester = remember { FocusRequester() }
 
     val menuListState = rememberLazyListState()
-    val coroutineScope = rememberCoroutineScope()
 
+    // Foco automático al abrir
     LaunchedEffect(Unit) {
         subMenu = SubMenu.CONTENT
-        kotlinx.coroutines.delay(100)
+        kotlinx.coroutines.delay(80)
         contentRequester.requestFocus()
     }
 
@@ -60,24 +57,24 @@ fun SideMenu(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.75f))
-            .onPreviewKeyEvent { event ->
-                if (event.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
-                    event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK
+            .onPreviewKeyEvent {
+                if (it.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
+                    it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK
                 ) {
                     onClose()
                     true
-                } else {
-                    false
-                }
+                } else false
             }
     ) {
 
+        // MENU PRINCIPAL
         LazyColumn(
             state = menuListState,
             modifier = Modifier
                 .width(260.dp)
                 .padding(24.dp)
         ) {
+
             item {
                 MenuItemView(
                     text = "Contenido",
@@ -143,6 +140,8 @@ fun SideMenu(
                 )
             }
         }
+
+        // SUBMENUS
 
         AnimatedVisibility(visible = subMenu == SubMenu.ANIMATION) {
             AnimationSubMenu(

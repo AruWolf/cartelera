@@ -3,6 +3,7 @@ package com.litvy.carteleria.ui.slideshow
 import android.content.Context
 import android.graphics.Bitmap
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
@@ -20,6 +21,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.animations.TvTransitions
+import com.litvy.carteleria.data.CartelConfig
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.ContentSource
 import com.litvy.carteleria.engine.EvokeSlide
@@ -28,10 +30,17 @@ import com.litvy.carteleria.ui.menu.SideMenu
 import com.litvy.carteleria.util.generateQrCode
 import com.litvy.carteleria.util.network.LocalHttpServer
 import com.litvy.carteleria.util.usb.UsbContentManager
+import com.litvy.carteleria.util.usb.UsbScanResult
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.Inet4Address
 import java.net.NetworkInterface
+import android.content.Intent
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.documentfile.provider.DocumentFile
 
 enum class ContentMode {
     INTERNAL,
@@ -71,19 +80,19 @@ fun SlideShowScreen() {
     var serverUrl by remember { mutableStateOf("") }
 
     // --- MANEJO DE USB --- (Necesario para escanear y cargar imagenes desde USB)
+    var usbMessage by remember { mutableStateOf<String?>(null) }
     val usbManager = remember {
-        UsbContentManager(context) {
-            reloadTrigger++
-        }
+        UsbContentManager(context)
     }
 
     val scope = rememberCoroutineScope()
     val prefs = remember { CartelPreferences(context) }
 
+    var selectedUsbUri by remember { mutableStateOf<Uri?>(null) }
+
     // Arranque de servidor LAN y escaneo USB
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
-        usbManager.startPeriodicScan()
         try {
             server.start()
             val ip = getLocalIpAddress()
@@ -94,31 +103,102 @@ fun SlideShowScreen() {
     }
 
     LaunchedEffect(Unit) {
+
         prefs.preferencesFlow.collect { config ->
 
-            config?.let {
+            when (config.source) {
 
-                when (it.source) {
+                is ContentSource.Internal -> {
 
-                    is ContentSource.Internal -> {
+                    val folders = assetProvider.listFolders()
+
+                    // Si no hay carpeta guardada o no existe, usar la primera
+                    val folderToUse =
+                        if (config.source.folder.isBlank() || !folders.contains(config.source.folder)) {
+                            folders.firstOrNull()
+                        } else config.source.folder
+
+                    folderToUse?.let {
                         contentMode = ContentMode.INTERNAL
-                        selectedInternalFolder = it.source.folder
+                        selectedInternalFolder = it
                         selectedExternalFolder = null
-                    }
-
-                    is ContentSource.External -> {
-                        contentMode = ContentMode.EXTERNAL
-                        selectedExternalFolder = File(it.source.path)
-                        selectedInternalFolder = null
                     }
                 }
 
-                currentAnimation = it.animation
-                slideSpeed = it.speed
+                is ContentSource.External -> {
+
+                    val file = File(config.source.path)
+
+                    if (file.exists()) {
+                        contentMode = ContentMode.EXTERNAL
+                        selectedExternalFolder = file
+                        selectedInternalFolder = null
+                    }
+                }
+            }
+
+            currentAnimation = config.animation
+            slideSpeed = config.speed
+        }
+    }
+
+    //
+    val folderPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+
+        uri?.let {
+
+            context.contentResolver.takePersistableUriPermission(
+                it,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+
+            selectedUsbUri = it
+
+            scope.launch {
+                usbMessage = "📂 Importando desde carpeta seleccionada..."
+                val result = usbManager.importFromUri(it)
+                usbMessage = when (result) {
+                    UsbScanResult.NoChanges -> "📁 No hay cambios para importar"
+                    is UsbScanResult.Imported -> {
+                        reloadTrigger++
+                        "✅ Se importaron ${result.count} archivos"
+                    }
+                    else -> "❌ Error al importar"
+                }
+                delay(3000)
+                usbMessage = null
             }
         }
     }
 
+
+    fun saveCurrentConfig() {
+        scope.launch {
+
+            val source = when (contentMode) {
+
+                ContentMode.INTERNAL -> {
+                    val folder = selectedInternalFolder ?: return@launch
+                    ContentSource.Internal(folder)
+                }
+
+                ContentMode.EXTERNAL -> {
+                    val folder = selectedExternalFolder ?: return@launch
+                    ContentSource.External(folder.absolutePath)
+                }
+            }
+
+            prefs.saveConfig(
+                CartelConfig(
+                    source = source,
+                    animation = currentAnimation,
+                    speed = slideSpeed
+                )
+            )
+        }
+    }
 
     // Selección de contenido (slides)
     val slides = remember(
@@ -331,6 +411,7 @@ fun SlideShowScreen() {
             }
         }
 
+
         // Menu lateral
         if (menuVisible) {
             SideMenu(
@@ -340,14 +421,27 @@ fun SlideShowScreen() {
                 externalFolders = externalProvider.listFolders().map { it.name },
                 currentFolder = selectedInternalFolder ?: "",
                 currentExternalFolder = selectedExternalFolder?.name ?: "",
-                onAnimationSelected = { currentAnimation = it },
-                onSpeedSelected = { slideSpeed = it },
+
+                onAnimationSelected = {
+                    currentAnimation = it
+                    saveCurrentConfig()
+                },
+
+                onSpeedSelected = {
+                    slideSpeed = it
+                    saveCurrentConfig()
+                },
+
                 onFolderSelected = {
                     contentMode = ContentMode.INTERNAL
                     selectedInternalFolder = it
+                    selectedExternalFolder = null
+                    saveCurrentConfig()
                     menuVisible = false
                 },
+
                 onExternalFolderSelected = { folderName ->
+
                     val folderFile =
                         externalProvider.listFolders()
                             .firstOrNull { it.name == folderName }
@@ -355,20 +449,81 @@ fun SlideShowScreen() {
                     if (folderFile != null) {
                         contentMode = ContentMode.EXTERNAL
                         selectedExternalFolder = folderFile
+                        selectedInternalFolder = null
+                        saveCurrentConfig()
                     }
+
                     menuVisible = false
                 },
+
                 onPickExternalFolder = { },
+
                 onShowQr = {
                     contentMode = ContentMode.EXTERNAL
                     showQr = true
                     menuVisible = false
                 },
+
                 onForceUsbScan = {
-                    usbManager.forceScan()
+
+                    scope.launch {
+
+                        usbMessage = "🔍 Buscando USB..."
+
+                        // 1️⃣ Intento clásico (TV Box)
+                        when (val result = usbManager.forceScan()) {
+
+                            is UsbScanResult.Imported -> {
+                                reloadTrigger++
+                                usbMessage = "✅ Se importaron ${result.count} archivos"
+                                delay(3000)
+                                usbMessage = null
+                                return@launch
+                            }
+
+                            UsbScanResult.NoChanges -> {
+                                usbMessage = "📁 No hay cambios para importar"
+                                delay(3000)
+                                usbMessage = null
+                                return@launch
+                            }
+
+                            else -> { /* seguimos */ }
+                        }
+
+                        // 2️⃣ Intento MediaStore (Android moderno)
+                        usbMessage = "🔍 Escaneando vía sistema..."
+
+                        when (val mediaResult = usbManager.scanViaMediaStore()) {
+
+                            is UsbScanResult.Imported -> {
+                                reloadTrigger++
+                                usbMessage = "✅ Se importaron ${mediaResult.count} archivos"
+                                delay(3000)
+                                usbMessage = null
+                                return@launch
+                            }
+
+                            UsbScanResult.NoChanges -> {
+                                usbMessage = "📁 No hay cambios para importar"
+                                delay(3000)
+                                usbMessage = null
+                                return@launch
+                            }
+
+                            else -> {
+                                // 3️⃣ Fallback final
+                                usbMessage = "⚠️ Este dispositivo no permite acceso directo al USB.\nUtilice la carga por red (QR)."
+                                delay(5000)
+                                usbMessage = null
+                            }
+                        }
+                    }
                 },
+
                 onClose = { menuVisible = false }
             )
+
         }
 
         if (showQr && serverUrl.isNotEmpty()) {
@@ -417,9 +572,34 @@ fun SlideShowScreen() {
                 }
             }
         }
+
+        // Mensaje de lectura de usb
+        usbMessage?.let { message ->
+
+            Box(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                Box(
+                    modifier = Modifier
+                        .padding(32.dp)
+                        .background(
+                            Color(0xFF1E1E1E),
+                            RoundedCornerShape(18.dp)
+                        )
+                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                ) {
+                    Text(
+                        text = message,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+
         DisposableEffect(Unit) {
             onDispose {
-                usbManager.stop() // Detener el escaneo USB
                 server.stop() // Detener el servidor LAN
             }
         }

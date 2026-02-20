@@ -28,9 +28,9 @@ class EvokeSlide(
         onAutoNext: () -> Unit
     ) {
 
+        if (slides.isEmpty() || currentIndex !in slides.indices) return
         val currentSlide = slides[currentIndex]
 
-        // 🔥 Timer controlado correctamente
         LaunchedEffect(currentIndex, isPaused, speed) {
 
             if (isPaused) return@LaunchedEffect
@@ -54,6 +54,7 @@ class EvokeSlide(
                 },
                 label = "tv-slideshow"
             ) { slide ->
+
                 slide.Render()
             }
         }

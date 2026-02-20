@@ -22,16 +22,15 @@ class CartelPreferences(private val context: Context) {
         private const val EXTERNAL = "EXTERNAL"
     }
 
-    val preferencesFlow: Flow<CartelConfig?> =
+    val preferencesFlow: Flow<CartelConfig> =
         context.dataStore.data.map { prefs ->
 
-            val type = prefs[SOURCE_TYPE] ?: return@map null
-            val value = prefs[SOURCE_VALUE] ?: return@map null
+            val type = prefs[SOURCE_TYPE] ?: INTERNAL
+            val value = prefs[SOURCE_VALUE] ?: ""
 
             val source = when (type) {
-                INTERNAL -> ContentSource.Internal(value)
                 EXTERNAL -> ContentSource.External(value)
-                else -> return@map null
+                else -> ContentSource.Internal(value)
             }
 
             CartelConfig(
@@ -47,7 +46,6 @@ class CartelPreferences(private val context: Context) {
         context.dataStore.edit { prefs ->
 
             when (config.source) {
-
                 is ContentSource.Internal -> {
                     prefs[SOURCE_TYPE] = INTERNAL
                     prefs[SOURCE_VALUE] = config.source.folder

@@ -1,42 +1,40 @@
 package com.litvy.carteleria.slides
 
-import android.graphics.BitmapFactory
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 
 class AssetImageSlide(
     override val id: String,
     private val assetPath: String,
     override val durationMs: Long,
     override val transitionKey: String?
-): Slide {
+) : Slide {
 
     @Composable
-    override fun Render(){
-        val context = LocalContext.current
+    override fun Render() {
 
-        val bitmap = remember(assetPath) {
-            runCatching {
-                context.assets.open(assetPath).use {
-                    BitmapFactory.decodeStream(it)
-                }
-            }.getOrNull()
-        }
-
-        bitmap?.let {
-            Image(
-                bitmap = it.asImageBitmap(),
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black)
+        ) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data("file:///android_asset/$assetPath")
+                    .size(1920, 1080)
+                    .build(),
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Fit
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize()
             )
         }
-
     }
 }
