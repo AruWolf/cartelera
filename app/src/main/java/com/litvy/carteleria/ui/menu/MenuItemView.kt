@@ -23,12 +23,13 @@ fun MenuItemView(
     selected: Boolean = false,
     onClick: () -> Unit,
     onFocus: (() -> Unit)? = null,
-    focusRequester: FocusRequester? = null
+    focusRequester: FocusRequester? = null,
+    modifier: Modifier = Modifier // 👈 agregado (clave)
 ) {
     var focused by remember { mutableStateOf(false) }
 
     Box(
-        modifier = Modifier
+        modifier = modifier // 👈 ahora el modifier viene desde afuera
             .fillMaxWidth()
             .padding(vertical = 12.dp)
             .background(

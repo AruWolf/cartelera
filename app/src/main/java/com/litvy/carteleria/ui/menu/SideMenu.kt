@@ -1,21 +1,25 @@
 package com.litvy.carteleria.ui.menu
 
 import android.view.KeyEvent
-import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.*
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.slides.SlideSpeed
 import com.litvy.carteleria.ui.menu.SubMenues.*
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SideMenu(
     currentAnimation: String,
@@ -28,7 +32,6 @@ fun SideMenu(
     onSpeedSelected: (SlideSpeed) -> Unit,
     onFolderSelected: (String) -> Unit,
     onExternalFolderSelected: (String) -> Unit,
-    onPickExternalFolder: () -> Unit,
     onShowQr: () -> Unit,
     onClose: () -> Unit,
     onForceUsbScan: () -> Unit,
@@ -46,10 +49,10 @@ fun SideMenu(
 
     val menuListState = rememberLazyListState()
 
-    // Foco automático al abrir
-    LaunchedEffect(Unit) {
-        subMenu = SubMenu.CONTENT
-        kotlinx.coroutines.delay(80)
+    val externalFirstItemRequester = remember { FocusRequester() }
+
+    LaunchedEffect(true) {
+        kotlinx.coroutines.delay(50)
         contentRequester.requestFocus()
     }
 
@@ -57,9 +60,10 @@ fun SideMenu(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.75f))
-            .onPreviewKeyEvent {
-                if (it.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
-                    it.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK
+            .focusable()
+            .onPreviewKeyEvent { event ->
+                if (event.nativeKeyEvent.action == KeyEvent.ACTION_UP &&
+                    event.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_BACK
                 ) {
                     onClose()
                     true
@@ -67,7 +71,7 @@ fun SideMenu(
             }
     ) {
 
-        // MENU PRINCIPAL
+        // -------- MENU PRINCIPAL --------
         LazyColumn(
             state = menuListState,
             modifier = Modifier
@@ -80,7 +84,10 @@ fun SideMenu(
                     text = "Contenido",
                     onFocus = { subMenu = SubMenu.CONTENT },
                     onClick = {},
-                    focusRequester = contentRequester
+                    focusRequester = contentRequester,
+                    modifier = Modifier.focusProperties {
+                        up = contentRequester
+                    }
                 )
             }
 
@@ -89,7 +96,12 @@ fun SideMenu(
                     text = "Contenido Externo",
                     onFocus = { subMenu = SubMenu.EXTERNAL_CONTENT },
                     onClick = {},
-                    focusRequester = externalRequester
+                    focusRequester = externalRequester,
+                    modifier = Modifier.focusProperties {
+                        if (externalFolders.isNotEmpty()) {
+                            right = externalFirstItemRequester
+                        }
+                    }
                 )
             }
 
@@ -124,9 +136,7 @@ fun SideMenu(
                 MenuItemView(
                     text = "Actualizar desde USB",
                     onFocus = { subMenu = SubMenu.NONE },
-                    onClick = {
-                        onForceUsbScan()
-                    },
+                    onClick = { onForceUsbScan() },
                     focusRequester = usbRequester
                 )
             }
@@ -141,11 +151,12 @@ fun SideMenu(
             }
         }
 
-        // SUBMENUS
+        // -------- SUBMENUS --------
 
         AnimatedVisibility(visible = subMenu == SubMenu.ANIMATION) {
             AnimationSubMenu(
                 selected = currentAnimation,
+                parentFocusRequester = animationRequester,
                 onSelect = {
                     onAnimationSelected(it)
                     subMenu = SubMenu.NONE
@@ -158,6 +169,7 @@ fun SideMenu(
             ContentSubMenu(
                 folders = folders,
                 selected = currentFolder,
+                parentFocusRequester = contentRequester,
                 onSelect = {
                     onFolderSelected(it)
                     subMenu = SubMenu.NONE
@@ -170,6 +182,8 @@ fun SideMenu(
             ExternalContentSubMenu(
                 folders = externalFolders,
                 selected = currentExternalFolder,
+                parentFocusRequester = externalRequester,
+                firstItemFocusRequester = externalFirstItemRequester,
                 onSelect = {
                     onExternalFolderSelected(it)
                     subMenu = SubMenu.NONE
@@ -186,6 +200,7 @@ fun SideMenu(
         AnimatedVisibility(visible = subMenu == SubMenu.SPEED) {
             SpeedSubMenu(
                 selected = currentSpeed,
+                parentFocusRequester = speedRequester,
                 onSelect = {
                     onSpeedSelected(it)
                     subMenu = SubMenu.NONE

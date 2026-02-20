@@ -1,83 +1,80 @@
 package com.litvy.carteleria.ui.menu.SubMenues
 
-import com.litvy.carteleria.ui.menu.MenuItemView
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.ui.menu.MenuItemView
 import kotlinx.coroutines.launch
 
 @Composable
 fun ExternalContentSubMenu(
     folders: List<String>,
     selected: String,
+    parentFocusRequester: FocusRequester,
     onSelect: (String) -> Unit,
-    onShowQr: () -> Unit
+    onShowQr: () -> Unit,
+    firstItemFocusRequester: FocusRequester
 ) {
 
-    var listState = rememberLazyListState()
-    var coroutineScope = rememberCoroutineScope()
-
-
-    LaunchedEffect(folders, selected) {
-        val selectedIndex = folders.indexOf(selected)
-        if (selectedIndex >= 0) {
-            listState.scrollToItem(selectedIndex)
-        }
-    }
-
-    if (folders.isEmpty()) {
-
-        Column(
-            modifier = Modifier
-                .width(260.dp)
-                .padding(24.dp)
-        ) {
-
-            MenuItemView(
-                text = "No hay contenido externo",
-                onClick = {}
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            MenuItemView(
-                text = "Cargar contenido (QR)",
-                onClick = { onShowQr() }
-            )
-        }
-
-        return
-    }
-
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
     LazyColumn(
         state = listState,
         modifier = Modifier
             .width(260.dp)
+            .fillMaxHeight()
             .padding(24.dp)
     ) {
-        itemsIndexed(folders) { index, folder ->
 
-            MenuItemView(
-                text = if (folder == selected) "▶ $folder" else folder,
-                onClick = { onSelect(folder) },
-                onFocus = {
-                    coroutineScope.launch {
-                        listState.animateScrollToItem(index)
+        if (folders.isEmpty()) {
+
+            item {
+                MenuItemView(
+                    text = "No hay contenido externo",
+                    onClick = {},
+                    modifier = Modifier.focusProperties {
+                        left = parentFocusRequester
                     }
-                }
-            )
-        }
+                )
+            }
 
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            item {
+                MenuItemView(
+                    text = "Cargar contenido (QR)",
+                    onClick = { onShowQr() },
+                    modifier = Modifier.focusProperties {
+                        left = parentFocusRequester
+                    }
+                )
+            }
+        } else {
+
+            itemsIndexed(folders) { index, folder ->
+                MenuItemView(
+                    focusRequester = if (index == 0) firstItemFocusRequester else null,
+                    text = if (folder == selected) "▶ $folder" else folder,
+                    onClick = { onSelect(folder) },
+                    onFocus = {
+                        scope.launch {
+                            listState.animateScrollToItem(index)
+                        }
+                    },
+                    modifier = Modifier.focusProperties {
+                        left = parentFocusRequester
+                    }
+                )
+            }
+        }
     }
 }

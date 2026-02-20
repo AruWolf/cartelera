@@ -292,15 +292,16 @@ fun SlideShowScreen() {
             .fillMaxSize()
             .focusRequester(focusRequester)
             .focusable()
-            // Detección de eventos de teclado
             .onPreviewKeyEvent { event ->
+
+                // 🚫 Si el menú está abierto, no manejar eventos acá
+                if (menuVisible) return@onPreviewKeyEvent false
 
                 if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP)
                     return@onPreviewKeyEvent false
 
                 when (event.nativeKeyEvent.keyCode) {
 
-                    // Desplazamiento entre slides (Botones direccionales, izquierda, derecha)
                     KeyEvent.KEYCODE_DPAD_RIGHT -> {
                         nextSlide()
                         true
@@ -311,14 +312,12 @@ fun SlideShowScreen() {
                         true
                     }
 
-                    // Pausa/reanudación de reproducción (Botón direccional arriba o botón pausa)
                     KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
                     KeyEvent.KEYCODE_DPAD_UP -> {
                         isPaused = !isPaused
                         true
                     }
 
-                    //Apertura de menu (Botón OK/Central)
                     KeyEvent.KEYCODE_DPAD_CENTER -> {
                         if (!menuVisible) {
                             menuVisible = true
@@ -326,20 +325,12 @@ fun SlideShowScreen() {
                         } else false
                     }
 
-                    // Cierre de menu o QR (Botón Back/Retroceso)
                     KeyEvent.KEYCODE_BACK -> {
                         when {
                             showQr -> {
                                 showQr = false
-                                reloadTrigger++
                                 true
                             }
-
-                            menuVisible -> {
-                                menuVisible = false
-                                true
-                            }
-
                             else -> false
                         }
                     }
@@ -347,7 +338,8 @@ fun SlideShowScreen() {
                     else -> false
                 }
             }
-    ) {
+    )
+    {
 
         // Renderización de Slides
         if (slides.isNotEmpty() && engine != null) {
@@ -411,6 +403,11 @@ fun SlideShowScreen() {
             }
         }
 
+        LaunchedEffect(menuVisible) {
+            if (menuVisible) {
+                delay(50)
+            }
+        }
 
         // Menu lateral
         if (menuVisible) {
@@ -456,10 +453,8 @@ fun SlideShowScreen() {
                     menuVisible = false
                 },
 
-                onPickExternalFolder = { },
 
                 onShowQr = {
-                    contentMode = ContentMode.EXTERNAL
                     showQr = true
                     menuVisible = false
                 },
@@ -470,7 +465,6 @@ fun SlideShowScreen() {
 
                         usbMessage = "🔍 Buscando USB..."
 
-                        // 1️⃣ Intento clásico (TV Box)
                         when (val result = usbManager.forceScan()) {
 
                             is UsbScanResult.Imported -> {
