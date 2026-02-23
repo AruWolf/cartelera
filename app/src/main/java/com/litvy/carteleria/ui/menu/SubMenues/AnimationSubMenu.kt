@@ -15,6 +15,7 @@ fun AnimationSubMenu(
     activeAnimation: String
 ) {
 
+    // Lista de animaciones disponibles (Depende de las que esten implementadas en TvTransitions)
     val animations = listOf(
         "random" to "Aleatorio",
         "fade" to "Fade",

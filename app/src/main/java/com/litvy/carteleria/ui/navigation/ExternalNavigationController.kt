@@ -5,11 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import java.io.File
 
+// Controlador para navegar por el arbol de carpetas del contenido externo
 class ExternalNavigationController {
 
     var state by mutableStateOf(ExternalNavigationState())
         private set
 
+    // Función para indexar el desplazamiento superior del arbol de carpetas
     fun moveUp(maxIndex: Int) {
 
         state = when (state.level) {
@@ -32,7 +34,7 @@ class ExternalNavigationController {
             else -> state
         }
     }
-
+    // Función para indexar el desplazamiento inferior del arbol de carpetas
     fun moveDown(maxIndex: Int) {
 
         state = when (state.level) {
@@ -56,6 +58,8 @@ class ExternalNavigationController {
         }
     }
 
+    // Apertura del menu contextual
+    // Despliega las opciones disponibles para carpetas y archivos del contenido externo
     fun openContextMenu(target: ContextTarget) {
 
         state = state.copy(
@@ -66,6 +70,7 @@ class ExternalNavigationController {
         )
     }
 
+    // Apertura de carpeta para mostrar sus archivos
     fun enterFiles(folder: File) {
 
         state = state.copy(
@@ -77,15 +82,18 @@ class ExternalNavigationController {
         )
     }
 
+    // Función para navegar hacia atras
     fun back(): Boolean {
 
         state = when (state.level) {
 
+            // De menu contextual a archivos
             2 -> state.copy(
                 level = state.previousLevel,
                 contextTarget = null
             )
 
+            // De archivos a carpetas
             1 -> state.copy(
                 level = 0,
                 exploredFolder = null,

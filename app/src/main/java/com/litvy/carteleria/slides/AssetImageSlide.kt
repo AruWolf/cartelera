@@ -19,7 +19,10 @@ class AssetImageSlide(
 ) : Slide {
 
     @Composable
-    override fun Render() {
+    override fun Render(
+        isPaused: Boolean,
+        onFinished: (() -> Unit)?
+    ) {
 
         Box(
             modifier = Modifier

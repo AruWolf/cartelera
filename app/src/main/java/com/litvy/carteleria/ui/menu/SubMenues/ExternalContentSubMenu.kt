@@ -46,9 +46,7 @@ fun ExternalContentSubMenu(
                 .fillMaxHeight()
         ) {
 
-            // ===================================================
-            // SI HAY CARPETA EXPLORADA → MOSTRAR ARCHIVOS
-            // ===================================================
+            // SI SE ABRIO UNA CARPETA → MOSTRAR ARCHIVOS
 
             if (exploredFolder != null) {
 
@@ -65,6 +63,7 @@ fun ExternalContentSubMenu(
                     val isSelected =
                         !isPreviewMode && navState.fileIndex == 0
 
+                    // Opción de pegar (Aparece si hay algo en el clipboard)
                     MenuItemView(
                         text = if (isSelected)
                             "▶ 📋 Pegar aquí"
@@ -81,6 +80,7 @@ fun ExternalContentSubMenu(
 
                 val volverIndex = if (hasClipboard) 1 else 0
 
+                // Opción para volver al submenu de contenido externo
                 MenuItemView(
                     text = "< Volver",
                     selected = !isPreviewMode && navState.fileIndex == volverIndex,
@@ -91,6 +91,7 @@ fun ExternalContentSubMenu(
 
                 val offset = if (clipboardItem != null) 2 else 1
 
+                // MOSTRAR ARCHIVOS
                 files.forEachIndexed { index, file ->
 
                     val globalIndex = index + offset
@@ -109,16 +110,17 @@ fun ExternalContentSubMenu(
 
             } else {
 
-                // ===================================================
-                // NO HAY CARPETA EXPLORADA → MOSTRAR CARPETAS
-                // ===================================================
+                // ESTADO NATURAL DE SUB MENU, CARPETAS Y OPCIONES DE CARGA DE CONTENIDO
 
+                // Sección de opciones de carga de contenido
+                // Carga mediante qr
                 MenuItemView(
                     text = "📱 Cargar contenido (QR)",
                     selected = !isPreviewMode && navState.folderIndex == 0,
                     onClick = {}
                 )
 
+                // Carga mediante USB
                 MenuItemView(
                     text = "🔄 Actualizar desde USB",
                     selected = !isPreviewMode && navState.folderIndex == 1,
@@ -127,8 +129,10 @@ fun ExternalContentSubMenu(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                // MOSTRAR CARPETAS
                 folders.forEachIndexed { index, folder ->
 
+                    // Inicializa la posición de las carpetas, por debajo de las opciones de carga
                     val globalIndex = index + 2
                     val isSelected =
                         !isPreviewMode && navState.folderIndex == globalIndex
@@ -145,9 +149,7 @@ fun ExternalContentSubMenu(
             }
         }
 
-        // ===================================================
         // CONTEXT MENU (OVERLAY)
-        // ===================================================
 
         if (navState.level == 2 && !isPreviewMode) {
 

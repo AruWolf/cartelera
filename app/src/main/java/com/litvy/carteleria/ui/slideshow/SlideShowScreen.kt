@@ -422,7 +422,6 @@ fun SlideShowScreen() {
                 externalStorageProvider = externalProvider,
                 onExternalContentChanged = { reloadTrigger++ },
                 currentFolder = selectedInternalFolder ?: "",
-                currentExternalFolder = selectedExternalFolder?.name ?: "",
                 clipboardItem = clipboardItem,
                 onClipboardChange = { clipboardItem = it },
 

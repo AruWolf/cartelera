@@ -20,6 +20,8 @@ import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import com.litvy.carteleria.ui.navigation.*
 import java.io.File
 
+// TODO: Desacoplar modulos que no correspondan a ui
+
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SideMenu(
@@ -28,7 +30,6 @@ fun SideMenu(
     folders: List<String>,
     externalFolders: List<File>,
     currentFolder: String,
-    currentExternalFolder: String,
     externalStorageProvider: AppStorageSlideProvider,
     clipboardItem: ClipboardItem?,
     onClipboardChange: (ClipboardItem?) -> Unit,
@@ -197,6 +198,32 @@ fun SideMenu(
 
                                 selected?.let {
                                     onFolderSelected(it)
+                                }
+                            }
+
+                            FocusSection.SUBMENU_ANIMATION -> {
+
+                                val animations = listOf(
+                                    "random",
+                                    "fade",
+                                    "scale",
+                                    "left",
+                                    "up",
+                                    "right",
+                                    "down"
+                                )
+
+                                val selected = animations.getOrNull(navState.subIndex)
+                                selected?.let {
+                                    onAnimationSelected(it)
+                                }
+                            }
+
+                            FocusSection.SUBMENU_SPEED -> {
+
+                                val selected = SlideSpeed.entries.getOrNull(navState.subIndex)
+                                selected?.let {
+                                    onSpeedSelected(it)
                                 }
                             }
 

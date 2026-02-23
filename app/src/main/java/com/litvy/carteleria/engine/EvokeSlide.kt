@@ -35,12 +35,10 @@ class EvokeSlide(
 
             if (isPaused) return@LaunchedEffect
 
-            val duration =
-                (currentSlide.durationMs * speed.multiplier).toLong()
+            val duration = currentSlide.durationMs
 
-            delay(duration)
-
-            if (!isPaused) {
+            if (duration != null) {
+                delay((duration * speed.multiplier).toLong())
                 onAutoNext()
             }
         }
@@ -55,7 +53,10 @@ class EvokeSlide(
                 label = "tv-slideshow"
             ) { slide ->
 
-                slide.Render()
+                slide.Render(
+                    isPaused = isPaused,
+                    onFinished = { onAutoNext() }
+                )
             }
         }
     }

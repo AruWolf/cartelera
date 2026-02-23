@@ -7,8 +7,11 @@ class AppStorageSlideProvider(
     private val context: Context
 ) {
 
+    // Formatos de imagen admitidos TODO: Verificar la correcta lectura de cada uno
     private val imageExtensions = listOf("png", "jpg", "jpeg", "webp")
+    private val videoExtensions = listOf("mp4", "webm", "mkv")
 
+    // Direccion de la carpeta de recursos
     private val resourcesDir: File by lazy {
         File(context.filesDir, "resources").apply {
             if (!exists()) mkdirs()
@@ -25,18 +28,35 @@ class AppStorageSlideProvider(
     }
 
     fun loadFromFolder(folder: File): List<Slide> {
+
         return folder.listFiles()
             ?.filter { it.isFile }
-            ?.filter { it.extension.lowercase() in imageExtensions }
             ?.sortedBy { it.name.lowercase() }
-            ?.mapIndexed { index, file ->
-                ExternalImageSlide(
-                    id = "external-$index-${file.name}",
-                    file = file,
-                    durationMs = 5000L,
-                    transitionKey = "fade"
-                )
-            } ?: emptyList()
+            ?.mapIndexedNotNull { index, file ->
+
+                val ext = file.extension.lowercase()
+
+                when {
+
+                    ext in imageExtensions ->
+                        ExternalImageSlide(
+                            id = "external-img-$index-${file.name}",
+                            file = file,
+                            durationMs = 5000L,
+                            transitionKey = "fade"
+                        )
+
+                    ext in videoExtensions ->
+                        ExternalVideoSlide(
+                            id = "external-video-$index-${file.name}",
+                            file = file,
+                            transitionKey = "fade"
+                        )
+
+                    else -> null
+                }
+            }
+            ?: emptyList()
     }
 
     // MODIFICACIÓN DE CARPETAS

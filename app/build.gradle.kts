@@ -63,9 +63,13 @@ dependencies {
 
     // Material
     implementation("androidx.compose.material3:material3")
-
     implementation("com.google.android.material:material:1.13.0")
+
     implementation("androidx.documentfile:documentfile:1.1.0")
+
+    // Videos - Media3
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
 
 
     // Debug

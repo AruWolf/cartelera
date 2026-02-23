@@ -7,25 +7,41 @@ class AssetSlideProvider(
 ) {
 
     private val ROOT = "content"
+    private val videoExtensions = listOf("mp4", "webm", "mkv")
 
     fun loadFrom(folder: String): List<Slide> {
         val path = "$ROOT/$folder"
         val files = context.assets.list(path) ?: emptyArray()
 
         return files
-            .filter {
-                it.endsWith(".png") ||
-                        it.endsWith(".jpg") ||
-                        it.endsWith(".webp")
+            .filter { fileName ->
+                val ext = fileName.substringAfterLast('.', "")
+                ext.lowercase() in listOf("png","jpg","jpeg","webp") + videoExtensions
             }
             .sorted()
-            .mapIndexed { index, fileName ->
-                AssetImageSlide(
-                    id = "$folder-$index",
-                    assetPath = "$path/$fileName",
-                    durationMs = 3000,
-                    transitionKey = "fade"
-                )
+            .mapIndexedNotNull { index, fileName ->
+
+                val ext = fileName.substringAfterLast('.', "").lowercase()
+
+                when {
+
+                    ext in listOf("png","jpg","jpeg","webp") ->
+                        AssetImageSlide(
+                            id = "$folder-img-$index",
+                            assetPath = "$path/$fileName",
+                            durationMs = 3000,
+                            transitionKey = "fade"
+                        )
+
+                    ext in videoExtensions ->
+                        AssetVideoSlide(
+                            id = "$folder-video-$index",
+                            assetPath = "$path/$fileName",
+                            transitionKey = "fade"
+                        )
+
+                    else -> null
+                }
             }
     }
 
@@ -34,9 +50,8 @@ class AssetSlideProvider(
             ?.filter { folder ->
                 context.assets.list("$ROOT/$folder")
                     ?.any { file ->
-                        file.endsWith(".png") ||
-                                file.endsWith(".jpg") ||
-                                file.endsWith(".webp")
+                        val ext = file.substringAfterLast('.', "")
+                        ext.lowercase() in listOf("png","jpg","jpeg","webp") + videoExtensions
                     } == true
             }
             ?.sorted()

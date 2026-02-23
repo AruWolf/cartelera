@@ -1,5 +1,6 @@
 package com.litvy.carteleria.ui.navigation
 
+// Clase utilizada para contextualizar el menu de acciones de archivos y carpetas
 sealed class ContextAction(val label: String) {
 
     object Cancel : ContextAction("Cancelar")
