@@ -41,6 +41,7 @@ class AppStorageSlideProvider(
 
     // MODIFICACIÓN DE CARPETAS
 
+    //TODO: Implementar creación de carpetas. Concepto: Opción " + Crear Carpeta " en menú de contenido externo, por encima de todas las carpetas.
     fun createFolder(name: String): Boolean {
         if (name.isBlank()) return false
 
@@ -50,11 +51,13 @@ class AppStorageSlideProvider(
         return newFolder.mkdirs()
     }
 
+    // Eliminar carpeta
     fun deleteFolder(folder: File): Boolean {
         if (!folder.exists() || !folder.isDirectory) return false
         return folder.deleteRecursively()
     }
 
+    //TODO: Implementar renombrado de carpetas. Concepto: Opción ya existente en menu de acciones de carpeta en ExternalContentSubMenu.
     fun renameFolder(folder: File, newName: String): Boolean {
         if (newName.isBlank()) return false
 
@@ -66,11 +69,12 @@ class AppStorageSlideProvider(
 
     // MODIFICACION DE ARCHIVOS
 
+    //  Eliminar archivos
     fun deleteFile(file: File): Boolean {
         if (!file.exists() || !file.isFile) return false
         return file.delete()
     }
-
+    // Copiar archivos
     fun duplicateFileToFolder(source: File, targetFolder: File): Boolean {
         if (!source.exists()) return false
         if (!targetFolder.exists()) return false
@@ -85,7 +89,7 @@ class AppStorageSlideProvider(
 
         return true
     }
-
+    // Cortar archivos
     fun moveFileToFolder(source: File, targetFolder: File): Boolean {
         if (!source.exists()) return false
         if (!targetFolder.exists()) return false
@@ -95,7 +99,7 @@ class AppStorageSlideProvider(
 
         val targetFile = File(targetFolder, source.name)
 
-        // Si ya existe archivo con ese nombre, generamos uno nuevo
+        // Si ya existe archivo con ese nombre, generamos uno nuevo aplicando un número al final
         val finalTarget = if (targetFile.exists()) {
             File(targetFolder, generateUniqueFileName(source, targetFolder))
         } else targetFile
@@ -103,8 +107,11 @@ class AppStorageSlideProvider(
         return source.renameTo(finalTarget)
     }
 
-    // GENERADOR DE NOMBRE ÚNICO
+    // GENERADOR DE NOMBRE REPETIDO DE ARCHIVO
 
+    // Se encarga de aplicar un número al final del nombre del archivo para evitar sobreescritura
+    // Aplica (x) al final del nombre del archivo, siendo x un numero
+    // El número aplicado siempre va a ser diferente al último número usado
     private fun generateUniqueFileName(
         sourceFile: File,
         targetFolder: File

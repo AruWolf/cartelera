@@ -1,58 +1,51 @@
 package com.litvy.carteleria.ui.menu.SubMenues
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.ui.menu.MenuItemView
-import kotlinx.coroutines.launch
 
 @Composable
 fun AnimationSubMenu(
-    selected: String,
-    parentFocusRequester: FocusRequester,
-    onSelect: (String) -> Unit
+    selectedIndex: Int,
+    activeAnimation: String
 ) {
 
     val animations = listOf(
         "random" to "Aleatorio",
-        "fade" to "fade",
-        "scale" to "scale",
+        "fade" to "Fade",
+        "scale" to "Scale",
         "left" to "Deslizar Izq",
         "up" to "Deslizar Arriba",
         "right" to "Deslizar Der",
         "down" to "Deslizar Abajo"
     )
 
-    val listState = rememberLazyListState()
-    val scope = rememberCoroutineScope()
-
-    LazyColumn(
-        state = listState,
+    Column(
         modifier = Modifier
             .width(240.dp)
             .fillMaxHeight()
             .padding(24.dp)
     ) {
-        itemsIndexed(animations) { index, (key, label) ->
+
+        animations.forEachIndexed { index, (key, label) ->
+
+            val isFocused = selectedIndex == index
+            val isActive = key == activeAnimation
+
+            val prefix = buildString {
+                if (isFocused) append("▶ ")
+                if (isActive) append("✔ ")
+            }
+
             MenuItemView(
-                text = if (key == selected) "▶ $label" else label,
-                onClick = { onSelect(key) },
-                onFocus = {
-                    scope.launch {
-                        listState.animateScrollToItem(index)
-                    }
-                },
-                modifier = Modifier.focusProperties {
-                    left = parentFocusRequester
-                }
+                text = prefix + label,
+                selected = isFocused,
+                onClick = {}
             )
         }
     }

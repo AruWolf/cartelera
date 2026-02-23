@@ -35,7 +35,7 @@ fun MenuItemView(
             .fillMaxWidth()
             .padding(vertical = 12.dp)
             .background(
-                if (focused) Color.White.copy(alpha = 0.2f)
+                if (selected) Color.White.copy(alpha = 0.2f)
                 else Color.Transparent
             )
             .then(

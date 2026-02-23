@@ -1,22 +1,30 @@
 package com.litvy.carteleria.ui.menu.SubMenues
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.slides.SlideSpeed
 import com.litvy.carteleria.ui.menu.MenuItemView
 
 @Composable
 fun SpeedSubMenu(
-    selected: SlideSpeed,
-    parentFocusRequester: FocusRequester,
-    onSelect: (SlideSpeed) -> Unit
+    selectedIndex: Int,
+    activeSpeed: SlideSpeed
 ) {
+    val speeds = SlideSpeed.entries
 
-    Column {
-        SlideSpeed.values().forEach { speed ->
+    Column(
+        modifier = Modifier
+            .width(240.dp)
+            .fillMaxHeight()
+            .padding(24.dp)
+    ) {
+
+        speeds.forEachIndexed { index, speed ->
 
             val label = when (speed) {
                 SlideSpeed.SLOW -> "Lento"
@@ -24,12 +32,18 @@ fun SpeedSubMenu(
                 SlideSpeed.FAST -> "Rápido"
             }
 
+            val isFocused = selectedIndex == index
+            val isActive = speed == activeSpeed
+
+            val prefix = buildString {
+                if (isFocused) append("▶ ")
+                if (isActive) append("✔ ")
+            }
+
             MenuItemView(
-                text = if (speed == selected) "▶ $label" else label,
-                onClick = { onSelect(speed) },
-                modifier = Modifier.focusProperties {
-                    left = parentFocusRequester
-                }
+                text = prefix + label,
+                selected = isFocused,
+                onClick = {}
             )
         }
     }
