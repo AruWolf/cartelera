@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.ui.menu.MenuItemView
+import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import com.litvy.carteleria.ui.navigation.*
 import com.litvy.carteleria.ui.navigation.ContextAction.Cancel.buildContextOptions
 import java.io.File
@@ -17,6 +18,9 @@ fun ExternalContentSubMenu(
     folders: List<File>,
     storageProvider: AppStorageSlideProvider,
     navigation: ExternalNavigationController,
+    clipboardItem: ClipboardItem?,
+    onClipboardChange: (ClipboardItem?) -> Unit,
+    onExternalContentChanged: () -> Unit,
     onSelectFolder: (File) -> Unit,
     isPreviewMode: Boolean
 ) {
@@ -56,17 +60,40 @@ fun ExternalContentSubMenu(
 
                 Spacer(modifier = Modifier.height(12.dp))
 
+                if (clipboardItem != null) {
+
+                    val isSelected =
+                        !isPreviewMode && navState.fileIndex == 0
+
+                    MenuItemView(
+                        text = if (isSelected)
+                            "▶ 📋 Pegar aquí"
+                        else
+                            "📋 Pegar aquí",
+                        selected = isSelected,
+                        onClick = {}
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+
+                val hasClipboard = clipboardItem != null
+
+                val volverIndex = if (hasClipboard) 1 else 0
+
                 MenuItemView(
                     text = "< Volver",
-                    selected = !isPreviewMode && navState.fileIndex == 0,
+                    selected = !isPreviewMode && navState.fileIndex == volverIndex,
                     onClick = {}
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
+                val offset = if (clipboardItem != null) 2 else 1
+
                 files.forEachIndexed { index, file ->
 
-                    val globalIndex = index + 1
+                    val globalIndex = index + offset
                     val isSelected =
                         !isPreviewMode && navState.fileIndex == globalIndex
 

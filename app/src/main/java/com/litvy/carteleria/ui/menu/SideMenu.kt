@@ -18,7 +18,6 @@ import com.litvy.carteleria.slides.SlideSpeed
 import com.litvy.carteleria.ui.menu.SubMenues.*
 import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import com.litvy.carteleria.ui.navigation.*
-import com.litvy.carteleria.ui.navigation.ContextAction.Cancel.buildContextOptions
 import java.io.File
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -74,7 +73,7 @@ fun SideMenu(
 
                 when (native.keyCode) {
 
-                    // ---------------- UP ----------------
+                    // ================= UP =================
                     KeyEvent.KEYCODE_DPAD_UP -> {
 
                         when (navState.section) {
@@ -97,19 +96,22 @@ fun SideMenu(
                                     }
 
                                     1 -> {
-                                        val files = externalNavigation.state.exploredFolder
-                                            ?.listFiles()
+                                        val folder = externalNavigation.state.exploredFolder
+                                        val files = folder?.listFiles()
                                             ?.filter { it.isFile }
                                             ?.sortedBy { it.name.lowercase() }
                                             ?: emptyList()
 
-                                        externalNavigation.moveUp(files.size)
+                                        val extra = if (clipboardItem != null) 1 else 0
+                                        val total = files.size + 1 + extra
+                                        externalNavigation.moveUp(total)
                                     }
 
                                     2 -> {
-                                        val options = buildContextOptions(
-                                            externalNavigation.state.contextTarget
-                                        )
+                                        val options =
+                                            ContextAction.Cancel.buildContextOptions(
+                                                externalNavigation.state.contextTarget
+                                            )
                                         externalNavigation.moveUp(options.lastIndex)
                                     }
                                 }
@@ -120,7 +122,7 @@ fun SideMenu(
                         true
                     }
 
-                    // ---------------- DOWN ----------------
+                    // ================= DOWN =================
                     KeyEvent.KEYCODE_DPAD_DOWN -> {
 
                         when (navState.section) {
@@ -147,19 +149,22 @@ fun SideMenu(
                                     }
 
                                     1 -> {
-                                        val files = externalNavigation.state.exploredFolder
-                                            ?.listFiles()
+                                        val folder = externalNavigation.state.exploredFolder
+                                        val files = folder?.listFiles()
                                             ?.filter { it.isFile }
                                             ?.sortedBy { it.name.lowercase() }
                                             ?: emptyList()
 
-                                        externalNavigation.moveDown(files.size)
+                                        val extra = if (clipboardItem != null) 1 else 0
+                                        val total = files.size + 1 + extra
+                                        externalNavigation.moveDown(total)
                                     }
 
                                     2 -> {
-                                        val options = buildContextOptions(
-                                            externalNavigation.state.contextTarget
-                                        )
+                                        val options =
+                                            ContextAction.Cancel.buildContextOptions(
+                                                externalNavigation.state.contextTarget
+                                            )
                                         externalNavigation.moveDown(options.lastIndex)
                                     }
                                 }
@@ -170,7 +175,7 @@ fun SideMenu(
                         true
                     }
 
-                    // ---------------- OK ----------------
+                    // ================= OK =================
                     KeyEvent.KEYCODE_DPAD_CENTER,
                     KeyEvent.KEYCODE_DPAD_RIGHT -> {
 
@@ -186,25 +191,30 @@ fun SideMenu(
                                 }
                             }
 
+                            FocusSection.SUBMENU_CONTENT -> {
+
+                                val selected = folders.getOrNull(navState.subIndex)
+
+                                selected?.let {
+                                    onFolderSelected(it)
+                                }
+                            }
+
                             FocusSection.SUBMENU_EXTERNAL -> {
 
                                 when (externalNavigation.state.level) {
 
-                                    // NIVEL 0 → Carpetas
+                                    // ========= CARPETAS =========
                                     0 -> {
 
                                         val index = externalNavigation.state.folderIndex
 
                                         when (index) {
-
                                             0 -> onShowQr()
-
                                             1 -> onForceUsbScan()
-
                                             else -> {
                                                 val folder =
                                                     externalFolders.getOrNull(index - 2)
-
                                                 folder?.let {
                                                     externalNavigation.openContextMenu(
                                                         ContextTarget.Folder(it)
@@ -214,12 +224,10 @@ fun SideMenu(
                                         }
                                     }
 
-                                    // NIVEL 1 → Archivos
+                                    // ========= ARCHIVOS =========
                                     1 -> {
 
-                                        val folder =
-                                            externalNavigation.state.exploredFolder
-
+                                        val folder = externalNavigation.state.exploredFolder
                                         val files = folder?.listFiles()
                                             ?.filter { it.isFile }
                                             ?.sortedBy { it.name.lowercase() }
@@ -228,28 +236,67 @@ fun SideMenu(
                                         val fileIndex =
                                             externalNavigation.state.fileIndex
 
-                                        if (fileIndex == 0) {
-                                            externalNavigation.back()
-                                        } else {
-                                            val file =
-                                                files.getOrNull(fileIndex - 1)
+                                        val hasClipboard = clipboardItem != null
 
-                                            file?.let {
-                                                externalNavigation.openContextMenu(
-                                                    ContextTarget.FileItem(it)
-                                                )
+                                        when {
+
+                                            // PEGAR
+                                            hasClipboard && fileIndex == 0 -> {
+
+                                                val clip = clipboardItem
+                                                if (clip != null && folder != null) {
+
+                                                    if (clip.isCut) {
+                                                        externalStorageProvider.moveFileToFolder(
+                                                            clip.file,
+                                                            folder
+                                                        )
+                                                    } else {
+                                                        externalStorageProvider.duplicateFileToFolder(
+                                                            clip.file,
+                                                            folder
+                                                        )
+                                                    }
+
+                                                    onClipboardChange(null)
+                                                    onExternalContentChanged()
+                                                }
+                                            }
+
+                                            // VOLVER
+                                            (!hasClipboard && fileIndex == 0) ||
+                                                    (hasClipboard && fileIndex == 1) -> {
+                                                externalNavigation.back()
+                                            }
+
+                                            // ARCHIVOS
+                                            else -> {
+
+                                                val offset =
+                                                    if (hasClipboard) 2 else 1
+
+                                                val file =
+                                                    files.getOrNull(fileIndex - offset)
+
+                                                file?.let {
+                                                    externalNavigation.openContextMenu(
+                                                        ContextTarget.FileItem(it)
+                                                    )
+                                                }
                                             }
                                         }
                                     }
 
-                                    // NIVEL 2 → Contexto
+                                    // ========= CONTEXTO =========
                                     2 -> {
 
                                         val target =
                                             externalNavigation.state.contextTarget
 
                                         val options =
-                                            buildContextOptions(target)
+                                            ContextAction.Cancel.buildContextOptions(
+                                                target
+                                            )
 
                                         val action =
                                             options.getOrNull(
@@ -342,14 +389,13 @@ fun SideMenu(
                         true
                     }
 
-                    // ---------------- BACK ----------------
+                    // ================= BACK =================
                     KeyEvent.KEYCODE_BACK,
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
 
                         when (navState.section) {
 
                             FocusSection.SUBMENU_EXTERNAL -> {
-
                                 if (!externalNavigation.back()) {
                                     navigation.backToMain()
                                     externalNavigation.reset()
@@ -426,6 +472,9 @@ fun SideMenu(
                     folders = externalFolders,
                     storageProvider = externalStorageProvider,
                     navigation = externalNavigation,
+                    clipboardItem = clipboardItem,
+                    onClipboardChange = onClipboardChange,
+                    onExternalContentChanged = onExternalContentChanged,
                     onSelectFolder = onExternalFolderSelected,
                     isPreviewMode = isPreviewMode
                 )
