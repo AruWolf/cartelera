@@ -1,4 +1,4 @@
-package com.litvy.carteleria.util
+package com.litvy.carteleria.util.qr
 
 import android.graphics.Bitmap
 import android.graphics.Color
