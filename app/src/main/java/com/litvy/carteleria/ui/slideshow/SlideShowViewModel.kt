@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import com.litvy.carteleria.ui.menu.model.ClipboardItem
+import kotlinx.coroutines.flow.update
 import java.io.File
 
 class SlideShowViewModel(
@@ -279,13 +280,12 @@ class SlideShowViewModel(
         _uiState.value = _uiState.value.copy(usbMessage = null)
     }
 
-    // --- CLIPBOARD ---
-    fun setClipboard(item: ClipboardItem?) {
-        _uiState.value = _uiState.value.copy(clipboardItem = item)
+    fun openMenu() {
+        _uiState.update { it.copy(menuVisible = true) }
     }
 
-    fun clearClipboard() {
-        _uiState.value = _uiState.value.copy(clipboardItem = null)
+    fun closeMenu() {
+        _uiState.update { it.copy(menuVisible = false) }
     }
 
 }

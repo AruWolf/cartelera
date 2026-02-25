@@ -26,8 +26,12 @@ import com.litvy.carteleria.ui.menu.SideMenu
 import com.litvy.carteleria.util.qr.generateQrCode
 import com.litvy.carteleria.util.usb.UsbContentManager
 import kotlinx.coroutines.delay
-import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import com.litvy.carteleria.util.network.LocalCartelServer
+import com.litvy.carteleria.data.external.AppStorageExternalRepository
+import com.litvy.carteleria.domain.external.usecase.*
+import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
+import java.io.File
+
 
 enum class ContentMode {
     INTERNAL,
@@ -57,7 +61,6 @@ fun SlideShowScreen() {
     val focusRequester = remember { FocusRequester() } // Solicitud de foco/atención en pantalla
 
     var showQr by remember { mutableStateOf(false) }
-    var reloadTrigger by remember { mutableStateOf(0) }
 
 
     // --- PROVIDERS --- (importan las imagenes)
@@ -88,6 +91,27 @@ fun SlideShowScreen() {
             )
         } else null
     }
+
+    val externalRepository = remember {
+        AppStorageExternalRepository(externalProvider)
+    }
+
+    val externalUseCases = remember {
+        ExternalContentUseCases(
+            listFolders = ListExternalFoldersUseCase(externalRepository),
+            listFiles = ListExternalFilesUseCase(externalRepository),
+            deleteFile = DeleteExternalFileUseCase(externalRepository),
+            deleteFolder = DeleteExternalFolderUseCase(externalRepository),
+            copyFile = CopyExternalFileUseCase(externalRepository),
+            moveFile = MoveExternalFileUseCase(externalRepository),
+            rename = RenameExternalNodeUseCase(externalRepository)
+        )
+    }
+
+    val externalMenuViewModel = remember {
+        ExternalMenuViewModel(externalUseCases)
+    }
+
 
     // Arranque de servidor LAN - Al iniciar la pantalla
     LaunchedEffect(Unit) {
@@ -145,7 +169,7 @@ fun SlideShowScreen() {
                     }
 
                     KeyEvent.KEYCODE_DPAD_CENTER -> {
-                        viewModel.toggleMenu()
+                        viewModel.openMenu()
                         true
                     }
 
@@ -239,12 +263,8 @@ fun SlideShowScreen() {
                 currentAnimation = state.currentAnimation,
                 currentSpeed = state.slideSpeed,
                 folders = assetProvider.listFolders(),
-                externalFolders = externalProvider.listFolders(),
-                externalStorageProvider = externalProvider,
-                onExternalContentChanged = { reloadTrigger++ },
                 currentFolder = state.selectedInternalFolder ?: "",
-                clipboardItem = state.clipboardItem,
-                onClipboardChange = { viewModel.setClipboard(it) },
+                externalMenuViewModel = externalMenuViewModel,
 
                 onAnimationSelected = {
                     viewModel.changeAnimation(it)
@@ -259,11 +279,10 @@ fun SlideShowScreen() {
                     viewModel.toggleMenu()
                 },
 
-                onExternalFolderSelected = { folderFile ->
-                    viewModel.selectExternalFolder(folderFile)
+                onPlayExternalFolder = { path ->
+                    viewModel.selectExternalFolder(File(path))
                     viewModel.toggleMenu()
                 },
-
 
                 onShowQr = {
                     showQr = true
@@ -274,7 +293,9 @@ fun SlideShowScreen() {
                     viewModel.forceUsbScan()
                 },
 
-                onClose = { viewModel.toggleMenu() }
+                onClose = {
+                    viewModel.closeMenu()
+                }
             )
         }
 

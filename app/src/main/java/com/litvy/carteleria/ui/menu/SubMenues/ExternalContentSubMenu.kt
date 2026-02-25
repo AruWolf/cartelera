@@ -3,180 +3,111 @@ package com.litvy.carteleria.ui.menu.SubMenues
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.ui.menu.MenuItemView
-import com.litvy.carteleria.ui.menu.model.ClipboardItem
+import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
 import com.litvy.carteleria.ui.navigation.*
-import com.litvy.carteleria.ui.navigation.ContextAction.Cancel.buildContextOptions
-import java.io.File
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ExternalContentSubMenu(
-    folders: List<File>,
-    storageProvider: AppStorageSlideProvider,
+    viewModel: ExternalMenuViewModel,
     navigation: ExternalNavigationController,
-    clipboardItem: ClipboardItem?,
-    onClipboardChange: (ClipboardItem?) -> Unit,
-    onExternalContentChanged: () -> Unit,
-    onSelectFolder: (File) -> Unit,
-    isPreviewMode: Boolean
+    isPreviewMode: Boolean,
+    onPlayFolder: (String) -> Unit
 ) {
+    val state by viewModel.state.collectAsState()
 
-    val navState = navigation.state
-    val exploredFolder = navState.exploredFolder
-
-    val files = exploredFolder?.listFiles()
-        ?.filter { it.isFile }
-        ?.sortedBy { it.name.lowercase() }
-        ?: emptyList()
-
-    Box(
+    Column(
         modifier = Modifier
-            .width(420.dp)
+            .width(300.dp)
             .fillMaxHeight()
             .padding(24.dp)
     ) {
 
-        Column(
-            modifier = Modifier
-                .width(300.dp)
-                .fillMaxHeight()
-        ) {
+        if (!state.isInFolder) {
 
-            // SI SE ABRIO UNA CARPETA → MOSTRAR ARCHIVOS
+            // ---------- OPCIONES FIJAS ----------
+            MenuItemView(
+                text = "📱 Cargar contenido (QR)",
+                selected = !isPreviewMode && navigation.state.folderIndex == 0,
+                onClick = {}
+            )
 
-            if (exploredFolder != null) {
+            MenuItemView(
+                text = "🔄 Actualizar desde USB",
+                selected = !isPreviewMode && navigation.state.folderIndex == 1,
+                onClick = {}
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ---------- CARPETAS ----------
+            state.folders.forEachIndexed { index, folder ->
+
+                val globalIndex = index + 2
+
+                val isSelected =
+                    !isPreviewMode &&
+                            navigation.state.folderIndex == globalIndex
 
                 MenuItemView(
-                    text = "📁 ${exploredFolder.name}",
-                    selected = false,
+                    text = if (isSelected)
+                        "▶ ${folder.name}"
+                    else
+                        folder.name,
+                    selected = isSelected,
                     onClick = {}
                 )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                if (clipboardItem != null) {
-
-                    val isSelected =
-                        !isPreviewMode && navState.fileIndex == 0
-
-                    // Opción de pegar (Aparece si hay algo en el clipboard)
-                    MenuItemView(
-                        text = if (isSelected)
-                            "▶ 📋 Pegar aquí"
-                        else
-                            "📋 Pegar aquí",
-                        selected = isSelected,
-                        onClick = {}
-                    )
-
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-
-                val hasClipboard = clipboardItem != null
-
-                val volverIndex = if (hasClipboard) 1 else 0
-
-                // Opción para volver al submenu de contenido externo
-                MenuItemView(
-                    text = "< Volver",
-                    selected = !isPreviewMode && navState.fileIndex == volverIndex,
-                    onClick = {}
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                val offset = if (clipboardItem != null) 2 else 1
-
-                // MOSTRAR ARCHIVOS
-                files.forEachIndexed { index, file ->
-
-                    val globalIndex = index + offset
-                    val isSelected =
-                        !isPreviewMode && navState.fileIndex == globalIndex
-
-                    MenuItemView(
-                        text = if (isSelected)
-                            "▶ ${file.name}"
-                        else
-                            file.name,
-                        selected = isSelected,
-                        onClick = {}
-                    )
-                }
-
-            } else {
-
-                // ESTADO NATURAL DE SUB MENU, CARPETAS Y OPCIONES DE CARGA DE CONTENIDO
-
-                // Sección de opciones de carga de contenido
-                // Carga mediante qr
-                MenuItemView(
-                    text = "📱 Cargar contenido (QR)",
-                    selected = !isPreviewMode && navState.folderIndex == 0,
-                    onClick = {}
-                )
-
-                // Carga mediante USB
-                MenuItemView(
-                    text = "🔄 Actualizar desde USB",
-                    selected = !isPreviewMode && navState.folderIndex == 1,
-                    onClick = {}
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // MOSTRAR CARPETAS
-                folders.forEachIndexed { index, folder ->
-
-                    // Inicializa la posición de las carpetas, por debajo de las opciones de carga
-                    val globalIndex = index + 2
-                    val isSelected =
-                        !isPreviewMode && navState.folderIndex == globalIndex
-
-                    MenuItemView(
-                        text = if (isSelected)
-                            "▶ ${folder.name}"
-                        else
-                            folder.name,
-                        selected = isSelected,
-                        onClick = {}
-                    )
-                }
             }
-        }
 
-        // CONTEXT MENU (OVERLAY)
+        } else {
 
-        if (navState.level == 2 && !isPreviewMode) {
+            val hasClipboard = state.clipboardPath != null
 
-            val options = buildContextOptions(navState.contextTarget)
+            if (hasClipboard) {
+                MenuItemView(
+                    text = if (!isPreviewMode && navigation.state.fileIndex == 0)
+                        "▶ 📋 Pegar aquí"
+                    else
+                        "📋 Pegar aquí",
+                    selected = !isPreviewMode && navigation.state.fileIndex == 0,
+                    onClick = {}
+                )
+            }
 
-            Column(
-                modifier = Modifier
-                    .offset(x = 300.dp)
-                    .width(220.dp)
-                    .background(Color.Black.copy(alpha = 0.95f))
-                    .padding(16.dp)
-            ) {
+            val backIndex = if (hasClipboard) 1 else 0
 
-                options.forEachIndexed { index, action ->
+            MenuItemView(
+                text = "< Volver",
+                selected = !isPreviewMode &&
+                        navigation.state.fileIndex == backIndex,
+                onClick = {}
+            )
 
-                    val isSelected =
-                        navState.contextIndex == index
+            Spacer(modifier = Modifier.height(16.dp))
 
-                    MenuItemView(
-                        text = if (isSelected)
-                            "▶ ${action.label}"
-                        else
-                            action.label,
-                        selected = isSelected,
-                        onClick = {}
-                    )
-                }
+            val offset = if (hasClipboard) 2 else 1
+
+            state.files.forEachIndexed { index, file ->
+
+                val globalIndex = index + offset
+
+                val isSelected =
+                    !isPreviewMode &&
+                            navigation.state.fileIndex == globalIndex
+
+                MenuItemView(
+                    text = if (isSelected)
+                        "▶ ${file.name}"
+                    else
+                        file.name,
+                    selected = isSelected,
+                    onClick = {}
+                )
             }
         }
     }
