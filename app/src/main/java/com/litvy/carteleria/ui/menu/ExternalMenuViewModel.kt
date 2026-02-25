@@ -86,37 +86,6 @@ class ExternalMenuViewModel(
         }
     }
 
-    fun rename(path: String, newName: String) {
-        useCases.rename(path, newName)
-        refreshFolder()
-    }
 
-    fun startRename(path: String) {
-        val file = java.io.File(path)
 
-        _state.value = _state.value.copy(
-            renameTargetPath = path,
-            renameInitialName = file.nameWithoutExtension
-        )
-    }
-
-    fun cancelRename() {
-        _state.value = _state.value.copy(
-            renameTargetPath = null,
-            renameInitialName = ""
-        )
-    }
-
-    fun confirmRename(newName: String) {
-        val path = _state.value.renameTargetPath ?: return
-
-        useCases.rename(path, newName)
-
-        _state.value = _state.value.copy(
-            renameTargetPath = null,
-            renameInitialName = ""
-        )
-
-        refreshFolder()
-    }
 }

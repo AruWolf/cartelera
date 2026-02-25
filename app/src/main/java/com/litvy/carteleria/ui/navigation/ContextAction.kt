@@ -5,7 +5,6 @@ sealed class ContextAction(val label: String) {
 
     object Cancel : ContextAction("Cancelar")
     object Delete : ContextAction("Eliminar")
-    object Rename : ContextAction("Renombrar")
 
     // Carpetas
     object OpenFolder : ContextAction("Abrir")
@@ -23,14 +22,12 @@ sealed class ContextAction(val label: String) {
             is ContextTarget.Folder -> listOf(
                 ContextAction.OpenFolder,
                 ContextAction.PlayFolder,
-                ContextAction.Rename,
                 ContextAction.Delete,
                 ContextAction.Cancel
             )
 
             is ContextTarget.FileItem -> listOf(
                 ContextAction.Preview,
-                ContextAction.Rename,
                 ContextAction.Copy,
                 ContextAction.Cut,
                 ContextAction.Delete,

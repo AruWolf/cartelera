@@ -77,16 +77,6 @@ class AppStorageSlideProvider(
         return folder.deleteRecursively()
     }
 
-    //TODO: Implementar renombrado de carpetas. Concepto: Opción ya existente en menu de acciones de carpeta en ExternalContentSubMenu.
-    fun renameFolder(folder: File, newName: String): Boolean {
-        if (newName.isBlank()) return false
-
-        val target = File(resourcesDir, newName.trim())
-        if (target.exists()) return false
-
-        return folder.renameTo(target)
-    }
-
     // MODIFICACION DE ARCHIVOS
 
     //  Eliminar archivos

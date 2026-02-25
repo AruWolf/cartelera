@@ -10,7 +10,4 @@ data class ExternalMenuState(
     val clipboardPath: String? = null,
     val isCut: Boolean = false,
     val isInFolder: Boolean = false,
-
-    val renameTargetPath: String? = null,
-    val renameInitialName: String = ""
 )

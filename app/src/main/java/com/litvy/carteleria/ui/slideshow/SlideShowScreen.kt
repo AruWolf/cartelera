@@ -104,7 +104,6 @@ fun SlideShowScreen() {
             deleteFolder = DeleteExternalFolderUseCase(externalRepository),
             copyFile = CopyExternalFileUseCase(externalRepository),
             moveFile = MoveExternalFileUseCase(externalRepository),
-            rename = RenameExternalNodeUseCase(externalRepository)
         )
     }
 

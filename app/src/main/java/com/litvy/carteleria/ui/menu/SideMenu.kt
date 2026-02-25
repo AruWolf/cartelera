@@ -18,7 +18,6 @@ import com.litvy.carteleria.ui.menu.SubMenues.*
 import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuOverlay
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuState
-import com.litvy.carteleria.ui.menu.overlay.RenameOverlay
 import com.litvy.carteleria.ui.navigation.*
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -71,11 +70,6 @@ fun SideMenu(
 
                 if (native.action != KeyEvent.ACTION_DOWN || native.repeatCount > 0)
                     return@onPreviewKeyEvent false
-
-                // 🔒 BLOQUEO TOTAL si Rename está activo
-                if (externalState.renameTargetPath != null) {
-                    return@onPreviewKeyEvent true
-                }
 
                 // ================= CONTEXT MENU =================
                 if (contextMenuState.isVisible) {
@@ -131,9 +125,6 @@ fun SideMenu(
                                             ContextAction.Delete ->
                                                 externalMenuViewModel.deleteFolder(target.path)
 
-                                            ContextAction.Rename ->
-                                                externalMenuViewModel.startRename(target.path)
-
                                             else -> {}
                                         }
                                     }
@@ -148,9 +139,6 @@ fun SideMenu(
 
                                             ContextAction.Delete ->
                                                 externalMenuViewModel.deleteFile(target.path)
-
-                                            ContextAction.Rename ->
-                                                externalMenuViewModel.startRename(target.path)
 
                                             else -> {}
                                         }
@@ -454,16 +442,5 @@ fun SideMenu(
             )
         }
 
-        if (externalState.renameTargetPath != null) {
-            RenameOverlay(
-                initialName = externalState.renameInitialName,
-                onConfirm = { newName ->
-                    externalMenuViewModel.confirmRename(newName)
-                },
-                onCancel = {
-                    externalMenuViewModel.cancelRename()
-                }
-            )
-        }
     }
 }

@@ -28,7 +28,6 @@ fun MenuItemView(
     onLongPress: (() -> Unit)? = null,
 ) {
     var focused by remember { mutableStateOf(false) }
-    var longPressTriggered by remember { mutableStateOf(false) }
 
     Box(
         modifier = modifier

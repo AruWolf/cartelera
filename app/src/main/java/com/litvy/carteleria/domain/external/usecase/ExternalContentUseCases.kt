@@ -7,5 +7,4 @@ data class ExternalContentUseCases(
     val deleteFolder: DeleteExternalFolderUseCase,
     val copyFile: CopyExternalFileUseCase,
     val moveFile: MoveExternalFileUseCase,
-    val rename: RenameExternalNodeUseCase
 )

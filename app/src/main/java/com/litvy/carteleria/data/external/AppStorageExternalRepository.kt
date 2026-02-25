@@ -54,20 +54,4 @@ class AppStorageExternalRepository(
         )
     }
 
-    override fun rename(path: String, newName: String) {
-        val file = File(path)
-
-        val extension = file.extension
-        val finalName =
-            if (extension.isNotEmpty())
-                "$newName.$extension"
-            else
-                newName
-
-        val newFile = File(file.parent, finalName)
-
-        if (!newFile.exists()) {
-            file.renameTo(newFile)
-        }
-    }
 }

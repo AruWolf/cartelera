@@ -13,6 +13,4 @@ interface ExternalContentRepository {
     fun copyFile(sourcePath: String, targetFolderPath: String)
 
     fun moveFile(sourcePath: String, targetFolderPath: String)
-
-    fun rename(path: String, newName: String)
 }
