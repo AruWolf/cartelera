@@ -2,9 +2,12 @@ package com.litvy.carteleria.slides
 
 import android.content.Context
 import java.io.File
+import com.litvy.carteleria.data.external.HiddenFileManager
+
 
 class AppStorageSlideProvider(
-    private val context: Context
+    private val context: Context,
+    private val hiddenManager: HiddenFileManager
 ) {
 
     // Formatos de imagen admitidos TODO: Verificar la correcta lectura de cada uno
@@ -30,7 +33,7 @@ class AppStorageSlideProvider(
     fun loadFromFolder(folder: File): List<Slide> {
 
         return folder.listFiles()
-            ?.filter { it.isFile }
+            ?.filter { it.isFile && !hiddenManager.isHidden(it.absolutePath) }
             ?.sortedBy { it.name.lowercase() }
             ?.mapIndexedNotNull { index, file ->
 

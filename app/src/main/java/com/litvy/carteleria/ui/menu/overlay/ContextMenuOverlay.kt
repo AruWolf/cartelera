@@ -20,10 +20,9 @@ data class ContextMenuState(
 @Composable
 fun BoxScope.ContextMenuOverlay(
     state: ContextMenuState,
+    options: List<ContextAction>,
     onActionSelected: (ContextAction) -> Unit
 ) {
-
-    val options = ContextAction.Cancel.buildContextOptions(state.target)
 
     Column(
         modifier = Modifier

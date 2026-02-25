@@ -36,6 +36,7 @@ fun SideMenu(
     onShowQr: () -> Unit,
     onClose: () -> Unit,
     onForceUsbScan: () -> Unit,
+    onVisibilityChanged: () -> Unit
 ) {
 
     val navigation = remember { TvNavigationController() }
@@ -59,6 +60,44 @@ fun SideMenu(
         containerFocusRequester.requestFocus()
     }
 
+    val contextOptions = remember(contextMenuState, externalState) {
+
+        val target = contextMenuState.target
+
+        when (target) {
+
+            is ContextTarget.FileItem -> {
+
+                val file = externalState.files
+                    .find { it.path == target.path }
+
+                val visibilityAction =
+                    if (file?.isHidden == true)
+                        ContextAction.Show
+                    else
+                        ContextAction.Hide
+
+                listOf(
+                    ContextAction.Preview,
+                    visibilityAction, // ← segundo lugar
+                    ContextAction.Copy,
+                    ContextAction.Cut,
+                    ContextAction.Delete,
+                    ContextAction.Cancel
+                )
+            }
+
+            is ContextTarget.Folder -> listOf(
+                ContextAction.OpenFolder,
+                ContextAction.PlayFolder,
+                ContextAction.Delete,
+                ContextAction.Cancel
+            )
+
+            else -> emptyList()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -75,8 +114,7 @@ fun SideMenu(
                 // ================= CONTEXT MENU =================
                 if (contextMenuState.isVisible) {
 
-                    val options = ContextAction.Cancel
-                        .buildContextOptions(contextMenuState.target)
+                    val target = contextMenuState.target
 
                     when (native.keyCode) {
 
@@ -91,7 +129,7 @@ fun SideMenu(
                         KeyEvent.KEYCODE_DPAD_DOWN -> {
                             contextMenuState = contextMenuState.copy(
                                 selectedIndex = (contextMenuState.selectedIndex + 1)
-                                    .coerceAtMost(options.lastIndex)
+                                    .coerceAtMost(contextOptions.lastIndex)
                             )
                             return@onPreviewKeyEvent true
                         }
@@ -104,8 +142,7 @@ fun SideMenu(
 
                         KeyEvent.KEYCODE_DPAD_CENTER -> {
 
-                            val action =
-                                options.getOrNull(contextMenuState.selectedIndex)
+                            val action = contextOptions.getOrNull(contextMenuState.selectedIndex)
 
                             val target = contextMenuState.target
 
@@ -140,6 +177,16 @@ fun SideMenu(
 
                                             ContextAction.Delete ->
                                                 externalMenuViewModel.deleteFile(target.path)
+
+                                            ContextAction.Hide -> {
+                                                externalMenuViewModel.hideFile(target.path)
+                                                onVisibilityChanged()
+                                            }
+
+                                            ContextAction.Show -> {
+                                                externalMenuViewModel.showFile(target.path)
+                                                onVisibilityChanged()
+                                            }
 
                                             else -> {}
                                         }
@@ -459,6 +506,7 @@ fun SideMenu(
         if (contextMenuState.isVisible) {
             ContextMenuOverlay(
                 state = contextMenuState,
+                options = contextOptions,
                 onActionSelected = {}
             )
         }

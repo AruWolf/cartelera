@@ -5,7 +5,8 @@ import com.litvy.carteleria.slides.AppStorageSlideProvider
 import java.io.File
 
 class AppStorageExternalRepository(
-    private val provider: AppStorageSlideProvider
+    private val provider: AppStorageSlideProvider,
+    private val hiddenManager: HiddenFileManager
 ) : ExternalContentRepository {
 
     override fun listFolders(): List<ExternalFolder> {
@@ -18,17 +19,22 @@ class AppStorageExternalRepository(
     }
 
     override fun listFiles(folderPath: String): List<ExternalFile> {
+
         val folder = File(folderPath)
 
         return folder.listFiles()
             ?.filter { it.isFile }
-            ?.sortedBy { it.name.lowercase() }
             ?.map {
                 ExternalFile(
                     name = it.name,
-                    path = it.absolutePath
+                    path = it.absolutePath,
+                    isHidden = hiddenManager.isHidden(it.absolutePath)
                 )
             }
+            ?.sortedWith(
+                compareBy<ExternalFile> { it.isHidden }
+                    .thenBy { it.name.lowercase() }
+            )
             ?: emptyList()
     }
 
@@ -52,6 +58,14 @@ class AppStorageExternalRepository(
             File(sourcePath),
             File(targetFolderPath)
         )
+    }
+
+    override fun hideFile(path: String) {
+        hiddenManager.hide(path)
+    }
+
+    override fun showFile(path: String) {
+        hiddenManager.show(path)
     }
 
 }

@@ -28,6 +28,7 @@ import com.litvy.carteleria.util.usb.UsbContentManager
 import kotlinx.coroutines.delay
 import com.litvy.carteleria.util.network.LocalCartelServer
 import com.litvy.carteleria.data.external.AppStorageExternalRepository
+import com.litvy.carteleria.data.external.HiddenFileManager
 import com.litvy.carteleria.domain.external.usecase.*
 import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
 import java.io.File
@@ -44,10 +45,14 @@ fun SlideShowScreen() {
     // --- View Model ---
     val context = LocalContext.current
 
+    val hiddenManager = remember {
+        HiddenFileManager(context)
+    }
+
     val viewModel = remember {
         SlideShowViewModel(
             assetProvider = AssetSlideProvider(context),
-            externalProvider = AppStorageSlideProvider(context),
+            externalProvider = AppStorageSlideProvider(context, hiddenManager),
             prefs = CartelPreferences(context),
             server = LocalCartelServer(context),
             usbImporter = UsbContentManager(context)
@@ -62,11 +67,11 @@ fun SlideShowScreen() {
 
     var showQr by remember { mutableStateOf(false) }
 
-
     // --- PROVIDERS --- (importan las imagenes)
     val assetProvider = remember { AssetSlideProvider(context) }
-    val externalProvider = remember { AppStorageSlideProvider(context) }
-
+    val externalProvider = remember {
+        AppStorageSlideProvider(context, hiddenManager)
+    }
     // --- ANIMACIONES ---
     val transition = remember(state.currentAnimation) {
         when (state.currentAnimation) {
@@ -93,7 +98,10 @@ fun SlideShowScreen() {
     }
 
     val externalRepository = remember {
-        AppStorageExternalRepository(externalProvider)
+        AppStorageExternalRepository(
+            provider = externalProvider,
+            hiddenManager = hiddenManager
+        )
     }
 
     val externalUseCases = remember {
@@ -104,6 +112,8 @@ fun SlideShowScreen() {
             deleteFolder = DeleteExternalFolderUseCase(externalRepository),
             copyFile = CopyExternalFileUseCase(externalRepository),
             moveFile = MoveExternalFileUseCase(externalRepository),
+            hideFile = HideExternalFileUseCase(externalRepository),
+            showFile = ShowExternalFileUseCase(externalRepository)
         )
     }
 
@@ -294,6 +304,10 @@ fun SlideShowScreen() {
 
                 onClose = {
                     viewModel.closeMenu()
+                },
+
+                onVisibilityChanged = {
+                    viewModel.reloadExternalFolderIfSelected()
                 }
             )
         }

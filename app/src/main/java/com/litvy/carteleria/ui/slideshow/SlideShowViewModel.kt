@@ -288,4 +288,16 @@ class SlideShowViewModel(
         _uiState.update { it.copy(menuVisible = false) }
     }
 
+    fun reloadExternalFolderIfSelected() {
+
+        val currentFolder = _uiState.value.selectedExternalFolder ?: return
+
+        val slides = externalProvider.loadFromFolder(currentFolder)
+
+        _uiState.value = _uiState.value.copy(
+            slides = slides,
+            currentIndex = 0
+        )
+    }
+
 }

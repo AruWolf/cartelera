@@ -15,6 +15,9 @@ sealed class ContextAction(val label: String) {
     object Copy : ContextAction("Copiar")
     object Cut : ContextAction("Cortar")
 
+    object Hide : ContextAction("Ocultar")
+    object Show : ContextAction("Mostrar")
+
     fun buildContextOptions(target: ContextTarget?): List<ContextAction> {
 
         return when (target) {

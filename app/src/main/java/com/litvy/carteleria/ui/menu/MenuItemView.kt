@@ -6,6 +6,7 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,6 +15,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -26,6 +29,8 @@ fun MenuItemView(
     focusRequester: FocusRequester? = null,
     modifier: Modifier = Modifier,
     onLongPress: (() -> Unit)? = null,
+    textColor: Color =  Color.White,
+    isHidden: Boolean = false
 ) {
     var focused by remember { mutableStateOf(false) }
 
@@ -34,7 +39,7 @@ fun MenuItemView(
             .fillMaxWidth()
             .padding(vertical = 12.dp)
             .background(
-                if (selected) Color.White.copy(alpha = 0.2f)
+                if (selected) Color.Gray.copy(alpha = 0.3f)
                 else Color.Transparent
             )
             .then(
@@ -75,10 +80,16 @@ fun MenuItemView(
             }
             .padding(12.dp)
     ) {
-        Text(
+        BasicText(
             text = text,
-            fontSize = 22.sp,
-            color = Color.White
+            style = TextStyle(
+                color = textColor,
+                fontSize = 22.sp,
+                textDecoration = if (isHidden)
+                    TextDecoration.LineThrough
+                else
+                    TextDecoration.None
+            )
         )
     }
 }

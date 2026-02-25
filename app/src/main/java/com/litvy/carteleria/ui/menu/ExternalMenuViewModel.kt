@@ -86,6 +86,14 @@ class ExternalMenuViewModel(
         }
     }
 
+    fun hideFile(path: String) {
+        useCases.hideFile(path)
+        refreshFolder()
+    }
 
+    fun showFile(path: String) {
+        useCases.showFile(path)
+        refreshFolder()
+    }
 
 }

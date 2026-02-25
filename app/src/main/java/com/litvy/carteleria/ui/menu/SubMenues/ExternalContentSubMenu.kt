@@ -13,6 +13,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
 
 @Composable
 fun ExternalContentSubMenu(
@@ -23,6 +24,7 @@ fun ExternalContentSubMenu(
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
+
 
     LaunchedEffect(
         navigation.state.folderIndex,
@@ -125,11 +127,13 @@ fun ExternalContentSubMenu(
                             navigation.state.fileIndex == globalIndex
 
                 MenuItemView(
-                    text = if (isSelected)
-                        "▶ ${file.name}"
-                    else
-                        file.name,
+                    text = file.name.replace("▶ ", ""),
                     selected = isSelected,
+                    isHidden = file.isHidden,
+                    textColor = if (file.isHidden)
+                        Color(0xFFFF5555)
+                    else
+                        Color.White,
                     onClick = {}
                 )
             }

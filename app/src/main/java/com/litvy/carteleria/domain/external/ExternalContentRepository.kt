@@ -13,4 +13,8 @@ interface ExternalContentRepository {
     fun copyFile(sourcePath: String, targetFolderPath: String)
 
     fun moveFile(sourcePath: String, targetFolderPath: String)
+
+    fun hideFile(path: String)
+
+    fun showFile(path: String)
 }
