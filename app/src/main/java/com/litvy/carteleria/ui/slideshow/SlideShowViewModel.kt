@@ -300,4 +300,45 @@ class SlideShowViewModel(
         )
     }
 
+    suspend fun forceUsbScanAndReturnResult(): Boolean {
+
+        _uiState.value = _uiState.value.copy(
+            isUsbLoading = true,
+            usbMessage = "🔍 Buscando USB..."
+        )
+
+        when (val result = usbImporter.forceScan()) {
+
+            is UsbScanResult.Imported -> {
+                _uiState.value = _uiState.value.copy(
+                    usbMessage = "✅ Se importaron ${result.count} archivos",
+                    isUsbLoading = false
+                )
+                delay(3000)
+                clearUsbMessage()
+                return true
+            }
+
+            UsbScanResult.NoChanges -> {
+                _uiState.value = _uiState.value.copy(
+                    usbMessage = "📁 No hay cambios para importar",
+                    isUsbLoading = false
+                )
+                delay(3000)
+                clearUsbMessage()
+                return false
+            }
+
+            else -> {
+                _uiState.value = _uiState.value.copy(
+                    usbMessage = "⚠️ No se encontró USB",
+                    isUsbLoading = false
+                )
+                delay(3000)
+                clearUsbMessage()
+                return false
+            }
+        }
+    }
+
 }

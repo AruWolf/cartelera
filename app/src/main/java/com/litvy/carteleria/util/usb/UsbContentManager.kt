@@ -13,7 +13,7 @@ class UsbContentManager(
     private val context: Context
 ): UsbImporter {
 
-    private val imageExtensions = listOf("png", "jpg", "jpeg", "webp")
+    private val imageExtensions = listOf("png", "jpg", "jpeg", "webp", "mp4")
 
     override suspend fun forceScan(): UsbScanResult = withContext(Dispatchers.IO) {
 

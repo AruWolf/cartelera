@@ -96,4 +96,12 @@ class ExternalMenuViewModel(
         refreshFolder()
     }
 
+    fun reloadCurrentView() {
+        if (_state.value.isInFolder) {
+            refreshFolder()
+        } else {
+            loadFolders()
+        }
+    }
+
 }

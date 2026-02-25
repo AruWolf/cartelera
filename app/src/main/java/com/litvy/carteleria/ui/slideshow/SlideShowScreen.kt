@@ -1,7 +1,9 @@
 package com.litvy.carteleria.ui.slideshow
 
+import android.app.Activity
 import android.graphics.Bitmap
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
@@ -31,6 +33,7 @@ import com.litvy.carteleria.data.external.AppStorageExternalRepository
 import com.litvy.carteleria.data.external.HiddenFileManager
 import com.litvy.carteleria.domain.external.usecase.*
 import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
+import kotlinx.coroutines.launch
 import java.io.File
 
 
@@ -44,6 +47,7 @@ fun SlideShowScreen() {
 
     // --- View Model ---
     val context = LocalContext.current
+    var backPressedOnce by remember { mutableStateOf(false) }
 
     val hiddenManager = remember {
         HiddenFileManager(context)
@@ -66,6 +70,8 @@ fun SlideShowScreen() {
     val focusRequester = remember { FocusRequester() } // Solicitud de foco/atención en pantalla
 
     var showQr by remember { mutableStateOf(false) }
+
+    val scope = rememberCoroutineScope()
 
     // --- PROVIDERS --- (importan las imagenes)
     val assetProvider = remember { AssetSlideProvider(context) }
@@ -121,6 +127,7 @@ fun SlideShowScreen() {
         ExternalMenuViewModel(externalUseCases)
     }
 
+    var ignoreNextCenter by remember { mutableStateOf(false) }
 
     // Arranque de servidor LAN - Al iniciar la pantalla
     LaunchedEffect(Unit) {
@@ -149,12 +156,17 @@ fun SlideShowScreen() {
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .background(Color.Black)
             .focusRequester(focusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
 
-                // 🚫 Si el menú está abierto, no manejar eventos acá
                 if (state.menuVisible) return@onPreviewKeyEvent false
+
+                if (!state.menuVisible && ignoreNextCenter) {
+                    ignoreNextCenter = false
+                    return@onPreviewKeyEvent true
+                }
 
                 if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP)
                     return@onPreviewKeyEvent false
@@ -183,12 +195,31 @@ fun SlideShowScreen() {
                     }
 
                     KeyEvent.KEYCODE_BACK -> {
-                        when {
-                            showQr -> {
-                                showQr = false
-                                true
+
+                        // Si está abierto el QR, cerrarlo primero
+                        if (showQr) {
+                            showQr = false
+                            return@onPreviewKeyEvent true
+                        }
+
+                        // Doble back para salir
+                        if (!backPressedOnce) {
+
+                            backPressedOnce = true
+
+                            Toast
+                                .makeText(context, "Presione nuevamente para salir", Toast.LENGTH_SHORT)
+                                .show()
+
+                            scope.launch {
+                                delay(2000)
+                                backPressedOnce = false
                             }
-                            else -> false
+
+                            return@onPreviewKeyEvent true
+                        } else {
+                            (context as? Activity)?.finishAffinity()
+                            return@onPreviewKeyEvent true
                         }
                     }
 
@@ -250,7 +281,8 @@ fun SlideShowScreen() {
 
         } else { // Mensaje ejecutado al no haber contenido para reproducir
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize()
+                    .background(Color.DarkGray),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -299,10 +331,16 @@ fun SlideShowScreen() {
                 },
 
                 onForceUsbScan = {
-                    viewModel.forceUsbScan()
+                    scope.launch {
+                        val imported = viewModel.forceUsbScanAndReturnResult()
+                        if (imported) {
+                            externalMenuViewModel.reloadCurrentView()
+                        }
+                    }
                 },
 
                 onClose = {
+                    ignoreNextCenter = true
                     viewModel.closeMenu()
                 },
 
