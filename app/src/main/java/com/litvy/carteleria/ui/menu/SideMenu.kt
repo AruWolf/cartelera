@@ -19,6 +19,7 @@ import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuOverlay
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuState
 import com.litvy.carteleria.ui.navigation.*
+import com.litvy.carteleria.ui.menu.preview.FilePreviewPanel
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -363,6 +364,18 @@ fun SideMenu(
             }
     ) {
 
+        val selectedFile = if (
+            navState.section == FocusSection.SUBMENU_EXTERNAL &&
+            externalState.isInFolder
+        ) {
+            val hasClipboard = externalState.clipboardPath != null
+            val offset = if (hasClipboard) 2 else 1
+
+            externalState.files.getOrNull(
+                externalNavigation.state.fileIndex - offset
+            )
+        } else null
+
         Row {
 
             LazyColumn(
@@ -431,8 +444,16 @@ fun SideMenu(
                         onPlayFolder = onPlayExternalFolder
                     )
 
+
+
                 else -> {}
             }
+
+            if (selectedFile != null) {
+                Spacer(modifier = Modifier.width(24.dp))
+                FilePreviewPanel(selectedFile)
+            }
+
         }
 
         if (contextMenuState.isVisible) {
