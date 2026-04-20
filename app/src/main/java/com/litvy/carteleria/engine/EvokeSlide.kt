@@ -15,11 +15,6 @@ class EvokeSlide(
     private val transition: TvTransition<Slide>,
     private val speed: SlideSpeed
 ) {
-
-    init {
-        require(slides.isNotEmpty()) { "EvokeSlide requires at least one slide" }
-    }
-
     @Composable
     fun Render(
         modifier: Modifier = Modifier,

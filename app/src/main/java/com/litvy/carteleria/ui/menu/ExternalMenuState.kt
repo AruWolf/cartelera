@@ -1,4 +1,4 @@
-package com.litvy.carteleria.ui.menu.external
+package com.litvy.carteleria.ui.menu
 
 import com.litvy.carteleria.domain.external.ExternalFile
 import com.litvy.carteleria.domain.external.ExternalFolder

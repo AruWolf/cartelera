@@ -33,7 +33,7 @@ class AppStorageExternalRepository(
             }
             ?.sortedWith(
                 compareBy<ExternalFile> { it.isHidden }
-                    .thenBy { it.name.lowercase() }
+                    .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
             )
             ?: emptyList()
     }

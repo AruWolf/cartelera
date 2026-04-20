@@ -4,9 +4,11 @@ import android.content.Context
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.litvy.carteleria.content.ContentStorage
 import com.litvy.carteleria.slides.SlideSpeed
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.File
 
 private val Context.dataStore by preferencesDataStore(name = "cartel_prefs")
 
@@ -27,33 +29,43 @@ class CartelPreferences(private val context: Context) {
 
             val type = prefs[SOURCE_TYPE] ?: INTERNAL
             val value = prefs[SOURCE_VALUE] ?: ""
+            val defaultFolder = ContentStorage.defaultFolder(context)
 
             val source = when (type) {
                 EXTERNAL -> ContentSource.External(value)
-                else -> ContentSource.Internal(value)
+                INTERNAL -> {
+                    val migratedFolder = if (value.isBlank()) {
+                        defaultFolder
+                    } else {
+                        File(ContentStorage.ensureRootDirectory(context), value)
+                    }
+                    ContentSource.External(migratedFolder.absolutePath)
+                }
+                else -> ContentSource.External(defaultFolder.absolutePath)
             }
 
             CartelConfig(
                 source = source,
                 animation = prefs[ANIMATION] ?: "fade",
-                speed = SlideSpeed.valueOf(
-                    prefs[SPEED] ?: SlideSpeed.NORMAL.name
+                speed = SlideSpeed.entries.firstOrNull { it.name == prefs[SPEED] } ?: SlideSpeed.NORMAL
                 )
-            )
         }
 
     suspend fun saveConfig(config: CartelConfig) {
         context.dataStore.edit { prefs ->
 
             when (config.source) {
-                is ContentSource.Internal -> {
-                    prefs[SOURCE_TYPE] = INTERNAL
-                    prefs[SOURCE_VALUE] = config.source.folder
-                }
-
                 is ContentSource.External -> {
                     prefs[SOURCE_TYPE] = EXTERNAL
                     prefs[SOURCE_VALUE] = config.source.path
+                }
+
+                is ContentSource.Internal -> {
+                    prefs[SOURCE_TYPE] = EXTERNAL
+                    prefs[SOURCE_VALUE] = File(
+                        ContentStorage.ensureRootDirectory(context),
+                        config.source.folder
+                    ).absolutePath
                 }
             }
 

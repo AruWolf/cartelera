@@ -1,4 +1,4 @@
-package com.litvy.carteleria.ui.menu.external
+package com.litvy.carteleria.ui.menu
 
 import androidx.lifecycle.ViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

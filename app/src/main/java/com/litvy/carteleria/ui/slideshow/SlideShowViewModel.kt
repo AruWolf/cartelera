@@ -7,7 +7,6 @@ import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.ContentSource
 import com.litvy.carteleria.domain.server.CartelServer
 import com.litvy.carteleria.domain.usb.UsbImporter
-import com.litvy.carteleria.slides.AssetSlideProvider
 import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.slides.SlideSpeed
 import com.litvy.carteleria.util.usb.UsbScanResult
@@ -15,12 +14,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import kotlinx.coroutines.flow.update
 import java.io.File
 
 class SlideShowViewModel(
-    private val assetProvider: AssetSlideProvider,
     private val externalProvider: AppStorageSlideProvider,
     private val prefs: CartelPreferences,
     private val server: CartelServer,
@@ -40,32 +37,20 @@ class SlideShowViewModel(
     private fun observePreferences() {
         viewModelScope.launch {
             prefs.preferencesFlow.collect { config ->
-
-                when (config.source) {
-
-                    is ContentSource.Internal -> {
-                        val slides = assetProvider.loadFrom(config.source.folder)
-                        _uiState.value = _uiState.value.copy(
-                            contentMode = ContentMode.INTERNAL,
-                            selectedInternalFolder = config.source.folder,
-                            selectedExternalFolder = null,
-                            slides = slides
-                        )
-                    }
-
-                    is ContentSource.External -> {
-                        val folder = File(config.source.path)
-                        if (folder.exists()) {
-                            val slides = externalProvider.loadFromFolder(folder)
-                            _uiState.value = _uiState.value.copy(
-                                contentMode = ContentMode.EXTERNAL,
-                                selectedExternalFolder = folder,
-                                selectedInternalFolder = null,
-                                slides = slides
-                            )
-                        }
-                    }
+                val folder = when (val source = config.source) {
+                    is ContentSource.External -> File(source.path)
+                    is ContentSource.Internal -> File(source.folder)
                 }
+                val slides = if (folder.exists()) {
+                    externalProvider.loadFromFolder(folder)
+                } else {
+                    emptyList()
+                }
+
+                _uiState.value = _uiState.value.copy(
+                    selectedExternalFolder = folder.takeIf { it.exists() },
+                    slides = slides
+                )
 
                 _uiState.value = _uiState.value.copy(
                     currentAnimation = config.animation,
@@ -75,27 +60,11 @@ class SlideShowViewModel(
         }
     }
 
-    fun selectInternalFolder(folder: String) {
-        val slides = assetProvider.loadFrom(folder)
-
-        _uiState.value = _uiState.value.copy(
-            contentMode = ContentMode.INTERNAL,
-            selectedInternalFolder = folder,
-            selectedExternalFolder = null,
-            slides = slides,
-            currentIndex = 0
-        )
-
-        saveConfig()
-    }
-
     fun selectExternalFolder(folder: File) {
         val slides = externalProvider.loadFromFolder(folder)
 
         _uiState.value = _uiState.value.copy(
-            contentMode = ContentMode.EXTERNAL,
             selectedExternalFolder = folder,
-            selectedInternalFolder = null,
             slides = slides,
             currentIndex = 0
         )
@@ -118,17 +87,11 @@ class SlideShowViewModel(
 
             val state = _uiState.value
 
-            val source = when (state.contentMode) {
-                ContentMode.INTERNAL ->
-                    ContentSource.Internal(state.selectedInternalFolder ?: return@launch)
-
-                ContentMode.EXTERNAL ->
-                    ContentSource.External(state.selectedExternalFolder?.absolutePath ?: return@launch)
-            }
-
             prefs.saveConfig(
                 CartelConfig(
-                    source = source,
+                    source = com.litvy.carteleria.data.ContentSource.External(
+                        state.selectedExternalFolder?.absolutePath ?: return@launch
+                    ),
                     animation = state.currentAnimation,
                     speed = state.slideSpeed
                 )
@@ -205,78 +168,7 @@ class SlideShowViewModel(
 
     // --- USB ---
 
-    fun forceUsbScan() {
-        viewModelScope.launch {
-
-            _uiState.value = _uiState.value.copy(
-                isUsbLoading = true,
-                usbMessage = "🔍 Buscando USB..."
-            )
-
-            when (val result = usbImporter.forceScan()) {
-
-                is UsbScanResult.Imported -> {
-                    _uiState.value = _uiState.value.copy(
-                        usbMessage = "✅ Se importaron ${result.count} archivos",
-                        isUsbLoading = false
-                    )
-                    delay(3000)
-                    clearUsbMessage()
-                    return@launch
-                }
-
-                UsbScanResult.NoChanges -> {
-                    _uiState.value = _uiState.value.copy(
-                        usbMessage = "📁 No hay cambios para importar",
-                        isUsbLoading = false
-                    )
-                    delay(3000)
-                    clearUsbMessage()
-                    return@launch
-                }
-
-                else -> { }
-            }
-
-            _uiState.value = _uiState.value.copy(
-                usbMessage = "🔍 Escaneando vía sistema..."
-            )
-
-            when (val mediaResult = usbImporter.scanViaMediaStore()) {
-
-                is UsbScanResult.Imported -> {
-                    _uiState.value = _uiState.value.copy(
-                        usbMessage = "✅ Se importaron ${mediaResult.count} archivos",
-                        isUsbLoading = false
-                    )
-                    delay(3000)
-                    clearUsbMessage()
-                    return@launch
-                }
-
-                UsbScanResult.NoChanges -> {
-                    _uiState.value = _uiState.value.copy(
-                        usbMessage = "📁 No hay cambios para importar",
-                        isUsbLoading = false
-                    )
-                    delay(3000)
-                    clearUsbMessage()
-                    return@launch
-                }
-
-                else -> {
-                    _uiState.value = _uiState.value.copy(
-                        usbMessage = "⚠️ Este dispositivo no permite acceso directo al USB.\nUtilice la carga por red (QR).",
-                        isUsbLoading = false
-                    )
-                    delay(5000)
-                    clearUsbMessage()
-                }
-            }
-        }
-    }
-
-    private fun clearUsbMessage() {
+        private fun clearUsbMessage() {
         _uiState.value = _uiState.value.copy(usbMessage = null)
     }
 

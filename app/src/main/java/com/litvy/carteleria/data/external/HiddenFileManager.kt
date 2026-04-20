@@ -3,7 +3,7 @@ package com.litvy.carteleria.data.external
 import android.content.Context
 import java.io.File
 
-class HiddenFileManager(private val context: Context) {
+class HiddenFileManager(context: Context) {
 
     private val hiddenFile = File(context.filesDir, "hidden_files.txt")
 
@@ -14,13 +14,11 @@ class HiddenFileManager(private val context: Context) {
     }
 
     fun hide(path: String) {
-        hiddenPaths.add(path)
-        save()
+        if (hiddenPaths.add(path)) save()
     }
 
     fun show(path: String) {
-        hiddenPaths.remove(path)
-        save()
+        if (hiddenPaths.remove(path)) save()
     }
 
     private fun save() {

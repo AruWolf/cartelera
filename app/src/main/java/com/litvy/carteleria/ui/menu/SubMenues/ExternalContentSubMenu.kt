@@ -1,30 +1,32 @@
 package com.litvy.carteleria.ui.menu.SubMenues
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.litvy.carteleria.ui.menu.MenuItemView
-import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
-import com.litvy.carteleria.ui.navigation.*
-import androidx.compose.runtime.getValue
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
+import com.litvy.carteleria.ui.menu.MenuItemView
+import com.litvy.carteleria.ui.navigation.ExternalNavigationController
 
 @Composable
 fun ExternalContentSubMenu(
     viewModel: ExternalMenuViewModel,
     navigation: ExternalNavigationController,
-    isPreviewMode: Boolean,
-    onPlayFolder: (String) -> Unit
+    isPreviewMode: Boolean
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
-
 
     LaunchedEffect(
         navigation.state.folderIndex,
@@ -45,12 +47,10 @@ fun ExternalContentSubMenu(
             .fillMaxHeight()
             .padding(24.dp)
     ) {
-
         if (!state.isInFolder) {
-
             item {
                 MenuItemView(
-                    text = "📱 Cargar contenido (QR)",
+                    text = "\uD83D\uDCF1 Cargar contenido (QR)",
                     selected = !isPreviewMode && navigation.state.folderIndex == 0,
                     onClick = {}
                 )
@@ -58,7 +58,7 @@ fun ExternalContentSubMenu(
 
             item {
                 MenuItemView(
-                    text = "🔄 Actualizar desde USB",
+                    text = "\uD83D\uDD04 Actualizar desde USB",
                     selected = !isPreviewMode && navigation.state.folderIndex == 1,
                     onClick = {}
                 )
@@ -66,37 +66,25 @@ fun ExternalContentSubMenu(
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            items(state.folders.size) { index ->
-
-                val folder = state.folders[index]
+            itemsIndexed(state.folders) { index, folder ->
                 val globalIndex = index + 2
-
-                val isSelected =
-                    !isPreviewMode &&
-                            navigation.state.folderIndex == globalIndex
+                val isSelected = !isPreviewMode && navigation.state.folderIndex == globalIndex
 
                 MenuItemView(
-                    text = if (isSelected)
-                        "▶ ${folder.name}"
-                    else
-                        folder.name,
+                    text = if (isSelected) "\u25B6 ${folder.name}" else folder.name,
                     selected = isSelected,
                     onClick = {}
                 )
             }
-
         } else {
-
             val hasClipboard = state.clipboardPath != null
 
             if (hasClipboard) {
                 item {
+                    val isSelected = !isPreviewMode && navigation.state.fileIndex == 0
                     MenuItemView(
-                        text = if (!isPreviewMode && navigation.state.fileIndex == 0)
-                            "▶ 📋 Pegar aquí"
-                        else
-                            "📋 Pegar aquí",
-                        selected = !isPreviewMode && navigation.state.fileIndex == 0,
+                        text = if (isSelected) "\u25B6 \uD83D\uDCCB Pegar aquí" else "\uD83D\uDCCB Pegar aquí",
+                        selected = isSelected,
                         onClick = {}
                     )
                 }
@@ -107,33 +95,23 @@ fun ExternalContentSubMenu(
             item {
                 MenuItemView(
                     text = "< Volver",
-                    selected = !isPreviewMode &&
-                            navigation.state.fileIndex == backIndex,
+                    selected = !isPreviewMode && navigation.state.fileIndex == backIndex,
                     onClick = {}
                 )
             }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
-            val offset = if (hasClipboard) 2 else 1
-
-            items(state.files.size) { index ->
-
-                val file = state.files[index]
+            itemsIndexed(state.files) { index, file ->
+                val offset = if (hasClipboard) 2 else 1
                 val globalIndex = index + offset
-
-                val isSelected =
-                    !isPreviewMode &&
-                            navigation.state.fileIndex == globalIndex
+                val isSelected = !isPreviewMode && navigation.state.fileIndex == globalIndex
 
                 MenuItemView(
-                    text = file.name.replace("▶ ", ""),
+                    text = file.name,
                     selected = isSelected,
                     isHidden = file.isHidden,
-                    textColor = if (file.isHidden)
-                        Color(0xFFFF5555)
-                    else
-                        Color.White,
+                    textColor = if (file.isHidden) Color(0xFFFF5555) else Color.White,
                     onClick = {}
                 )
             }

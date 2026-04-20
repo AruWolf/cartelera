@@ -1,7 +1,6 @@
 package com.litvy.carteleria.slides
 
 import android.net.Uri
-import android.telecom.VideoProfile.isPaused
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect

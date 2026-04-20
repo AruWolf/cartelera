@@ -6,6 +6,7 @@ import java.io.File
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import android.provider.MediaStore
+import com.litvy.carteleria.content.ContentStorage
 import com.litvy.carteleria.domain.usb.UsbImporter
 
 // Lector de archivos usb --- Lee lo que esté dentro de la carpeta "Carteleria"
@@ -38,8 +39,7 @@ class UsbContentManager(
 
                     carteleriaFound = true
 
-                    val destRoot = File(context.filesDir, "resources")
-                    if (!destRoot.exists()) destRoot.mkdirs()
+                    val destRoot = ContentStorage.ensureRootDirectory(context)
 
                     carteleriaDir.listFiles()?.forEach { sourceFolder ->
 
@@ -81,8 +81,7 @@ class UsbContentManager(
 
         var importedCount = 0
 
-        val destRoot = File(context.filesDir, "resources")
-        if (!destRoot.exists()) destRoot.mkdirs()
+        val destRoot = ContentStorage.ensureRootDirectory(context)
 
         root.listFiles()?.forEach { folder ->
 
@@ -140,8 +139,7 @@ class UsbContentManager(
         ) ?: return@withContext UsbScanResult.NoUsbFound
 
         var importedCount = 0
-        val destRoot = File(context.filesDir, "resources")
-        if (!destRoot.exists()) destRoot.mkdirs()
+        val destRoot = ContentStorage.ensureRootDirectory(context)
 
         cursor.use {
 

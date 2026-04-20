@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicText
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -32,8 +31,6 @@ fun MenuItemView(
     textColor: Color =  Color.White,
     isHidden: Boolean = false
 ) {
-    var focused by remember { mutableStateOf(false) }
-
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -48,7 +45,6 @@ fun MenuItemView(
                 else Modifier
             )
             .onFocusChanged {
-                focused = it.isFocused
                 if (it.isFocused) {
                     onFocus?.invoke()
                 }

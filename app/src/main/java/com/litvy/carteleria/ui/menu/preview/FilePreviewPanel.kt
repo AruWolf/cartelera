@@ -36,6 +36,7 @@ fun FilePreviewPanel(
         val ext = file.name.substringAfterLast('.', "").lowercase()
         val fileObj = File(file.path)
 
+        // TODO: Extraer lógica de filtrado
         if (ext in listOf("png", "jpg", "jpeg", "webp")) {
             ImagePreview(fileObj)
         } else {

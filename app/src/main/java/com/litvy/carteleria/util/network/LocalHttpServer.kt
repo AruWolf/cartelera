@@ -1,6 +1,7 @@
 package com.litvy.carteleria.util.network
 
 import android.content.Context
+import com.litvy.carteleria.content.ContentStorage
 import fi.iki.elonen.NanoHTTPD
 import java.io.File
 import java.io.FileOutputStream
@@ -10,11 +11,7 @@ class LocalHttpServer(
     port: Int = 8080
 ) : NanoHTTPD(port) {
 
-    private val resourcesDir: File by lazy {
-        File(context.filesDir, "resources").apply {
-            if (!exists()) mkdirs()
-        }
-    }
+    private val resourcesDir: File by lazy { ContentStorage.ensureRootDirectory(context) }
 
     override fun serve(session: IHTTPSession): Response {
 

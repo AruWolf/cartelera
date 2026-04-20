@@ -3,9 +3,20 @@ package com.litvy.carteleria.ui.menu
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -14,24 +25,26 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.slides.SlideSpeed
-import com.litvy.carteleria.ui.menu.SubMenues.*
-import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
+import com.litvy.carteleria.ui.menu.SubMenues.AnimationSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.ExternalContentSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.SpeedSubMenu
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuOverlay
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuState
-import com.litvy.carteleria.ui.navigation.*
 import com.litvy.carteleria.ui.menu.preview.FilePreviewPanel
+import com.litvy.carteleria.ui.navigation.ContextAction
+import com.litvy.carteleria.ui.navigation.ContextTarget
+import com.litvy.carteleria.ui.navigation.ExternalNavigationController
+import com.litvy.carteleria.ui.navigation.FocusSection
+import com.litvy.carteleria.ui.navigation.TvNavigationController
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SideMenu(
     currentAnimation: String,
     currentSpeed: SlideSpeed,
-    folders: List<String>,
-    currentFolder: String,
     externalMenuViewModel: ExternalMenuViewModel,
     onAnimationSelected: (String) -> Unit,
     onSpeedSelected: (SlideSpeed) -> Unit,
-    onFolderSelected: (String) -> Unit,
     onPlayExternalFolder: (String) -> Unit,
     onShowQr: () -> Unit,
     onClose: () -> Unit,
@@ -45,12 +58,10 @@ fun SideMenu(
     val externalState by externalMenuViewModel.state.collectAsState()
 
     val containerFocusRequester = remember { FocusRequester() }
-
     var contextMenuState by remember { mutableStateOf(ContextMenuState()) }
 
     val mainMenuItems = listOf(
         "Contenido",
-        "Contenido Externo",
         "Animación",
         "Velocidad",
         "Cerrar"
@@ -61,25 +72,15 @@ fun SideMenu(
     }
 
     val contextOptions = remember(contextMenuState, externalState) {
-
-        val target = contextMenuState.target
-
-        when (target) {
-
+        when (val target = contextMenuState.target) {
             is ContextTarget.FileItem -> {
-
-                val file = externalState.files
-                    .find { it.path == target.path }
-
+                val file = externalState.files.find { it.path == target.path }
                 val visibilityAction =
-                    if (file?.isHidden == true)
-                        ContextAction.Show
-                    else
-                        ContextAction.Hide
+                    if (file?.isHidden == true) ContextAction.Show else ContextAction.Hide
 
                 listOf(
                     ContextAction.Preview,
-                    visibilityAction, // ← segundo lugar
+                    visibilityAction,
                     ContextAction.Copy,
                     ContextAction.Cut,
                     ContextAction.Delete,
@@ -105,23 +106,17 @@ fun SideMenu(
             .focusRequester(containerFocusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
-
                 val native = event.nativeKeyEvent
 
-                if (native.action != KeyEvent.ACTION_DOWN || native.repeatCount > 0)
+                if (native.action != KeyEvent.ACTION_DOWN || native.repeatCount > 0) {
                     return@onPreviewKeyEvent false
+                }
 
-                // ================= CONTEXT MENU =================
                 if (contextMenuState.isVisible) {
-
-                    val target = contextMenuState.target
-
                     when (native.keyCode) {
-
                         KeyEvent.KEYCODE_DPAD_UP -> {
                             contextMenuState = contextMenuState.copy(
-                                selectedIndex = (contextMenuState.selectedIndex - 1)
-                                    .coerceAtLeast(0)
+                                selectedIndex = (contextMenuState.selectedIndex - 1).coerceAtLeast(0)
                             )
                             return@onPreviewKeyEvent true
                         }
@@ -141,15 +136,11 @@ fun SideMenu(
                         }
 
                         KeyEvent.KEYCODE_DPAD_CENTER -> {
-
                             val action = contextOptions.getOrNull(contextMenuState.selectedIndex)
-
                             val target = contextMenuState.target
 
                             if (action != null && target != null) {
-
                                 when (target) {
-
                                     is ContextTarget.Folder -> {
                                         when (action) {
                                             ContextAction.OpenFolder -> {
@@ -163,7 +154,7 @@ fun SideMenu(
                                             ContextAction.Delete ->
                                                 externalMenuViewModel.deleteFolder(target.path)
 
-                                            else -> {}
+                                            else -> Unit
                                         }
                                     }
 
@@ -188,7 +179,7 @@ fun SideMenu(
                                                 onVisibilityChanged()
                                             }
 
-                                            else -> {}
+                                            else -> Unit
                                         }
                                     }
                                 }
@@ -200,44 +191,34 @@ fun SideMenu(
                     }
                 }
 
-                // ================= NAVEGACIÓN ORIGINAL =================
                 when (native.keyCode) {
-
                     KeyEvent.KEYCODE_DPAD_UP -> {
-
                         when (navState.section) {
-
                             FocusSection.MAIN_MENU ->
                                 navigation.moveMainUp()
 
-                            FocusSection.SUBMENU_CONTENT,
                             FocusSection.SUBMENU_ANIMATION,
                             FocusSection.SUBMENU_SPEED ->
                                 navigation.moveSubUp()
 
                             FocusSection.SUBMENU_EXTERNAL -> {
-
-                                if (!externalState.isInFolder)
+                                if (!externalState.isInFolder) {
                                     externalNavigation.moveFolderUp()
-                                else
+                                } else {
                                     externalNavigation.moveFileUp()
+                                }
                             }
 
-                            else -> {}
+                            else -> Unit
                         }
 
                         true
                     }
 
                     KeyEvent.KEYCODE_DPAD_DOWN -> {
-
                         when (navState.section) {
-
                             FocusSection.MAIN_MENU ->
                                 navigation.moveMainDown(mainMenuItems.lastIndex)
-
-                            FocusSection.SUBMENU_CONTENT ->
-                                navigation.moveSubDown(folders.lastIndex)
 
                             FocusSection.SUBMENU_ANIMATION ->
                                 navigation.moveSubDown(6)
@@ -246,20 +227,17 @@ fun SideMenu(
                                 navigation.moveSubDown(SlideSpeed.entries.lastIndex)
 
                             FocusSection.SUBMENU_EXTERNAL -> {
-
                                 if (!externalState.isInFolder) {
                                     val max = externalState.folders.size + 1
                                     externalNavigation.moveFolderDown(max)
                                 } else {
-                                    val extra =
-                                        if (externalState.clipboardPath != null) 1 else 0
-                                    val total =
-                                        externalState.files.size + extra
+                                    val extra = if (externalState.clipboardPath != null) 1 else 0
+                                    val total = externalState.files.size + extra
                                     externalNavigation.moveFileDown(total)
                                 }
                             }
 
-                            else -> {}
+                            else -> Unit
                         }
 
                         true
@@ -267,114 +245,82 @@ fun SideMenu(
 
                     KeyEvent.KEYCODE_DPAD_CENTER,
                     KeyEvent.KEYCODE_DPAD_RIGHT -> {
-
                         when (navState.section) {
-
                             FocusSection.MAIN_MENU -> {
-
                                 when (navState.mainIndex) {
-                                    0 -> navigation.enterSubMenu(FocusSection.SUBMENU_CONTENT)
-                                    1 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
-                                    2 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
-                                    3 -> navigation.enterSubMenu(FocusSection.SUBMENU_SPEED)
-                                    4 -> onClose()
+                                    0 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
+                                    1 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
+                                    2 -> navigation.enterSubMenu(FocusSection.SUBMENU_SPEED)
+                                    3 -> onClose()
                                 }
                             }
 
                             FocusSection.SUBMENU_EXTERNAL -> {
-
                                 if (!externalState.isInFolder) {
-
-                                    val index =
-                                        externalNavigation.state.folderIndex
+                                    val index = externalNavigation.state.folderIndex
 
                                     when (index) {
-
                                         0 -> onShowQr()
                                         1 -> onForceUsbScan()
 
                                         else -> {
-                                            val folder =
-                                                externalState.folders
-                                                    .getOrNull(index - 2)
-
+                                            val folder = externalState.folders.getOrNull(index - 2)
                                             folder?.let {
-                                                contextMenuState =
-                                                    ContextMenuState(
-                                                        isVisible = true,
-                                                        target = ContextTarget.Folder(
-                                                            it.name,
-                                                            it.path
-                                                        )
-                                                    )
+                                                contextMenuState = ContextMenuState(
+                                                    isVisible = true,
+                                                    target = ContextTarget.Folder(it.name, it.path)
+                                                )
                                             }
                                         }
                                     }
-
                                 } else {
-
-                                    val fileIndex =
-                                        externalNavigation.state.fileIndex
-
-                                    val hasClipboard =
-                                        externalState.clipboardPath != null
+                                    val fileIndex = externalNavigation.state.fileIndex
+                                    val hasClipboard = externalState.clipboardPath != null
 
                                     if (hasClipboard && fileIndex == 0) {
                                         externalMenuViewModel.paste()
                                     } else {
-
-                                        val backIndex =
-                                            if (hasClipboard) 1 else 0
+                                        val backIndex = if (hasClipboard) 1 else 0
 
                                         if (fileIndex == backIndex) {
                                             externalMenuViewModel.goBack()
                                             externalNavigation.resetFileIndex()
                                         } else {
-
-                                            val offset =
-                                                if (hasClipboard) 2 else 1
-
-                                            val file =
-                                                externalState.files
-                                                    .getOrNull(fileIndex - offset)
+                                            val offset = if (hasClipboard) 2 else 1
+                                            val file = externalState.files.getOrNull(fileIndex - offset)
 
                                             file?.let {
-                                                contextMenuState =
-                                                    ContextMenuState(
-                                                        isVisible = true,
-                                                        target = ContextTarget.FileItem(
-                                                            it.name,
-                                                            it.path
-                                                        )
-                                                    )
+                                                contextMenuState = ContextMenuState(
+                                                    isVisible = true,
+                                                    target = ContextTarget.FileItem(it.name, it.path)
+                                                )
                                             }
                                         }
                                     }
                                 }
                             }
 
-                            FocusSection.SUBMENU_CONTENT -> {
-                                val selected =
-                                    folders.getOrNull(navState.subIndex)
-                                selected?.let { onFolderSelected(it) }
-                            }
-
                             FocusSection.SUBMENU_ANIMATION -> {
                                 val animations = listOf(
-                                    "random", "fade", "scale",
-                                    "left", "up", "right", "down"
+                                    "random",
+                                    "fade",
+                                    "scale",
+                                    "left",
+                                    "up",
+                                    "right",
+                                    "down"
                                 )
+
                                 animations.getOrNull(navState.subIndex)
                                     ?.let { onAnimationSelected(it) }
                             }
 
                             FocusSection.SUBMENU_SPEED -> {
-                                SlideSpeed.entries
-                                    .getOrNull(navState.subIndex)
+                                SlideSpeed.entries.getOrNull(navState.subIndex)
                                     ?.let { onSpeedSelected(it) }
                             }
 
-                            else -> {}
+                            else -> Unit
                         }
 
                         true
@@ -382,11 +328,8 @@ fun SideMenu(
 
                     KeyEvent.KEYCODE_BACK,
                     KeyEvent.KEYCODE_DPAD_LEFT -> {
-
                         when (navState.section) {
-
                             FocusSection.SUBMENU_EXTERNAL -> {
-
                                 if (externalState.isInFolder) {
                                     externalMenuViewModel.goBack()
                                     externalNavigation.resetFileIndex()
@@ -396,10 +339,11 @@ fun SideMenu(
                             }
 
                             else -> {
-                                if (navState.section != FocusSection.MAIN_MENU)
+                                if (navState.section != FocusSection.MAIN_MENU) {
                                     navigation.backToMain()
-                                else
+                                } else {
                                     onClose()
+                                }
                             }
                         }
 
@@ -410,32 +354,24 @@ fun SideMenu(
                 }
             }
     ) {
-
-        val selectedFile = if (
-            navState.section == FocusSection.SUBMENU_EXTERNAL &&
-            externalState.isInFolder
-        ) {
-            val hasClipboard = externalState.clipboardPath != null
-            val offset = if (hasClipboard) 2 else 1
-
-            externalState.files.getOrNull(
-                externalNavigation.state.fileIndex - offset
-            )
-        } else null
+        val selectedFile =
+            if (navState.section == FocusSection.SUBMENU_EXTERNAL && externalState.isInFolder) {
+                val hasClipboard = externalState.clipboardPath != null
+                val offset = if (hasClipboard) 2 else 1
+                externalState.files.getOrNull(externalNavigation.state.fileIndex - offset)
+            } else {
+                null
+            }
 
         Row {
-
             LazyColumn(
                 modifier = Modifier
                     .width(260.dp)
                     .padding(24.dp)
             ) {
-
                 items(mainMenuItems.size) { index ->
-
                     val isSelected =
-                        navState.section == FocusSection.MAIN_MENU &&
-                                navState.mainIndex == index
+                        navState.section == FocusSection.MAIN_MENU && navState.mainIndex == index
 
                     MenuItemView(
                         text = mainMenuItems[index],
@@ -445,41 +381,29 @@ fun SideMenu(
                 }
             }
 
-            val isPreviewMode =
-                navState.section == FocusSection.MAIN_MENU
+            val isPreviewMode = navState.section == FocusSection.MAIN_MENU
 
-            val sectionToRender =
-                if (isPreviewMode) {
-                    when (navState.mainIndex) {
-                        0 -> FocusSection.SUBMENU_CONTENT
-                        1 -> FocusSection.SUBMENU_EXTERNAL
-                        2 -> FocusSection.SUBMENU_ANIMATION
-                        3 -> FocusSection.SUBMENU_SPEED
-                        else -> null
-                    }
-                } else navState.section
+            val sectionToRender = if (isPreviewMode) {
+                when (navState.mainIndex) {
+                    0 -> FocusSection.SUBMENU_EXTERNAL
+                    1 -> FocusSection.SUBMENU_ANIMATION
+                    2 -> FocusSection.SUBMENU_SPEED
+                    else -> null
+                }
+            } else {
+                navState.section
+            }
 
             when (sectionToRender) {
-
                 FocusSection.SUBMENU_ANIMATION ->
                     AnimationSubMenu(
-                        selectedIndex =
-                            if (isPreviewMode) -1 else navState.subIndex,
+                        selectedIndex = if (isPreviewMode) -1 else navState.subIndex,
                         activeAnimation = currentAnimation
-                    )
-
-                FocusSection.SUBMENU_CONTENT ->
-                    ContentSubMenu(
-                        folders = folders,
-                        selectedIndex =
-                            if (isPreviewMode) -1 else navState.subIndex,
-                        activeFolder = currentFolder
                     )
 
                 FocusSection.SUBMENU_SPEED ->
                     SpeedSubMenu(
-                        selectedIndex =
-                            if (isPreviewMode) -1 else navState.subIndex,
+                        selectedIndex = if (isPreviewMode) -1 else navState.subIndex,
                         activeSpeed = currentSpeed
                     )
 
@@ -487,20 +411,16 @@ fun SideMenu(
                     ExternalContentSubMenu(
                         viewModel = externalMenuViewModel,
                         navigation = externalNavigation,
-                        isPreviewMode = isPreviewMode,
-                        onPlayFolder = onPlayExternalFolder
+                        isPreviewMode = isPreviewMode
                     )
 
-
-
-                else -> {}
+                else -> Unit
             }
 
             if (selectedFile != null) {
                 Spacer(modifier = Modifier.width(24.dp))
                 FilePreviewPanel(selectedFile)
             }
-
         }
 
         if (contextMenuState.isVisible) {
@@ -510,6 +430,5 @@ fun SideMenu(
                 onActionSelected = {}
             )
         }
-
     }
 }

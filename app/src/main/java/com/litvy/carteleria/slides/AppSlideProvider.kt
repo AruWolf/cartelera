@@ -1,6 +1,7 @@
 package com.litvy.carteleria.slides
 
 import android.content.Context
+import com.litvy.carteleria.content.ContentStorage
 import java.io.File
 import com.litvy.carteleria.data.external.HiddenFileManager
 
@@ -15,11 +16,7 @@ class AppStorageSlideProvider(
     private val videoExtensions = listOf("mp4", "webm", "mkv")
 
     // Direccion de la carpeta de recursos
-    private val resourcesDir: File by lazy {
-        File(context.filesDir, "resources").apply {
-            if (!exists()) mkdirs()
-        }
-    }
+    private val resourcesDir: File by lazy { ContentStorage.ensureRootDirectory(context) }
 
     // LISTADO DE CARPETAS
 
@@ -63,17 +60,6 @@ class AppStorageSlideProvider(
     }
 
     // MODIFICACIÓN DE CARPETAS
-
-    //TODO: Implementar creación de carpetas. Concepto: Opción " + Crear Carpeta " en menú de contenido externo, por encima de todas las carpetas.
-    fun createFolder(name: String): Boolean {
-        if (name.isBlank()) return false
-
-        val newFolder = File(resourcesDir, name.trim())
-        if (newFolder.exists()) return false
-
-        return newFolder.mkdirs()
-    }
-
     // Eliminar carpeta
     fun deleteFolder(folder: File): Boolean {
         if (!folder.exists() || !folder.isDirectory) return false

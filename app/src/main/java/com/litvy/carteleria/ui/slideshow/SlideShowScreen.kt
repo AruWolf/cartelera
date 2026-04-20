@@ -7,10 +7,25 @@ import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -22,40 +37,39 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.data.CartelPreferences
+import com.litvy.carteleria.data.external.AppStorageExternalRepository
+import com.litvy.carteleria.data.external.HiddenFileManager
+import com.litvy.carteleria.domain.external.usecase.CopyExternalFileUseCase
+import com.litvy.carteleria.domain.external.usecase.DeleteExternalFileUseCase
+import com.litvy.carteleria.domain.external.usecase.DeleteExternalFolderUseCase
+import com.litvy.carteleria.domain.external.usecase.ExternalContentUseCases
+import com.litvy.carteleria.domain.external.usecase.HideExternalFileUseCase
+import com.litvy.carteleria.domain.external.usecase.ListExternalFilesUseCase
+import com.litvy.carteleria.domain.external.usecase.ListExternalFoldersUseCase
+import com.litvy.carteleria.domain.external.usecase.MoveExternalFileUseCase
+import com.litvy.carteleria.domain.external.usecase.ShowExternalFileUseCase
 import com.litvy.carteleria.engine.EvokeSlide
-import com.litvy.carteleria.slides.*
+import com.litvy.carteleria.slides.AppStorageSlideProvider
+import com.litvy.carteleria.slides.Slide
+import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.SideMenu
+import com.litvy.carteleria.util.network.LocalCartelServer
 import com.litvy.carteleria.util.qr.generateQrCode
 import com.litvy.carteleria.util.usb.UsbContentManager
 import kotlinx.coroutines.delay
-import com.litvy.carteleria.util.network.LocalCartelServer
-import com.litvy.carteleria.data.external.AppStorageExternalRepository
-import com.litvy.carteleria.data.external.HiddenFileManager
-import com.litvy.carteleria.domain.external.usecase.*
-import com.litvy.carteleria.ui.menu.external.ExternalMenuViewModel
 import kotlinx.coroutines.launch
 import java.io.File
-
-
-enum class ContentMode {
-    INTERNAL,
-    EXTERNAL
-}
 
 @Composable
 fun SlideShowScreen() {
 
-    // --- View Model ---
     val context = LocalContext.current
     var backPressedOnce by remember { mutableStateOf(false) }
 
-    val hiddenManager = remember {
-        HiddenFileManager(context)
-    }
+    val hiddenManager = remember { HiddenFileManager(context) }
 
     val viewModel = remember {
         SlideShowViewModel(
-            assetProvider = AssetSlideProvider(context),
             externalProvider = AppStorageSlideProvider(context, hiddenManager),
             prefs = CartelPreferences(context),
             server = LocalCartelServer(context),
@@ -63,22 +77,16 @@ fun SlideShowScreen() {
         )
     }
     val state by viewModel.uiState.collectAsState()
-
-    // URL servidor LAN
     val serverUrl by viewModel.serverUrl.collectAsState()
 
-    val focusRequester = remember { FocusRequester() } // Solicitud de foco/atención en pantalla
-
+    val focusRequester = remember { FocusRequester() }
     var showQr by remember { mutableStateOf(false) }
-
     val scope = rememberCoroutineScope()
 
-    // --- PROVIDERS --- (importan las imagenes)
-    val assetProvider = remember { AssetSlideProvider(context) }
     val externalProvider = remember {
         AppStorageSlideProvider(context, hiddenManager)
     }
-    // --- ANIMACIONES ---
+
     val transition = remember(state.currentAnimation) {
         when (state.currentAnimation) {
             "fade" -> TvTransitions.fade<Slide>()
@@ -92,7 +100,6 @@ fun SlideShowScreen() {
         }
     }
 
-    // Parametros de reproducción(slides, animacion, velocidad)
     val engine = remember(state.slides, transition, state.slideSpeed) {
         if (state.slides.isNotEmpty()) {
             EvokeSlide(
@@ -100,7 +107,9 @@ fun SlideShowScreen() {
                 transition = transition,
                 speed = state.slideSpeed
             )
-        } else null
+        } else {
+            null
+        }
     }
 
     val externalRepository = remember {
@@ -129,20 +138,17 @@ fun SlideShowScreen() {
 
     var ignoreNextCenter by remember { mutableStateOf(false) }
 
-    // Arranque de servidor LAN - Al iniciar la pantalla
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
         viewModel.startServer()
     }
 
-    // Detención de servidor LAN - Al salir de la pantalla
     DisposableEffect(Unit) {
         onDispose {
             viewModel.stopServer()
         }
     }
 
-    // Ocultar indicador, numerico de slide, luego de 5 segundos
     LaunchedEffect(state.showSlideIndicator) {
         if (state.showSlideIndicator) {
             delay(5000)
@@ -150,9 +156,6 @@ fun SlideShowScreen() {
         }
     }
 
-    // --- UI ---
-
-    // Contenedor principal de la pantalla
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -163,16 +166,16 @@ fun SlideShowScreen() {
 
                 if (state.menuVisible) return@onPreviewKeyEvent false
 
-                if (!state.menuVisible && ignoreNextCenter) {
+                if (ignoreNextCenter) {
                     ignoreNextCenter = false
                     return@onPreviewKeyEvent true
                 }
 
-                if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP)
+                if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP) {
                     return@onPreviewKeyEvent false
+                }
 
                 when (event.nativeKeyEvent.keyCode) {
-
                     KeyEvent.KEYCODE_DPAD_RIGHT -> {
                         viewModel.nextSlide()
                         true
@@ -195,53 +198,44 @@ fun SlideShowScreen() {
                     }
 
                     KeyEvent.KEYCODE_BACK -> {
-
-                        // Si está abierto el QR, cerrarlo primero
                         if (showQr) {
                             showQr = false
                             return@onPreviewKeyEvent true
                         }
 
-                        // Doble back para salir
                         if (!backPressedOnce) {
-
                             backPressedOnce = true
 
-                            Toast
-                                .makeText(context, "Presione nuevamente para salir", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(
+                                context,
+                                "Presione nuevamente para salir",
+                                Toast.LENGTH_SHORT
+                            ).show()
 
                             scope.launch {
                                 delay(2000)
                                 backPressedOnce = false
                             }
 
-                            return@onPreviewKeyEvent true
+                            true
                         } else {
                             (context as? Activity)?.finishAffinity()
-                            return@onPreviewKeyEvent true
+                            true
                         }
                     }
 
                     else -> false
                 }
             }
-    )
-    {
-
-        // Renderización de Slides
+    ) {
         if (state.slides.isNotEmpty() && engine != null) {
-
             engine.Render(
                 modifier = Modifier.fillMaxSize(),
                 currentIndex = state.currentIndex,
                 isPaused = state.isPaused,
-                onAutoNext = {
-                    viewModel.autoNext()
-                }
+                onAutoNext = { viewModel.autoNext() }
             )
 
-            // Indicador temporal (se activa al navegar con el control)
             if (state.showSlideIndicator) {
                 Box(
                     modifier = Modifier
@@ -260,7 +254,6 @@ fun SlideShowScreen() {
                 }
             }
 
-            // Mensaje al pausar (Se ejecuta al pausar la reproducción)
             if (state.isPaused) {
                 Box(
                     modifier = Modifier
@@ -278,10 +271,10 @@ fun SlideShowScreen() {
                     )
                 }
             }
-
-        } else { // Mensaje ejecutado al no haber contenido para reproducir
+        } else {
             Box(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxSize()
                     .background(Color.DarkGray),
                 contentAlignment = Alignment.Center
             ) {
@@ -298,38 +291,25 @@ fun SlideShowScreen() {
             }
         }
 
-        // Menu lateral
         if (state.menuVisible) {
             SideMenu(
                 currentAnimation = state.currentAnimation,
                 currentSpeed = state.slideSpeed,
-                folders = assetProvider.listFolders(),
-                currentFolder = state.selectedInternalFolder ?: "",
                 externalMenuViewModel = externalMenuViewModel,
-
-                onAnimationSelected = {
-                    viewModel.changeAnimation(it)
-                },
-
-                onSpeedSelected = {
-                    viewModel.changeSpeed(it)
-                },
-
-                onFolderSelected = {
-                    viewModel.selectInternalFolder(it)
-                    viewModel.toggleMenu()
-                },
-
+                onAnimationSelected = { viewModel.changeAnimation(it) },
+                onSpeedSelected = { viewModel.changeSpeed(it) },
                 onPlayExternalFolder = { path ->
                     viewModel.selectExternalFolder(File(path))
                     viewModel.toggleMenu()
                 },
-
                 onShowQr = {
                     showQr = true
                     viewModel.toggleMenu()
                 },
-
+                onClose = {
+                    ignoreNextCenter = true
+                    viewModel.closeMenu()
+                },
                 onForceUsbScan = {
                     scope.launch {
                         val imported = viewModel.forceUsbScanAndReturnResult()
@@ -338,12 +318,6 @@ fun SlideShowScreen() {
                         }
                     }
                 },
-
-                onClose = {
-                    ignoreNextCenter = true
-                    viewModel.closeMenu()
-                },
-
                 onVisibilityChanged = {
                     viewModel.reloadExternalFolderIfSelected()
                 }
@@ -351,7 +325,6 @@ fun SlideShowScreen() {
         }
 
         if (showQr && serverUrl.isNotEmpty()) {
-
             val qrBitmap: Bitmap = remember(serverUrl) {
                 generateQrCode(serverUrl)
             }
@@ -372,9 +345,8 @@ fun SlideShowScreen() {
                         .padding(16.dp)
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
                         Text(
-                            text = "Escaneá para cargar contenido externo",
+                            text = "Escaneá para cargar contenido",
                             color = Color.White
                         )
 
@@ -397,12 +369,9 @@ fun SlideShowScreen() {
             }
         }
 
-        // Mensaje de lectura de usb
         state.usbMessage?.let { message ->
-
             Box(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.TopEnd
             ) {
                 Box(
@@ -423,5 +392,3 @@ fun SlideShowScreen() {
         }
     }
 }
-
-
