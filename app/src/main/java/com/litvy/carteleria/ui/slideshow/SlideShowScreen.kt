@@ -45,6 +45,7 @@ import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.external.AppStorageExternalRepository
 import com.litvy.carteleria.data.external.HiddenFileManager
+import com.litvy.carteleria.data.external.ImageDurationManager
 import com.litvy.carteleria.domain.external.usecase.CopyExternalFileUseCase
 import com.litvy.carteleria.domain.external.usecase.DeleteExternalFileUseCase
 import com.litvy.carteleria.domain.external.usecase.DeleteExternalFolderUseCase
@@ -76,10 +77,11 @@ fun SlideShowScreen() {
     var backPressedOnce by remember { mutableStateOf(false) }
 
     val hiddenManager = remember { HiddenFileManager(context) }
+    val imageDurationManager = remember { ImageDurationManager(context) }
 
     val viewModel = remember {
         SlideShowViewModel(
-            externalProvider = AppStorageSlideProvider(context, hiddenManager),
+            externalProvider = AppStorageSlideProvider(context, hiddenManager, imageDurationManager),
             prefs = CartelPreferences(context),
             server = LocalCartelServer(context),
             usbImporter = UsbContentManager(context)
@@ -94,7 +96,7 @@ fun SlideShowScreen() {
     var isFolderLoading by remember { mutableStateOf(false) }
 
     val externalProvider = remember {
-        AppStorageSlideProvider(context, hiddenManager)
+        AppStorageSlideProvider(context, hiddenManager, imageDurationManager)
     }
 
     val transition = remember(state.currentAnimation) {
@@ -110,12 +112,12 @@ fun SlideShowScreen() {
         }
     }
 
-    val engine = remember(state.slides, transition, state.slideSpeed) {
+    val engine = remember(state.slides, transition, state.globalImageDurationMs) {
         if (state.slides.isNotEmpty()) {
             EvokeSlide(
                 slides = state.slides,
                 transition = transition,
-                speed = state.slideSpeed
+                globalImageDurationMs = state.globalImageDurationMs
             )
         } else {
             null
@@ -125,7 +127,8 @@ fun SlideShowScreen() {
     val externalRepository = remember {
         AppStorageExternalRepository(
             provider = externalProvider,
-            hiddenManager = hiddenManager
+            hiddenManager = hiddenManager,
+            durationManager = imageDurationManager
         )
     }
 
@@ -317,10 +320,26 @@ fun SlideShowScreen() {
         if (state.menuVisible) {
             SideMenu(
                 currentAnimation = state.currentAnimation,
-                currentSpeed = state.slideSpeed,
+                currentGlobalImageDurationMs = state.globalImageDurationMs,
                 externalMenuViewModel = externalMenuViewModel,
                 onAnimationSelected = { viewModel.changeAnimation(it) },
-                onSpeedSelected = { viewModel.changeSpeed(it) },
+                onGlobalImageDurationSelected = { viewModel.changeGlobalImageDuration(it) },
+                onImageDurationSelected = { path, durationMs ->
+                    viewModel.setImageCustomDuration(path, durationMs)
+                    externalMenuViewModel.reloadCurrentView()
+                },
+                onUseGlobalImageDuration = { path ->
+                    viewModel.clearImageCustomDuration(path)
+                    externalMenuViewModel.reloadCurrentView()
+                },
+                onUseGlobalDurationForFolder = { path ->
+                    viewModel.clearImageDurationsInFolder(path)
+                    externalMenuViewModel.reloadCurrentView()
+                },
+                onUseGlobalDurationForAllImages = {
+                    viewModel.clearAllImageDurations()
+                    externalMenuViewModel.reloadCurrentView()
+                },
                 onPlayExternalFolder = { path ->
                     viewModel.toggleMenu()
                     scope.launch {

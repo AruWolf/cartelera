@@ -8,7 +8,7 @@ import com.litvy.carteleria.data.ContentSource
 import com.litvy.carteleria.domain.server.CartelServer
 import com.litvy.carteleria.domain.usb.UsbImporter
 import com.litvy.carteleria.slides.AppStorageSlideProvider
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.slides.ImageSlideDurations
 import com.litvy.carteleria.util.usb.UsbScanResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +54,7 @@ class SlideShowViewModel(
 
                 _uiState.value = _uiState.value.copy(
                     currentAnimation = config.animation,
-                    slideSpeed = config.speed
+                    globalImageDurationMs = config.globalImageDurationMs
                 )
             }
         }
@@ -77,9 +77,31 @@ class SlideShowViewModel(
         saveConfig()
     }
 
-    fun changeSpeed(speed: SlideSpeed) {
-        _uiState.value = _uiState.value.copy(slideSpeed = speed)
+    fun changeGlobalImageDuration(durationMs: Long) {
+        if (!ImageSlideDurations.isAllowed(durationMs)) return
+        _uiState.value = _uiState.value.copy(globalImageDurationMs = durationMs)
         saveConfig()
+    }
+
+    fun setImageCustomDuration(path: String, durationMs: Long) {
+        if (!ImageSlideDurations.isAllowed(durationMs)) return
+        externalProvider.setImageDuration(File(path), durationMs)
+        reloadExternalFolderPreservingCurrentIndex()
+    }
+
+    fun clearImageCustomDuration(path: String) {
+        externalProvider.clearImageDuration(File(path))
+        reloadExternalFolderPreservingCurrentIndex()
+    }
+
+    fun clearImageDurationsInFolder(path: String) {
+        externalProvider.clearImageDurationsInFolder(File(path))
+        reloadExternalFolderPreservingCurrentIndex()
+    }
+
+    fun clearAllImageDurations() {
+        externalProvider.clearAllImageDurations()
+        reloadExternalFolderPreservingCurrentIndex()
     }
 
     private fun saveConfig() {
@@ -93,7 +115,7 @@ class SlideShowViewModel(
                         state.selectedExternalFolder?.absolutePath ?: return@launch
                     ),
                     animation = state.currentAnimation,
-                    speed = state.slideSpeed
+                    globalImageDurationMs = state.globalImageDurationMs
                 )
             )
         }
@@ -189,6 +211,17 @@ class SlideShowViewModel(
         _uiState.value = _uiState.value.copy(
             slides = slides,
             currentIndex = 0
+        )
+    }
+
+    private fun reloadExternalFolderPreservingCurrentIndex() {
+        val currentFolder = _uiState.value.selectedExternalFolder ?: return
+        val state = _uiState.value
+        val slides = externalProvider.loadFromFolder(currentFolder)
+
+        _uiState.value = state.copy(
+            slides = slides,
+            currentIndex = state.currentIndex.coerceAtMost(slides.lastIndex.coerceAtLeast(0))
         )
     }
 

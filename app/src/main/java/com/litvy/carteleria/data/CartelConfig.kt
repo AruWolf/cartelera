@@ -1,11 +1,9 @@
 package com.litvy.carteleria.data
 
-import com.litvy.carteleria.slides.SlideSpeed
-
 data class CartelConfig(
     val source: ContentSource,
     val animation: String,
-    val speed: SlideSpeed
+    val globalImageDurationMs: Long
 )
 
 sealed class ContentSource {

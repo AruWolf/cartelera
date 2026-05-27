@@ -13,9 +13,10 @@ import java.io.File
 class ExternalImageSlide(
     override val id: String,
     val file: File,
-    override val durationMs: Long,
+    override val customDurationMs: Long? = null,
     override val transitionKey: String?
 ) : Slide {
+    override val durationMs: Long? = null
 
     @Composable
     override fun Render(

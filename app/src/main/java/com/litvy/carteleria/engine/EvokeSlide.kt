@@ -6,14 +6,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.litvy.carteleria.animations.TvTransition
+import com.litvy.carteleria.slides.ExternalImageSlide
 import com.litvy.carteleria.slides.Slide
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.slides.resolveImageSlideDuration
 import kotlinx.coroutines.delay
 
 class EvokeSlide(
     private val slides: List<Slide>,
     private val transition: TvTransition<Slide>,
-    private val speed: SlideSpeed
+    private val globalImageDurationMs: Long
 ) {
     @Composable
     fun Render(
@@ -26,14 +27,12 @@ class EvokeSlide(
         if (slides.isEmpty() || currentIndex !in slides.indices) return
         val currentSlide = slides[currentIndex]
 
-        LaunchedEffect(currentIndex, isPaused, speed) {
+        LaunchedEffect(currentIndex, isPaused, globalImageDurationMs, currentSlide.customDurationMs) {
 
             if (isPaused) return@LaunchedEffect
 
-            val duration = currentSlide.durationMs
-
-            if (duration != null) {
-                delay((duration * speed.multiplier).toLong())
+            if (currentSlide is ExternalImageSlide) {
+                delay(resolveImageSlideDuration(currentSlide, globalImageDurationMs))
                 onAutoNext()
             }
         }

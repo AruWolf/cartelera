@@ -1,14 +1,14 @@
 package com.litvy.carteleria.ui.slideshow
 
 import com.litvy.carteleria.slides.Slide
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.slides.ImageSlideDurations
 import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import java.io.File
 
 data class SlideShowUiState(
     val selectedExternalFolder: File? = null,
     val currentAnimation: String = "fade",
-    val slideSpeed: SlideSpeed = SlideSpeed.NORMAL,
+    val globalImageDurationMs: Long = ImageSlideDurations.DEFAULT_GLOBAL_DURATION_MS,
     val slides: List<Slide> = emptyList(),
     val isPaused: Boolean = false,
     val currentIndex: Int = 0,

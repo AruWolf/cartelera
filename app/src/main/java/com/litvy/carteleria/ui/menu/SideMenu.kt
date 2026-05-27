@@ -1,6 +1,7 @@
 package com.litvy.carteleria.ui.menu
 
 import android.view.KeyEvent
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
@@ -23,11 +24,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.litvy.carteleria.slides.SlideSpeed
 import com.litvy.carteleria.ui.menu.SubMenues.AnimationSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.DurationSubMenu
 import com.litvy.carteleria.ui.menu.SubMenues.ExternalContentSubMenu
-import com.litvy.carteleria.ui.menu.SubMenues.SpeedSubMenu
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuOverlay
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuState
 import com.litvy.carteleria.ui.menu.preview.FilePreviewPanel
@@ -42,10 +43,14 @@ import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 @Composable
 fun SideMenu(
     currentAnimation: String,
-    currentSpeed: SlideSpeed,
+    currentGlobalImageDurationMs: Long,
     externalMenuViewModel: ExternalMenuViewModel,
     onAnimationSelected: (String) -> Unit,
-    onSpeedSelected: (SlideSpeed) -> Unit,
+    onGlobalImageDurationSelected: (Long) -> Unit,
+    onImageDurationSelected: (String, Long) -> Unit,
+    onUseGlobalImageDuration: (String) -> Unit,
+    onUseGlobalDurationForFolder: (String) -> Unit,
+    onUseGlobalDurationForAllImages: () -> Unit,
     onPlayExternalFolder: (String) -> Unit,
     onShowQr: () -> Unit,
     onClose: () -> Unit,
@@ -53,6 +58,7 @@ fun SideMenu(
     onVisibilityChanged: () -> Unit
 ) {
 
+    val context = LocalContext.current
     val navigation = remember { TvNavigationController() }
     val navState = navigation.state
     val externalNavigation = remember { ExternalNavigationController() }
@@ -60,11 +66,16 @@ fun SideMenu(
 
     val containerFocusRequester = remember { FocusRequester() }
     var contextMenuState by remember { mutableStateOf(ContextMenuState()) }
+    var imageDurationTargetPath by remember { mutableStateOf<String?>(null) }
+    var imageDurationInitialMs by remember { mutableStateOf<Long?>(null) }
+    var showGlobalDurationDialog by remember { mutableStateOf(false) }
+    var confirmAllDurations by remember { mutableStateOf(false) }
+    var confirmFolderDurationPath by remember { mutableStateOf<String?>(null) }
 
     val mainMenuItems = listOf(
         "Contenido",
         "Animación",
-        "Velocidad",
+        "Duraci\u00f3n",
         "Cerrar"
     )
 
@@ -79,19 +90,21 @@ fun SideMenu(
                 val visibilityAction =
                     if (file?.isHidden == true) ContextAction.Show else ContextAction.Hide
 
-                listOf(
-                    ContextAction.Preview,
-                    visibilityAction,
-                    ContextAction.Copy,
-                    ContextAction.Cut,
-                    ContextAction.Delete,
-                    ContextAction.Cancel
-                )
+                buildList {
+                    add(ContextAction.Preview)
+                    if (file?.isImage == true) add(ContextAction.Duration)
+                    add(visibilityAction)
+                    add(ContextAction.Copy)
+                    add(ContextAction.Cut)
+                    add(ContextAction.Delete)
+                    add(ContextAction.Cancel)
+                }
             }
 
             is ContextTarget.Folder -> listOf(
                 ContextAction.OpenFolder,
                 ContextAction.PlayFolder,
+                ContextAction.ApplyGlobalDuration,
                 ContextAction.Delete,
                 ContextAction.Cancel
             )
@@ -140,6 +153,9 @@ fun SideMenu(
                                     ContextAction.PlayFolder ->
                                         onPlayExternalFolder(target.path)
 
+                                    ContextAction.ApplyGlobalDuration ->
+                                        confirmFolderDurationPath = target.path
+
                                     ContextAction.Delete ->
                                         externalMenuViewModel.deleteFolder(target.path)
 
@@ -168,6 +184,14 @@ fun SideMenu(
                                         onVisibilityChanged()
                                     }
 
+                                    ContextAction.Duration -> {
+                                        val file = externalState.files.find { it.path == target.path }
+                                        if (file?.isImage == true) {
+                                            imageDurationTargetPath = target.path
+                                            imageDurationInitialMs = file.customDurationMs
+                                        }
+                                    }
+
                                     else -> Unit
                                 }
                             }
@@ -187,7 +211,7 @@ fun SideMenu(
                         navigation.moveMainUp()
 
                     FocusSection.SUBMENU_ANIMATION,
-                    FocusSection.SUBMENU_SPEED ->
+                    FocusSection.SUBMENU_DURATION ->
                         navigation.moveSubUp()
 
                     FocusSection.SUBMENU_EXTERNAL -> {
@@ -212,8 +236,8 @@ fun SideMenu(
                     FocusSection.SUBMENU_ANIMATION ->
                         navigation.moveSubDown(6)
 
-                    FocusSection.SUBMENU_SPEED ->
-                        navigation.moveSubDown(SlideSpeed.entries.lastIndex)
+                    FocusSection.SUBMENU_DURATION ->
+                        navigation.moveSubDown(1)
 
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
@@ -239,7 +263,7 @@ fun SideMenu(
                         when (navState.mainIndex) {
                             0 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
                             1 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
-                            2 -> navigation.enterSubMenu(FocusSection.SUBMENU_SPEED)
+                            2 -> navigation.enterSubMenu(FocusSection.SUBMENU_DURATION)
                             3 -> onClose()
                         }
                     }
@@ -304,9 +328,12 @@ fun SideMenu(
                             ?.let { onAnimationSelected(it) }
                     }
 
-                    FocusSection.SUBMENU_SPEED -> {
-                        SlideSpeed.entries.getOrNull(navState.subIndex)
-                            ?.let { onSpeedSelected(it) }
+                    FocusSection.SUBMENU_DURATION -> {
+                        if (navState.subIndex == 0) {
+                            showGlobalDurationDialog = true
+                        } else {
+                            confirmAllDurations = true
+                        }
                     }
 
                     else -> Unit
@@ -409,6 +436,9 @@ fun SideMenu(
                                             ContextAction.PlayFolder ->
                                                 onPlayExternalFolder(target.path)
 
+                                            ContextAction.ApplyGlobalDuration ->
+                                                confirmFolderDurationPath = target.path
+
                                             ContextAction.Delete ->
                                                 externalMenuViewModel.deleteFolder(target.path)
 
@@ -437,6 +467,14 @@ fun SideMenu(
                                                 onVisibilityChanged()
                                             }
 
+                                            ContextAction.Duration -> {
+                                                val file = externalState.files.find { it.path == target.path }
+                                                if (file?.isImage == true) {
+                                                    imageDurationTargetPath = target.path
+                                                    imageDurationInitialMs = file.customDurationMs
+                                                }
+                                            }
+
                                             else -> Unit
                                         }
                                     }
@@ -456,7 +494,7 @@ fun SideMenu(
                                 navigation.moveMainUp()
 
                             FocusSection.SUBMENU_ANIMATION,
-                            FocusSection.SUBMENU_SPEED ->
+                            FocusSection.SUBMENU_DURATION ->
                                 navigation.moveSubUp()
 
                             FocusSection.SUBMENU_EXTERNAL -> {
@@ -481,8 +519,8 @@ fun SideMenu(
                             FocusSection.SUBMENU_ANIMATION ->
                                 navigation.moveSubDown(6)
 
-                            FocusSection.SUBMENU_SPEED ->
-                                navigation.moveSubDown(SlideSpeed.entries.lastIndex)
+                            FocusSection.SUBMENU_DURATION ->
+                                navigation.moveSubDown(1)
 
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
@@ -508,7 +546,7 @@ fun SideMenu(
                                 when (navState.mainIndex) {
                                     0 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
                                     1 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
-                                    2 -> navigation.enterSubMenu(FocusSection.SUBMENU_SPEED)
+                                    2 -> navigation.enterSubMenu(FocusSection.SUBMENU_DURATION)
                                     3 -> onClose()
                                 }
                             }
@@ -573,9 +611,12 @@ fun SideMenu(
                                     ?.let { onAnimationSelected(it) }
                             }
 
-                            FocusSection.SUBMENU_SPEED -> {
-                                SlideSpeed.entries.getOrNull(navState.subIndex)
-                                    ?.let { onSpeedSelected(it) }
+                            FocusSection.SUBMENU_DURATION -> {
+                                if (navState.subIndex == 0) {
+                                    showGlobalDurationDialog = true
+                                } else {
+                                    confirmAllDurations = true
+                                }
                             }
 
                             else -> Unit
@@ -645,7 +686,7 @@ fun SideMenu(
                 when (navState.mainIndex) {
                     0 -> FocusSection.SUBMENU_EXTERNAL
                     1 -> FocusSection.SUBMENU_ANIMATION
-                    2 -> FocusSection.SUBMENU_SPEED
+                    2 -> FocusSection.SUBMENU_DURATION
                     else -> null
                 }
             } else {
@@ -659,10 +700,10 @@ fun SideMenu(
                         activeAnimation = currentAnimation
                     )
 
-                FocusSection.SUBMENU_SPEED ->
-                    SpeedSubMenu(
+                FocusSection.SUBMENU_DURATION ->
+                    DurationSubMenu(
                         selectedIndex = if (isPreviewMode) -1 else navState.subIndex,
-                        activeSpeed = currentSpeed
+                        activeGlobalImageDurationMs = currentGlobalImageDurationMs
                     )
 
                 FocusSection.SUBMENU_EXTERNAL ->
@@ -686,6 +727,72 @@ fun SideMenu(
                 state = contextMenuState,
                 options = contextOptions,
                 onActionSelected = {}
+            )
+        }
+
+        if (showGlobalDurationDialog) {
+            DurationPickerDialog(
+                title = "Duraci\u00f3n",
+                initialDurationMs = currentGlobalImageDurationMs,
+                includeGlobalOption = false,
+                onDurationSelected = { durationMs ->
+                    durationMs?.let { onGlobalImageDurationSelected(it) }
+                    showGlobalDurationDialog = false
+                },
+                onDismiss = { showGlobalDurationDialog = false }
+            )
+        }
+
+        imageDurationTargetPath?.let { targetPath ->
+            DurationPickerDialog(
+                title = "Duraci\u00f3n",
+                initialDurationMs = imageDurationInitialMs,
+                includeGlobalOption = true,
+                onDurationSelected = { durationMs ->
+                    if (durationMs == null) {
+                        onUseGlobalImageDuration(targetPath)
+                    } else {
+                        onImageDurationSelected(targetPath, durationMs)
+                    }
+                    imageDurationTargetPath = null
+                    imageDurationInitialMs = null
+                },
+                onDismiss = {
+                    imageDurationTargetPath = null
+                    imageDurationInitialMs = null
+                }
+            )
+        }
+
+        if (confirmAllDurations) {
+            ConfirmationDialog(
+                text = "\u00bfAplicar duraci\u00f3n global a todas las im\u00e1genes?",
+                onConfirm = {
+                    onUseGlobalDurationForAllImages()
+                    Toast.makeText(
+                        context,
+                        "Duraci\u00f3n global aplicada a todas las im\u00e1genes",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    confirmAllDurations = false
+                },
+                onDismiss = { confirmAllDurations = false }
+            )
+        }
+
+        confirmFolderDurationPath?.let { folderPath ->
+            ConfirmationDialog(
+                text = "\u00bfAplicar duraci\u00f3n global a todas las im\u00e1genes de esta carpeta?",
+                onConfirm = {
+                    onUseGlobalDurationForFolder(folderPath)
+                    Toast.makeText(
+                        context,
+                        "Duraci\u00f3n global aplicada a la carpeta",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    confirmFolderDurationPath = null
+                },
+                onDismiss = { confirmFolderDurationPath = null }
             )
         }
     }

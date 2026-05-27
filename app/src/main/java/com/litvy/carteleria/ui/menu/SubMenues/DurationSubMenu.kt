@@ -7,41 +7,29 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.slides.ImageSlideDurations
 import com.litvy.carteleria.ui.menu.MenuItemView
 
 @Composable
-fun SpeedSubMenu(
+fun DurationSubMenu(
     selectedIndex: Int,
-    activeSpeed: SlideSpeed
+    activeGlobalImageDurationMs: Long
 ) {
-    val speeds = SlideSpeed.entries
+    val items = listOf(
+        "Duraci\u00f3n personalizada: ${ImageSlideDurations.labelFor(activeGlobalImageDurationMs)}",
+        "Aplicar duraci\u00f3n global a todas las im\u00e1genes"
+    )
 
     Column(
         modifier = Modifier
-            .width(240.dp)
+            .width(340.dp)
             .fillMaxHeight()
             .padding(24.dp)
     ) {
-
-        speeds.forEachIndexed { index, speed ->
-
-            val label = when (speed) {
-                SlideSpeed.SLOW -> "Lento"
-                SlideSpeed.NORMAL -> "Normal"
-                SlideSpeed.FAST -> "Rápido"
-            }
-
+        items.forEachIndexed { index, label ->
             val isFocused = selectedIndex == index
-            val isActive = speed == activeSpeed
-
-            val prefix = buildString {
-                if (isFocused) append("▶ ")
-                if (isActive) append("✔ ")
-            }
-
             MenuItemView(
-                text = prefix + label,
+                text = if (isFocused) "\u25B6 $label" else label,
                 selected = isFocused,
                 onClick = {}
             )

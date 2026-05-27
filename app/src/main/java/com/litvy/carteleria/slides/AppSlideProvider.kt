@@ -4,11 +4,13 @@ import android.content.Context
 import com.litvy.carteleria.content.ContentStorage
 import java.io.File
 import com.litvy.carteleria.data.external.HiddenFileManager
+import com.litvy.carteleria.data.external.ImageDurationManager
 
 
 class AppStorageSlideProvider(
     private val context: Context,
-    private val hiddenManager: HiddenFileManager
+    private val hiddenManager: HiddenFileManager,
+    private val durationManager: ImageDurationManager
 ) {
 
     // Formatos de imagen admitidos TODO: Verificar la correcta lectura de cada uno
@@ -42,7 +44,7 @@ class AppStorageSlideProvider(
                         ExternalImageSlide(
                             id = "external-img-$index-${file.name}",
                             file = file,
-                            durationMs = 5000L,
+                            customDurationMs = durationManager.getDuration(file.absolutePath),
                             transitionKey = "fade"
                         )
 
@@ -71,6 +73,7 @@ class AppStorageSlideProvider(
     //  Eliminar archivos
     fun deleteFile(file: File): Boolean {
         if (!file.exists() || !file.isFile) return false
+        durationManager.clearDuration(file.absolutePath)
         return file.delete()
     }
     // Copiar archivos
@@ -85,6 +88,10 @@ class AppStorageSlideProvider(
             target = targetFile,
             overwrite = false
         )
+
+        durationManager.getDuration(source.absolutePath)?.let { duration ->
+            durationManager.setDuration(targetFile.absolutePath, duration)
+        }
 
         return true
     }
@@ -103,7 +110,38 @@ class AppStorageSlideProvider(
             File(targetFolder, generateUniqueFileName(source, targetFolder))
         } else targetFile
 
-        return source.renameTo(finalTarget)
+        val moved = source.renameTo(finalTarget)
+
+        if (moved) {
+            durationManager.getDuration(source.absolutePath)?.let { duration ->
+                durationManager.clearDuration(source.absolutePath)
+                durationManager.setDuration(finalTarget.absolutePath, duration)
+            }
+        }
+
+        return moved
+    }
+
+    fun setImageDuration(file: File, durationMs: Long) {
+        if (!file.exists() || !file.isFile) return
+        if (!ImageSlideDurations.isAllowed(durationMs)) return
+        durationManager.setDuration(file.absolutePath, durationMs)
+    }
+
+    fun clearImageDuration(file: File) {
+        durationManager.clearDuration(file.absolutePath)
+    }
+
+    fun clearImageDurationsInFolder(folder: File) {
+        folder.listFiles()
+            ?.filter { it.isFile && it.extension.lowercase() in imageExtensions }
+            ?.forEach { durationManager.clearDuration(it.absolutePath) }
+    }
+
+    fun clearAllImageDurations() {
+        listFolders().forEach { folder ->
+            clearImageDurationsInFolder(folder)
+        }
     }
 
     // GENERADOR DE NOMBRE REPETIDO DE ARCHIVO

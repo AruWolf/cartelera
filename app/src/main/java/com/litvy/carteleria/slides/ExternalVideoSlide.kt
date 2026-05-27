@@ -22,6 +22,7 @@ class ExternalVideoSlide(
 ) : Slide {
 
     override val durationMs: Long? = null
+    override val customDurationMs: Long? = null
 
     @Composable
     override fun Render(

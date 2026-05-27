@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.MenuItemView
 import com.litvy.carteleria.ui.navigation.ExternalNavigationController
+import com.litvy.carteleria.slides.ImageSlideDurations
 
 @Composable
 fun ExternalContentSubMenu(
@@ -106,9 +107,15 @@ fun ExternalContentSubMenu(
                 val offset = if (hasClipboard) 2 else 1
                 val globalIndex = index + offset
                 val isSelected = !isPreviewMode && navigation.state.fileIndex == globalIndex
+                val durationIndicator = if (file.isImage) {
+                    val label = file.customDurationMs?.let { ImageSlideDurations.labelFor(it) } ?: "Global"
+                    "  \u23F1 $label"
+                } else {
+                    ""
+                }
 
                 MenuItemView(
-                    text = file.name,
+                    text = file.name + durationIndicator,
                     selected = isSelected,
                     isHidden = file.isHidden,
                     textColor = if (file.isHidden) Color(0xFFFF5555) else Color.White,

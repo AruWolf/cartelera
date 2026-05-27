@@ -2,10 +2,11 @@ package com.litvy.carteleria.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.litvy.carteleria.content.ContentStorage
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.slides.ImageSlideDurations
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import java.io.File
@@ -18,7 +19,7 @@ class CartelPreferences(private val context: Context) {
         private val SOURCE_TYPE = stringPreferencesKey("source_type")
         private val SOURCE_VALUE = stringPreferencesKey("source_value")
         private val ANIMATION = stringPreferencesKey("animation")
-        private val SPEED = stringPreferencesKey("speed")
+        private val GLOBAL_IMAGE_DURATION_MS = longPreferencesKey("global_image_duration_ms")
 
         private const val INTERNAL = "INTERNAL"
         private const val EXTERNAL = "EXTERNAL"
@@ -47,7 +48,9 @@ class CartelPreferences(private val context: Context) {
             CartelConfig(
                 source = source,
                 animation = prefs[ANIMATION] ?: "fade",
-                speed = SlideSpeed.entries.firstOrNull { it.name == prefs[SPEED] } ?: SlideSpeed.NORMAL
+                globalImageDurationMs = prefs[GLOBAL_IMAGE_DURATION_MS]
+                    ?.takeIf { ImageSlideDurations.isAllowed(it) }
+                    ?: ImageSlideDurations.DEFAULT_GLOBAL_DURATION_MS
                 )
         }
 
@@ -70,7 +73,9 @@ class CartelPreferences(private val context: Context) {
             }
 
             prefs[ANIMATION] = config.animation
-            prefs[SPEED] = config.speed.name
+            if (ImageSlideDurations.isAllowed(config.globalImageDurationMs)) {
+                prefs[GLOBAL_IMAGE_DURATION_MS] = config.globalImageDurationMs
+            }
         }
     }
 }

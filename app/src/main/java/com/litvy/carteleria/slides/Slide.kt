@@ -7,6 +7,7 @@ interface Slide {
     val id: String
     val transitionKey: String?
     val durationMs: Long?
+    val customDurationMs: Long?
 
     @Composable
     fun Render(

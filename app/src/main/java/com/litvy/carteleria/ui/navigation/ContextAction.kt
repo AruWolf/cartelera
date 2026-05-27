@@ -9,9 +9,11 @@ sealed class ContextAction(val label: String) {
     // Carpetas
     object OpenFolder : ContextAction("Abrir")
     object PlayFolder : ContextAction("Reproducir")
+    object ApplyGlobalDuration : ContextAction("Aplicar duraci\u00f3n global")
 
     // Archivos
     object Preview : ContextAction("Previsualizar")
+    object Duration : ContextAction("Duraci\u00f3n")
     object Copy : ContextAction("Copiar")
     object Cut : ContextAction("Cortar")
 

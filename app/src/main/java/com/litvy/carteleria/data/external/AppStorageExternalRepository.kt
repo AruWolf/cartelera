@@ -6,8 +6,11 @@ import java.io.File
 
 class AppStorageExternalRepository(
     private val provider: AppStorageSlideProvider,
-    private val hiddenManager: HiddenFileManager
+    private val hiddenManager: HiddenFileManager,
+    private val durationManager: ImageDurationManager
 ) : ExternalContentRepository {
+
+    private val imageExtensions = setOf("png", "jpg", "jpeg", "webp")
 
     override fun listFolders(): List<ExternalFolder> {
         return provider.listFolders().map {
@@ -25,10 +28,13 @@ class AppStorageExternalRepository(
         return folder.listFiles()
             ?.filter { it.isFile }
             ?.map {
+                val isImage = it.extension.lowercase() in imageExtensions
                 ExternalFile(
                     name = it.name,
                     path = it.absolutePath,
-                    isHidden = hiddenManager.isHidden(it.absolutePath)
+                    isHidden = hiddenManager.isHidden(it.absolutePath),
+                    isImage = isImage,
+                    customDurationMs = if (isImage) durationManager.getDuration(it.absolutePath) else null
                 )
             }
             ?.sortedWith(
