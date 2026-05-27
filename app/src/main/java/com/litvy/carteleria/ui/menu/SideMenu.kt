@@ -36,6 +36,7 @@ import com.litvy.carteleria.ui.navigation.ContextTarget
 import com.litvy.carteleria.ui.navigation.ExternalNavigationController
 import com.litvy.carteleria.ui.navigation.FocusSection
 import com.litvy.carteleria.ui.navigation.TvNavigationController
+import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -96,6 +97,263 @@ fun SideMenu(
             )
 
             else -> emptyList()
+        }
+    }
+
+    fun handleMenuRemoteKey(keyCode: Int): Boolean {
+        if (contextMenuState.isVisible) {
+            when (keyCode) {
+                KeyEvent.KEYCODE_DPAD_UP -> {
+                    contextMenuState = contextMenuState.copy(
+                        selectedIndex = (contextMenuState.selectedIndex - 1).coerceAtLeast(0)
+                    )
+                    return true
+                }
+
+                KeyEvent.KEYCODE_DPAD_DOWN -> {
+                    contextMenuState = contextMenuState.copy(
+                        selectedIndex = (contextMenuState.selectedIndex + 1)
+                            .coerceAtMost(contextOptions.lastIndex)
+                    )
+                    return true
+                }
+
+                KeyEvent.KEYCODE_BACK,
+                KeyEvent.KEYCODE_DPAD_LEFT -> {
+                    contextMenuState = ContextMenuState()
+                    return true
+                }
+
+                KeyEvent.KEYCODE_DPAD_CENTER -> {
+                    val action = contextOptions.getOrNull(contextMenuState.selectedIndex)
+                    val target = contextMenuState.target
+
+                    if (action != null && target != null) {
+                        when (target) {
+                            is ContextTarget.Folder -> {
+                                when (action) {
+                                    ContextAction.OpenFolder -> {
+                                        externalMenuViewModel.openFolder(target.path)
+                                        externalNavigation.resetFileIndex()
+                                    }
+
+                                    ContextAction.PlayFolder ->
+                                        onPlayExternalFolder(target.path)
+
+                                    ContextAction.Delete ->
+                                        externalMenuViewModel.deleteFolder(target.path)
+
+                                    else -> Unit
+                                }
+                            }
+
+                            is ContextTarget.FileItem -> {
+                                when (action) {
+                                    ContextAction.Copy ->
+                                        externalMenuViewModel.copyFile(target.path)
+
+                                    ContextAction.Cut ->
+                                        externalMenuViewModel.cutFile(target.path)
+
+                                    ContextAction.Delete ->
+                                        externalMenuViewModel.deleteFile(target.path)
+
+                                    ContextAction.Hide -> {
+                                        externalMenuViewModel.hideFile(target.path)
+                                        onVisibilityChanged()
+                                    }
+
+                                    ContextAction.Show -> {
+                                        externalMenuViewModel.showFile(target.path)
+                                        onVisibilityChanged()
+                                    }
+
+                                    else -> Unit
+                                }
+                            }
+                        }
+                    }
+
+                    contextMenuState = ContextMenuState()
+                    return true
+                }
+            }
+        }
+
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                when (navState.section) {
+                    FocusSection.MAIN_MENU ->
+                        navigation.moveMainUp()
+
+                    FocusSection.SUBMENU_ANIMATION,
+                    FocusSection.SUBMENU_SPEED ->
+                        navigation.moveSubUp()
+
+                    FocusSection.SUBMENU_EXTERNAL -> {
+                        if (!externalState.isInFolder) {
+                            externalNavigation.moveFolderUp()
+                        } else {
+                            externalNavigation.moveFileUp()
+                        }
+                    }
+
+                    else -> Unit
+                }
+
+                true
+            }
+
+            KeyEvent.KEYCODE_DPAD_DOWN -> {
+                when (navState.section) {
+                    FocusSection.MAIN_MENU ->
+                        navigation.moveMainDown(mainMenuItems.lastIndex)
+
+                    FocusSection.SUBMENU_ANIMATION ->
+                        navigation.moveSubDown(6)
+
+                    FocusSection.SUBMENU_SPEED ->
+                        navigation.moveSubDown(SlideSpeed.entries.lastIndex)
+
+                    FocusSection.SUBMENU_EXTERNAL -> {
+                        if (!externalState.isInFolder) {
+                            val max = externalState.folders.size + 1
+                            externalNavigation.moveFolderDown(max)
+                        } else {
+                            val extra = if (externalState.clipboardPath != null) 1 else 0
+                            val total = externalState.files.size + extra
+                            externalNavigation.moveFileDown(total)
+                        }
+                    }
+
+                    else -> Unit
+                }
+
+                true
+            }
+
+            KeyEvent.KEYCODE_DPAD_CENTER,
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                when (navState.section) {
+                    FocusSection.MAIN_MENU -> {
+                        when (navState.mainIndex) {
+                            0 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
+                            1 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
+                            2 -> navigation.enterSubMenu(FocusSection.SUBMENU_SPEED)
+                            3 -> onClose()
+                        }
+                    }
+
+                    FocusSection.SUBMENU_EXTERNAL -> {
+                        if (!externalState.isInFolder) {
+                            val index = externalNavigation.state.folderIndex
+
+                            when (index) {
+                                0 -> onShowQr()
+                                1 -> onForceUsbScan()
+
+                                else -> {
+                                    val folder = externalState.folders.getOrNull(index - 2)
+                                    folder?.let {
+                                        contextMenuState = ContextMenuState(
+                                            isVisible = true,
+                                            target = ContextTarget.Folder(it.name, it.path)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            val fileIndex = externalNavigation.state.fileIndex
+                            val hasClipboard = externalState.clipboardPath != null
+
+                            if (hasClipboard && fileIndex == 0) {
+                                externalMenuViewModel.paste()
+                            } else {
+                                val backIndex = if (hasClipboard) 1 else 0
+
+                                if (fileIndex == backIndex) {
+                                    externalMenuViewModel.goBack()
+                                    externalNavigation.resetFileIndex()
+                                } else {
+                                    val offset = if (hasClipboard) 2 else 1
+                                    val file = externalState.files.getOrNull(fileIndex - offset)
+
+                                    file?.let {
+                                        contextMenuState = ContextMenuState(
+                                            isVisible = true,
+                                            target = ContextTarget.FileItem(it.name, it.path)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    FocusSection.SUBMENU_ANIMATION -> {
+                        val animations = listOf(
+                            "random",
+                            "fade",
+                            "scale",
+                            "left",
+                            "up",
+                            "right",
+                            "down"
+                        )
+
+                        animations.getOrNull(navState.subIndex)
+                            ?.let { onAnimationSelected(it) }
+                    }
+
+                    FocusSection.SUBMENU_SPEED -> {
+                        SlideSpeed.entries.getOrNull(navState.subIndex)
+                            ?.let { onSpeedSelected(it) }
+                    }
+
+                    else -> Unit
+                }
+
+                true
+            }
+
+            KeyEvent.KEYCODE_BACK,
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                when (navState.section) {
+                    FocusSection.SUBMENU_EXTERNAL -> {
+                        if (externalState.isInFolder) {
+                            externalMenuViewModel.goBack()
+                            externalNavigation.resetFileIndex()
+                        } else {
+                            navigation.backToMain()
+                        }
+                    }
+
+                    else -> {
+                        if (navState.section != FocusSection.MAIN_MENU) {
+                            navigation.backToMain()
+                        } else {
+                            onClose()
+                        }
+                    }
+                }
+
+                true
+            }
+
+            else -> false
+        }
+    }
+
+    LaunchedEffect(
+        contextMenuState,
+        externalState,
+        navState.section,
+        navState.mainIndex,
+        navState.subIndex,
+        externalNavigation.state.folderIndex,
+        externalNavigation.state.fileIndex
+    ) {
+        RemoteKeyEventBus.keyEvents.collect { keyCode ->
+            handleMenuRemoteKey(keyCode)
         }
     }
 

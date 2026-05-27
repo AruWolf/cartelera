@@ -1,15 +1,19 @@
 package com.litvy.carteleria.ui.slideshow
 
+import com.litvy.carteleria.R
 import android.app.Activity
 import android.graphics.Bitmap
 import android.view.KeyEvent
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -28,12 +32,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.data.CartelPreferences
@@ -51,8 +57,12 @@ import com.litvy.carteleria.domain.external.usecase.ShowExternalFileUseCase
 import com.litvy.carteleria.engine.EvokeSlide
 import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.slides.Slide
+import com.litvy.carteleria.ui.loading.AppLoadingSurface
+import com.litvy.carteleria.ui.loading.AppVisualAssets
+import com.litvy.carteleria.ui.loading.LoadingUiDefaults
 import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.SideMenu
+import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 import com.litvy.carteleria.util.network.LocalCartelServer
 import com.litvy.carteleria.util.qr.generateQrCode
 import com.litvy.carteleria.util.usb.UsbContentManager
@@ -62,7 +72,6 @@ import java.io.File
 
 @Composable
 fun SlideShowScreen() {
-
     val context = LocalContext.current
     var backPressedOnce by remember { mutableStateOf(false) }
 
@@ -82,6 +91,7 @@ fun SlideShowScreen() {
     val focusRequester = remember { FocusRequester() }
     var showQr by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    var isFolderLoading by remember { mutableStateOf(false) }
 
     val externalProvider = remember {
         AppStorageSlideProvider(context, hiddenManager)
@@ -138,9 +148,79 @@ fun SlideShowScreen() {
 
     var ignoreNextCenter by remember { mutableStateOf(false) }
 
+    fun handleSlideshowRemoteKey(keyCode: Int): Boolean {
+        if (state.menuVisible) return false
+
+        if (ignoreNextCenter) {
+            ignoreNextCenter = false
+            return true
+        }
+
+        return when (keyCode) {
+            KeyEvent.KEYCODE_DPAD_RIGHT -> {
+                viewModel.nextSlide()
+                true
+            }
+
+            KeyEvent.KEYCODE_DPAD_LEFT -> {
+                viewModel.previousSlide()
+                true
+            }
+
+            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+            KeyEvent.KEYCODE_DPAD_UP -> {
+                viewModel.togglePause()
+                true
+            }
+
+            KeyEvent.KEYCODE_DPAD_CENTER -> {
+                viewModel.openMenu()
+                true
+            }
+
+            KeyEvent.KEYCODE_BACK -> {
+                if (showQr) {
+                    showQr = false
+                    true
+                } else if (!backPressedOnce) {
+                    backPressedOnce = true
+
+                    Toast.makeText(
+                        context,
+                        "Presione nuevamente para salir",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    scope.launch {
+                        delay(2000)
+                        backPressedOnce = false
+                    }
+
+                    true
+                } else {
+                    (context as? Activity)?.finishAffinity()
+                    true
+                }
+            }
+
+            else -> false
+        }
+    }
+
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
         viewModel.startServer()
+    }
+
+    LaunchedEffect(
+        state.menuVisible,
+        showQr,
+        ignoreNextCenter,
+        backPressedOnce
+    ) {
+        RemoteKeyEventBus.keyEvents.collect { keyCode ->
+            handleSlideshowRemoteKey(keyCode)
+        }
     }
 
     DisposableEffect(Unit) {
@@ -163,7 +243,6 @@ fun SlideShowScreen() {
             .focusRequester(focusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
-
                 if (state.menuVisible) return@onPreviewKeyEvent false
 
                 if (ignoreNextCenter) {
@@ -175,57 +254,7 @@ fun SlideShowScreen() {
                     return@onPreviewKeyEvent false
                 }
 
-                when (event.nativeKeyEvent.keyCode) {
-                    KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                        viewModel.nextSlide()
-                        true
-                    }
-
-                    KeyEvent.KEYCODE_DPAD_LEFT -> {
-                        viewModel.previousSlide()
-                        true
-                    }
-
-                    KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-                    KeyEvent.KEYCODE_DPAD_UP -> {
-                        viewModel.togglePause()
-                        true
-                    }
-
-                    KeyEvent.KEYCODE_DPAD_CENTER -> {
-                        viewModel.openMenu()
-                        true
-                    }
-
-                    KeyEvent.KEYCODE_BACK -> {
-                        if (showQr) {
-                            showQr = false
-                            return@onPreviewKeyEvent true
-                        }
-
-                        if (!backPressedOnce) {
-                            backPressedOnce = true
-
-                            Toast.makeText(
-                                context,
-                                "Presione nuevamente para salir",
-                                Toast.LENGTH_SHORT
-                            ).show()
-
-                            scope.launch {
-                                delay(2000)
-                                backPressedOnce = false
-                            }
-
-                            true
-                        } else {
-                            (context as? Activity)?.finishAffinity()
-                            true
-                        }
-                    }
-
-                    else -> false
-                }
+                handleSlideshowRemoteKey(event.nativeKeyEvent.keyCode)
             }
     ) {
         if (state.slides.isNotEmpty() && engine != null) {
@@ -272,17 +301,11 @@ fun SlideShowScreen() {
                 }
             }
         } else {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.DarkGray),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Sin contenido.\nPresione OK para abrir menú.",
-                    color = Color.White
-                )
-            }
+            AppLoadingSurface(
+                backgroundName = AppVisualAssets.EMPTY_CONTENT_BACKGROUND,
+                fallbackBackgroundColor = Color.DarkGray,
+                showLoadingIndicator = false
+            )
         }
 
         LaunchedEffect(state.menuVisible) {
@@ -299,8 +322,13 @@ fun SlideShowScreen() {
                 onAnimationSelected = { viewModel.changeAnimation(it) },
                 onSpeedSelected = { viewModel.changeSpeed(it) },
                 onPlayExternalFolder = { path ->
-                    viewModel.selectExternalFolder(File(path))
                     viewModel.toggleMenu()
+                    scope.launch {
+                        isFolderLoading = true
+                        delay(LoadingUiDefaults.FOLDER_SELECTION_LOADING_MS)
+                        viewModel.selectExternalFolder(File(path))
+                        isFolderLoading = false
+                    }
                 },
                 onShowQr = {
                     showQr = true
@@ -370,25 +398,57 @@ fun SlideShowScreen() {
         }
 
         state.usbMessage?.let { message ->
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.TopEnd
-            ) {
+            if (state.isUsbLoading) {
+                AppLoadingSurface(
+                    backgroundName = AppVisualAssets.EMPTY_CONTENT_BACKGROUND,
+                    message = message,
+                    fallbackBackgroundColor = Color.Black,
+                    showOverlayScrim = true
+                )
+            } else {
                 Box(
-                    modifier = Modifier
-                        .padding(32.dp)
-                        .background(
-                            Color(0xFF1E1E1E),
-                            RoundedCornerShape(18.dp)
-                        )
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.TopEnd
                 ) {
-                    Text(
-                        text = message,
-                        color = Color.White
-                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(32.dp)
+                            .background(
+                                Color(0xFF1E1E1E),
+                                RoundedCornerShape(18.dp)
+                            )
+                            .padding(horizontal = 24.dp, vertical = 16.dp)
+                    ) {
+                        Text(
+                            text = message,
+                            color = Color.White
+                        )
+                    }
                 }
             }
         }
+
+        AnimatedVisibility(
+            visible = isFolderLoading,
+            enter = fadeIn(tween(durationMillis = LoadingUiDefaults.FOLDER_SELECTION_FADE_MS)),
+            exit = fadeOut(tween(durationMillis = LoadingUiDefaults.FOLDER_SELECTION_FADE_MS))
+        ) {
+            AppLoadingSurface(
+                backgroundName = AppVisualAssets.EMPTY_CONTENT_BACKGROUND,
+                message = "Cargando contenido...",
+                fallbackBackgroundColor = Color.Black,
+                showOverlayScrim = true
+            )
+        }
+
+        Image(
+            painter = painterResource(id = R.drawable.litvy_letter),
+            contentDescription = "Logo Litvy",
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(24.dp)
+                .height(25.dp)
+                .alpha(1f)
+        )
     }
 }

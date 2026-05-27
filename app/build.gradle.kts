@@ -58,6 +58,7 @@ dependencies {
     implementation("com.google.zxing:core:3.5.1")
     // COIL
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
