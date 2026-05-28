@@ -6,20 +6,16 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import com.litvy.carteleria.animations.TvTransition
+import com.litvy.carteleria.slides.ExternalImageSlide
 import com.litvy.carteleria.slides.Slide
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.slides.resolveImageSlideDuration
 import kotlinx.coroutines.delay
 
 class EvokeSlide(
     private val slides: List<Slide>,
     private val transition: TvTransition<Slide>,
-    private val speed: SlideSpeed
+    private val globalImageDurationMs: Long
 ) {
-
-    init {
-        require(slides.isNotEmpty()) { "EvokeSlide requires at least one slide" }
-    }
-
     @Composable
     fun Render(
         modifier: Modifier = Modifier,
@@ -31,16 +27,12 @@ class EvokeSlide(
         if (slides.isEmpty() || currentIndex !in slides.indices) return
         val currentSlide = slides[currentIndex]
 
-        LaunchedEffect(currentIndex, isPaused, speed) {
+        LaunchedEffect(currentIndex, isPaused, globalImageDurationMs, currentSlide.customDurationMs) {
 
             if (isPaused) return@LaunchedEffect
 
-            val duration =
-                (currentSlide.durationMs * speed.multiplier).toLong()
-
-            delay(duration)
-
-            if (!isPaused) {
+            if (currentSlide is ExternalImageSlide) {
+                delay(resolveImageSlideDuration(currentSlide, globalImageDurationMs))
                 onAutoNext()
             }
         }
@@ -55,7 +47,10 @@ class EvokeSlide(
                 label = "tv-slideshow"
             ) { slide ->
 
-                slide.Render()
+                slide.Render(
+                    isPaused = isPaused,
+                    onFinished = { onAutoNext() }
+                )
             }
         }
     }

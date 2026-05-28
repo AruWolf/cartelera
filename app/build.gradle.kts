@@ -58,14 +58,19 @@ dependencies {
     implementation("com.google.zxing:core:3.5.1")
     // COIL
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
     // DataStore
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Material
     implementation("androidx.compose.material3:material3")
-
     implementation("com.google.android.material:material:1.13.0")
+
     implementation("androidx.documentfile:documentfile:1.1.0")
+
+    // Videos - Media3
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
 
 
     // Debug

@@ -1,0 +1,7 @@
+<resources>
+    <dimen name="touch_remote_button_size">48dp</dimen>
+    <dimen name="touch_remote_button_gap">6dp</dimen>
+    <dimen name="touch_remote_margin_end">18dp</dimen>
+    <dimen name="touch_remote_margin_bottom">18dp</dimen>
+    <dimen name="touch_remote_close_size">28dp</dimen>
+</resources>

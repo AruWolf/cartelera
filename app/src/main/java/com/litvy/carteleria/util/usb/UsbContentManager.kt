@@ -6,15 +6,17 @@ import java.io.File
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import android.provider.MediaStore
+import com.litvy.carteleria.content.ContentStorage
+import com.litvy.carteleria.domain.usb.UsbImporter
 
 // Lector de archivos usb --- Lee lo que esté dentro de la carpeta "Carteleria"
 class UsbContentManager(
     private val context: Context
-) {
+): UsbImporter {
 
-    private val imageExtensions = listOf("png", "jpg", "jpeg", "webp")
+    private val imageExtensions = listOf("png", "jpg", "jpeg", "webp", "mp4")
 
-    suspend fun forceScan(): UsbScanResult = withContext(Dispatchers.IO) {
+    override suspend fun forceScan(): UsbScanResult = withContext(Dispatchers.IO) {
 
         val roots = listOf(
             File("/storage"),
@@ -37,8 +39,7 @@ class UsbContentManager(
 
                     carteleriaFound = true
 
-                    val destRoot = File(context.filesDir, "resources")
-                    if (!destRoot.exists()) destRoot.mkdirs()
+                    val destRoot = ContentStorage.ensureRootDirectory(context)
 
                     carteleriaDir.listFiles()?.forEach { sourceFolder ->
 
@@ -73,15 +74,14 @@ class UsbContentManager(
         }
     }
 
-    suspend fun importFromUri(uri: Uri): UsbScanResult = withContext(Dispatchers.IO) {
+    override suspend fun importFromUri(uri: Uri): UsbScanResult = withContext(Dispatchers.IO) {
 
         val root = DocumentFile.fromTreeUri(context, uri)
             ?: return@withContext UsbScanResult.NoChanges
 
         var importedCount = 0
 
-        val destRoot = File(context.filesDir, "resources")
-        if (!destRoot.exists()) destRoot.mkdirs()
+        val destRoot = ContentStorage.ensureRootDirectory(context)
 
         root.listFiles()?.forEach { folder ->
 
@@ -119,7 +119,7 @@ class UsbContentManager(
         }
     }
 
-    suspend fun scanViaMediaStore(): UsbScanResult = withContext(Dispatchers.IO) {
+    override suspend fun scanViaMediaStore(): UsbScanResult = withContext(Dispatchers.IO) {
 
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
@@ -139,8 +139,7 @@ class UsbContentManager(
         ) ?: return@withContext UsbScanResult.NoUsbFound
 
         var importedCount = 0
-        val destRoot = File(context.filesDir, "resources")
-        if (!destRoot.exists()) destRoot.mkdirs()
+        val destRoot = ContentStorage.ensureRootDirectory(context)
 
         cursor.use {
 

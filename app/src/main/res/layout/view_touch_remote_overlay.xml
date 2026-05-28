@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/touchRemoteOverlay"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="2dp">
+
+    <GridLayout
+        android:id="@+id/touchRemotePad"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:alignmentMode="alignBounds"
+        android:columnCount="3"
+        android:rowCount="3"
+        android:useDefaultMargins="false">
+
+        <Space
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="0"
+            android:layout_column="0"
+            android:layout_margin="@dimen/touch_remote_button_gap" />
+
+        <TextView
+            android:id="@+id/touchRemoteUp"
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="0"
+            android:layout_column="1"
+            android:layout_margin="@dimen/touch_remote_button_gap"
+            android:background="@drawable/touch_remote_button_bg"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="▲"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/touchRemoteClose"
+            android:layout_width="@dimen/touch_remote_close_size"
+            android:layout_height="@dimen/touch_remote_close_size"
+            android:layout_row="0"
+            android:layout_column="2"
+            android:layout_gravity="top|end"
+            android:layout_margin="@dimen/touch_remote_button_gap"
+            android:background="@drawable/touch_remote_close_bg"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="X"
+            android:textColor="#FFFFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/touchRemoteLeft"
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="1"
+            android:layout_column="0"
+            android:layout_margin="@dimen/touch_remote_button_gap"
+            android:background="@drawable/touch_remote_button_bg"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="◀"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/touchRemoteOk"
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="1"
+            android:layout_column="1"
+            android:layout_margin="@dimen/touch_remote_button_gap"
+            android:background="@drawable/touch_remote_button_bg"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="OK"
+            android:textColor="#FFFFFFFF"
+            android:textSize="13sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/touchRemoteRight"
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="1"
+            android:layout_column="2"
+            android:layout_margin="@dimen/touch_remote_button_gap"
+            android:background="@drawable/touch_remote_button_bg"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="▶"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="2"
+            android:layout_column="0"
+            android:layout_margin="@dimen/touch_remote_button_gap" />
+
+        <TextView
+            android:id="@+id/touchRemoteDown"
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="2"
+            android:layout_column="1"
+            android:layout_margin="@dimen/touch_remote_button_gap"
+            android:background="@drawable/touch_remote_button_bg"
+            android:clickable="true"
+            android:focusable="false"
+            android:gravity="center"
+            android:text="▼"
+            android:textColor="#FFFFFFFF"
+            android:textSize="18sp" />
+
+        <Space
+            android:layout_width="@dimen/touch_remote_button_size"
+            android:layout_height="@dimen/touch_remote_button_size"
+            android:layout_row="2"
+            android:layout_column="2"
+            android:layout_margin="@dimen/touch_remote_button_gap" />
+    </GridLayout>
+</FrameLayout>

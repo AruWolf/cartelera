@@ -2,11 +2,14 @@ package com.litvy.carteleria.data
 
 import android.content.Context
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.litvy.carteleria.slides.SlideSpeed
+import com.litvy.carteleria.content.ContentStorage
+import com.litvy.carteleria.slides.ImageSlideDurations
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import java.io.File
 
 private val Context.dataStore by preferencesDataStore(name = "cartel_prefs")
 
@@ -16,7 +19,7 @@ class CartelPreferences(private val context: Context) {
         private val SOURCE_TYPE = stringPreferencesKey("source_type")
         private val SOURCE_VALUE = stringPreferencesKey("source_value")
         private val ANIMATION = stringPreferencesKey("animation")
-        private val SPEED = stringPreferencesKey("speed")
+        private val GLOBAL_IMAGE_DURATION_MS = longPreferencesKey("global_image_duration_ms")
 
         private const val INTERNAL = "INTERNAL"
         private const val EXTERNAL = "EXTERNAL"
@@ -27,38 +30,52 @@ class CartelPreferences(private val context: Context) {
 
             val type = prefs[SOURCE_TYPE] ?: INTERNAL
             val value = prefs[SOURCE_VALUE] ?: ""
+            val defaultFolder = ContentStorage.defaultFolder(context)
 
             val source = when (type) {
                 EXTERNAL -> ContentSource.External(value)
-                else -> ContentSource.Internal(value)
+                INTERNAL -> {
+                    val migratedFolder = if (value.isBlank()) {
+                        defaultFolder
+                    } else {
+                        File(ContentStorage.ensureRootDirectory(context), value)
+                    }
+                    ContentSource.External(migratedFolder.absolutePath)
+                }
+                else -> ContentSource.External(defaultFolder.absolutePath)
             }
 
             CartelConfig(
                 source = source,
                 animation = prefs[ANIMATION] ?: "fade",
-                speed = SlideSpeed.valueOf(
-                    prefs[SPEED] ?: SlideSpeed.NORMAL.name
+                globalImageDurationMs = prefs[GLOBAL_IMAGE_DURATION_MS]
+                    ?.takeIf { ImageSlideDurations.isAllowed(it) }
+                    ?: ImageSlideDurations.DEFAULT_GLOBAL_DURATION_MS
                 )
-            )
         }
 
     suspend fun saveConfig(config: CartelConfig) {
         context.dataStore.edit { prefs ->
 
             when (config.source) {
-                is ContentSource.Internal -> {
-                    prefs[SOURCE_TYPE] = INTERNAL
-                    prefs[SOURCE_VALUE] = config.source.folder
-                }
-
                 is ContentSource.External -> {
                     prefs[SOURCE_TYPE] = EXTERNAL
                     prefs[SOURCE_VALUE] = config.source.path
                 }
+
+                is ContentSource.Internal -> {
+                    prefs[SOURCE_TYPE] = EXTERNAL
+                    prefs[SOURCE_VALUE] = File(
+                        ContentStorage.ensureRootDirectory(context),
+                        config.source.folder
+                    ).absolutePath
+                }
             }
 
             prefs[ANIMATION] = config.animation
-            prefs[SPEED] = config.speed.name
+            if (ImageSlideDurations.isAllowed(config.globalImageDurationMs)) {
+                prefs[GLOBAL_IMAGE_DURATION_MS] = config.globalImageDurationMs
+            }
         }
     }
 }
