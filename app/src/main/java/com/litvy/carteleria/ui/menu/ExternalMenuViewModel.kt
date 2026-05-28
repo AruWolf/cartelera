@@ -48,6 +48,11 @@ class ExternalMenuViewModel(
         loadFolders()
     }
 
+    fun setFolderShortcut(path: String, shortcutNumber: Int?) {
+        useCases.setFolderShortcut(path, shortcutNumber)
+        loadFolders()
+    }
+
     fun copyFile(path: String) {
         _state.value = _state.value.copy(
             clipboardPath = path,

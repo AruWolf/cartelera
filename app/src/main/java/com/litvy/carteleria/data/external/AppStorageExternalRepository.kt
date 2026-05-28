@@ -7,18 +7,21 @@ import java.io.File
 class AppStorageExternalRepository(
     private val provider: AppStorageSlideProvider,
     private val hiddenManager: HiddenFileManager,
-    private val durationManager: ImageDurationManager
+    private val durationManager: ImageDurationManager,
+    private val shortcutManager: FolderShortcutManager
 ) : ExternalContentRepository {
 
     private val imageExtensions = setOf("png", "jpg", "jpeg", "webp")
 
     override fun listFolders(): List<ExternalFolder> {
-        return provider.listFolders().map {
+        val folders = provider.listFolders().map {
             ExternalFolder(
                 name = it.name,
                 path = it.absolutePath
             )
         }
+
+        return shortcutManager.applyPersistedShortcuts(folders)
     }
 
     override fun listFiles(folderPath: String): List<ExternalFile> {
@@ -50,6 +53,11 @@ class AppStorageExternalRepository(
 
     override fun deleteFolder(path: String) {
         provider.deleteFolder(File(path))
+        shortcutManager.clearShortcut(path)
+    }
+
+    override fun setFolderShortcut(path: String, shortcutNumber: Int?) {
+        shortcutManager.setShortcut(path, shortcutNumber)
     }
 
     override fun copyFile(sourcePath: String, targetFolderPath: String) {

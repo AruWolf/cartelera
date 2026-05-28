@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.animations.TvTransitions
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.external.AppStorageExternalRepository
+import com.litvy.carteleria.data.external.FolderShortcutManager
 import com.litvy.carteleria.data.external.HiddenFileManager
 import com.litvy.carteleria.data.external.ImageDurationManager
 import com.litvy.carteleria.domain.external.usecase.CopyExternalFileUseCase
@@ -54,6 +55,7 @@ import com.litvy.carteleria.domain.external.usecase.HideExternalFileUseCase
 import com.litvy.carteleria.domain.external.usecase.ListExternalFilesUseCase
 import com.litvy.carteleria.domain.external.usecase.ListExternalFoldersUseCase
 import com.litvy.carteleria.domain.external.usecase.MoveExternalFileUseCase
+import com.litvy.carteleria.domain.external.usecase.SetFolderShortcutUseCase
 import com.litvy.carteleria.domain.external.usecase.ShowExternalFileUseCase
 import com.litvy.carteleria.engine.EvokeSlide
 import com.litvy.carteleria.slides.AppStorageSlideProvider
@@ -68,6 +70,7 @@ import com.litvy.carteleria.util.network.LocalCartelServer
 import com.litvy.carteleria.util.qr.generateQrCode
 import com.litvy.carteleria.util.usb.UsbContentManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -78,6 +81,7 @@ fun SlideShowScreen() {
 
     val hiddenManager = remember { HiddenFileManager(context) }
     val imageDurationManager = remember { ImageDurationManager(context) }
+    val folderShortcutManager = remember { FolderShortcutManager(context) }
 
     val viewModel = remember {
         SlideShowViewModel(
@@ -128,7 +132,8 @@ fun SlideShowScreen() {
         AppStorageExternalRepository(
             provider = externalProvider,
             hiddenManager = hiddenManager,
-            durationManager = imageDurationManager
+            durationManager = imageDurationManager,
+            shortcutManager = folderShortcutManager
         )
     }
 
@@ -138,6 +143,7 @@ fun SlideShowScreen() {
             listFiles = ListExternalFilesUseCase(externalRepository),
             deleteFile = DeleteExternalFileUseCase(externalRepository),
             deleteFolder = DeleteExternalFolderUseCase(externalRepository),
+            setFolderShortcut = SetFolderShortcutUseCase(externalRepository),
             copyFile = CopyExternalFileUseCase(externalRepository),
             moveFile = MoveExternalFileUseCase(externalRepository),
             hideFile = HideExternalFileUseCase(externalRepository),
@@ -148,8 +154,30 @@ fun SlideShowScreen() {
     val externalMenuViewModel = remember {
         ExternalMenuViewModel(externalUseCases)
     }
+    val externalMenuState by externalMenuViewModel.state.collectAsState()
 
     var ignoreNextCenter by remember { mutableStateOf(false) }
+    var shortcutOverlayText by remember { mutableStateOf<String?>(null) }
+    var shortcutPlaybackJob by remember { mutableStateOf<Job?>(null) }
+    val shortcutOverlayManager = remember(scope) {
+        ShortcutOverlayManager(scope) { text -> shortcutOverlayText = text }
+    }
+
+    fun playFolderByShortcut(number: Int): Boolean {
+        val folder = externalMenuState.folders.firstOrNull { it.shortcutNumber == number }
+            ?: return false
+
+        shortcutPlaybackJob?.cancel()
+        shortcutPlaybackJob = scope.launch {
+            isFolderLoading = true
+            delay(LoadingUiDefaults.FOLDER_SELECTION_LOADING_MS)
+            viewModel.selectExternalFolder(File(folder.path))
+            isFolderLoading = false
+            shortcutOverlayManager.show("[$number] ${folder.name}")
+        }
+
+        return true
+    }
 
     fun handleSlideshowRemoteKey(keyCode: Int): Boolean {
         if (state.menuVisible) return false
@@ -160,6 +188,20 @@ fun SlideShowScreen() {
         }
 
         return when (keyCode) {
+            KeyEvent.KEYCODE_0,
+            KeyEvent.KEYCODE_1,
+            KeyEvent.KEYCODE_2,
+            KeyEvent.KEYCODE_3,
+            KeyEvent.KEYCODE_4,
+            KeyEvent.KEYCODE_5,
+            KeyEvent.KEYCODE_6,
+            KeyEvent.KEYCODE_7,
+            KeyEvent.KEYCODE_8,
+            KeyEvent.KEYCODE_9 -> {
+                val number = RemoteInputHandler.numberFromKeyCode(keyCode)
+                number?.let { playFolderByShortcut(it) } ?: false
+            }
+
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
                 viewModel.nextSlide()
                 true
@@ -229,6 +271,8 @@ fun SlideShowScreen() {
     DisposableEffect(Unit) {
         onDispose {
             viewModel.stopServer()
+            shortcutPlaybackJob?.cancel()
+            shortcutOverlayManager.clear()
         }
     }
 
@@ -369,6 +413,28 @@ fun SlideShowScreen() {
                     viewModel.reloadExternalFolderIfSelected()
                 }
             )
+        }
+
+        AnimatedVisibility(
+            visible = shortcutOverlayText != null,
+            enter = fadeIn(tween(durationMillis = 160)),
+            exit = fadeOut(tween(durationMillis = 160)),
+            modifier = Modifier.align(Alignment.TopCenter)
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(top = 32.dp)
+                    .background(
+                        Color.Black.copy(alpha = 0.82f),
+                        RoundedCornerShape(14.dp)
+                    )
+                    .padding(horizontal = 22.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = shortcutOverlayText.orEmpty(),
+                    color = Color.White
+                )
+            }
         }
 
         if (showQr && serverUrl.isNotEmpty()) {

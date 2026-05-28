@@ -9,6 +9,7 @@ sealed class ContextAction(val label: String) {
     // Carpetas
     object OpenFolder : ContextAction("Abrir")
     object PlayFolder : ContextAction("Reproducir")
+    object NumericShortcut : ContextAction("Atajo Num\u00e9rico")
     object ApplyGlobalDuration : ContextAction("Aplicar duraci\u00f3n global")
 
     // Archivos

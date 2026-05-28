@@ -71,6 +71,8 @@ fun SideMenu(
     var showGlobalDurationDialog by remember { mutableStateOf(false) }
     var confirmAllDurations by remember { mutableStateOf(false) }
     var confirmFolderDurationPath by remember { mutableStateOf<String?>(null) }
+    var shortcutTargetPath by remember { mutableStateOf<String?>(null) }
+    var shortcutConflict by remember { mutableStateOf<Pair<String, Int>?>(null) }
 
     val mainMenuItems = listOf(
         "Contenido",
@@ -104,6 +106,7 @@ fun SideMenu(
             is ContextTarget.Folder -> listOf(
                 ContextAction.OpenFolder,
                 ContextAction.PlayFolder,
+                ContextAction.NumericShortcut,
                 ContextAction.ApplyGlobalDuration,
                 ContextAction.Delete,
                 ContextAction.Cancel
@@ -152,6 +155,9 @@ fun SideMenu(
 
                                     ContextAction.PlayFolder ->
                                         onPlayExternalFolder(target.path)
+
+                                    ContextAction.NumericShortcut ->
+                                        shortcutTargetPath = target.path
 
                                     ContextAction.ApplyGlobalDuration ->
                                         confirmFolderDurationPath = target.path
@@ -435,6 +441,9 @@ fun SideMenu(
 
                                             ContextAction.PlayFolder ->
                                                 onPlayExternalFolder(target.path)
+
+                                            ContextAction.NumericShortcut ->
+                                                shortcutTargetPath = target.path
 
                                             ContextAction.ApplyGlobalDuration ->
                                                 confirmFolderDurationPath = target.path
@@ -793,6 +802,52 @@ fun SideMenu(
                     confirmFolderDurationPath = null
                 },
                 onDismiss = { confirmFolderDurationPath = null }
+            )
+        }
+
+        shortcutTargetPath?.takeIf { shortcutConflict == null }?.let { targetPath ->
+            val targetFolder = externalState.folders.find { it.path == targetPath }
+
+            FolderShortcutDialog(
+                currentShortcut = targetFolder?.shortcutNumber,
+                onShortcutSelected = { selectedShortcut ->
+                    if (selectedShortcut == null) {
+                        externalMenuViewModel.setFolderShortcut(targetPath, null)
+                        shortcutTargetPath = null
+                    } else {
+                        val conflictFolder = externalState.folders.firstOrNull {
+                            it.path != targetPath && it.shortcutNumber == selectedShortcut
+                        }
+
+                        if (conflictFolder != null) {
+                            shortcutConflict = conflictFolder.path to selectedShortcut
+                        } else {
+                            externalMenuViewModel.setFolderShortcut(targetPath, selectedShortcut)
+                            shortcutTargetPath = null
+                        }
+                    }
+                },
+                onDismiss = { shortcutTargetPath = null }
+            )
+        }
+
+        shortcutConflict?.let { (conflictPath, selectedShortcut) ->
+            val conflictFolder = externalState.folders.find { it.path == conflictPath }
+            val targetFolder = shortcutTargetPath?.let { targetPath ->
+                externalState.folders.find { it.path == targetPath }
+            }
+
+            ConfirmationDialog(
+                text = "El n\u00famero $selectedShortcut ya est\u00e1 asignado a:\n\n\"${conflictFolder?.name.orEmpty()}\"\n\n\u00bfDesea reemplazarlo y asignarlo a:\n\n\"${targetFolder?.name.orEmpty()}\"?",
+                onConfirm = {
+                    val targetPath = shortcutTargetPath
+                    if (targetPath != null) {
+                        externalMenuViewModel.setFolderShortcut(targetPath, selectedShortcut)
+                    }
+                    shortcutConflict = null
+                    shortcutTargetPath = null
+                },
+                onDismiss = { shortcutConflict = null }
             )
         }
     }

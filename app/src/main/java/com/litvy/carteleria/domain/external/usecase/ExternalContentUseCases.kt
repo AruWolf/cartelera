@@ -5,6 +5,7 @@ data class ExternalContentUseCases(
     val listFiles: ListExternalFilesUseCase,
     val deleteFile: DeleteExternalFileUseCase,
     val deleteFolder: DeleteExternalFolderUseCase,
+    val setFolderShortcut: SetFolderShortcutUseCase,
     val copyFile: CopyExternalFileUseCase,
     val moveFile: MoveExternalFileUseCase,
     val hideFile: HideExternalFileUseCase,

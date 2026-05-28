@@ -10,6 +10,8 @@ interface ExternalContentRepository {
 
     fun deleteFolder(path: String)
 
+    fun setFolderShortcut(path: String, shortcutNumber: Int?)
+
     fun copyFile(sourcePath: String, targetFolderPath: String)
 
     fun moveFile(sourcePath: String, targetFolderPath: String)

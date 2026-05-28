@@ -74,6 +74,7 @@ fun ExternalContentSubMenu(
                 MenuItemView(
                     text = if (isSelected) "\u25B6 ${folder.name}" else folder.name,
                     selected = isSelected,
+                    trailingText = folder.shortcutNumber?.let { "[$it]" },
                     onClick = {}
                 )
             }

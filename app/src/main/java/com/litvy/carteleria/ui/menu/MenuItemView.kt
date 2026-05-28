@@ -4,8 +4,10 @@ import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -29,7 +31,8 @@ fun MenuItemView(
     modifier: Modifier = Modifier,
     onLongPress: (() -> Unit)? = null,
     textColor: Color =  Color.White,
-    isHidden: Boolean = false
+    isHidden: Boolean = false,
+    trailingText: String? = null
 ) {
     Box(
         modifier = modifier
@@ -76,16 +79,30 @@ fun MenuItemView(
             }
             .padding(12.dp)
     ) {
-        BasicText(
-            text = text,
-            style = TextStyle(
-                color = textColor,
-                fontSize = 22.sp,
-                textDecoration = if (isHidden)
-                    TextDecoration.LineThrough
-                else
-                    TextDecoration.None
+        Row(modifier = Modifier.fillMaxWidth()) {
+            BasicText(
+                text = text,
+                style = TextStyle(
+                    color = textColor,
+                    fontSize = 22.sp,
+                    textDecoration = if (isHidden)
+                        TextDecoration.LineThrough
+                    else
+                        TextDecoration.None
+                ),
+                modifier = Modifier.weight(1f)
             )
-        )
+
+            if (trailingText != null) {
+                Spacer(modifier = Modifier.padding(horizontal = 6.dp))
+                BasicText(
+                    text = trailingText,
+                    style = TextStyle(
+                        color = Color.White.copy(alpha = 0.7f),
+                        fontSize = 18.sp
+                    )
+                )
+            }
+        }
     }
 }
