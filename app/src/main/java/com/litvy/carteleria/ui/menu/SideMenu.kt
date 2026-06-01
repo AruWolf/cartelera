@@ -27,6 +27,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.ui.menu.SubMenues.AnimationSubMenu
+import com.litvy.carteleria.ui.menu.SubMenues.AboutSubMenu
 import com.litvy.carteleria.ui.menu.SubMenues.DurationSubMenu
 import com.litvy.carteleria.ui.menu.SubMenues.ExternalContentSubMenu
 import com.litvy.carteleria.ui.menu.overlay.ContextMenuOverlay
@@ -78,6 +79,7 @@ fun SideMenu(
         "Contenido",
         "Animación",
         "Duraci\u00f3n",
+        "Acerca de",
         "Cerrar"
     )
 
@@ -220,6 +222,9 @@ fun SideMenu(
                     FocusSection.SUBMENU_DURATION ->
                         navigation.moveSubUp()
 
+                    FocusSection.SUBMENU_ABOUT ->
+                        Unit
+
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
                             externalNavigation.moveFolderUp()
@@ -244,6 +249,9 @@ fun SideMenu(
 
                     FocusSection.SUBMENU_DURATION ->
                         navigation.moveSubDown(1)
+
+                    FocusSection.SUBMENU_ABOUT ->
+                        Unit
 
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
@@ -270,7 +278,8 @@ fun SideMenu(
                             0 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
                             1 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
                             2 -> navigation.enterSubMenu(FocusSection.SUBMENU_DURATION)
-                            3 -> onClose()
+                            3 -> navigation.enterSubMenu(FocusSection.SUBMENU_ABOUT)
+                            4 -> onClose()
                         }
                     }
 
@@ -341,6 +350,8 @@ fun SideMenu(
                             confirmAllDurations = true
                         }
                     }
+
+                    FocusSection.SUBMENU_ABOUT -> Unit
 
                     else -> Unit
                 }
@@ -506,6 +517,9 @@ fun SideMenu(
                             FocusSection.SUBMENU_DURATION ->
                                 navigation.moveSubUp()
 
+                            FocusSection.SUBMENU_ABOUT ->
+                                Unit
+
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
                                     externalNavigation.moveFolderUp()
@@ -530,6 +544,9 @@ fun SideMenu(
 
                             FocusSection.SUBMENU_DURATION ->
                                 navigation.moveSubDown(1)
+
+                            FocusSection.SUBMENU_ABOUT ->
+                                Unit
 
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
@@ -556,7 +573,8 @@ fun SideMenu(
                                     0 -> navigation.enterSubMenu(FocusSection.SUBMENU_EXTERNAL)
                                     1 -> navigation.enterSubMenu(FocusSection.SUBMENU_ANIMATION)
                                     2 -> navigation.enterSubMenu(FocusSection.SUBMENU_DURATION)
-                                    3 -> onClose()
+                                    3 -> navigation.enterSubMenu(FocusSection.SUBMENU_ABOUT)
+                                    4 -> onClose()
                                 }
                             }
 
@@ -628,6 +646,8 @@ fun SideMenu(
                                 }
                             }
 
+                            FocusSection.SUBMENU_ABOUT -> Unit
+
                             else -> Unit
                         }
 
@@ -696,6 +716,7 @@ fun SideMenu(
                     0 -> FocusSection.SUBMENU_EXTERNAL
                     1 -> FocusSection.SUBMENU_ANIMATION
                     2 -> FocusSection.SUBMENU_DURATION
+                    3 -> FocusSection.SUBMENU_ABOUT
                     else -> null
                 }
             } else {
@@ -721,6 +742,9 @@ fun SideMenu(
                         navigation = externalNavigation,
                         isPreviewMode = isPreviewMode
                     )
+
+                FocusSection.SUBMENU_ABOUT ->
+                    AboutSubMenu()
 
                 else -> Unit
             }

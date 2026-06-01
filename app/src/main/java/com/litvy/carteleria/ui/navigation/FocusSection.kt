@@ -8,5 +8,6 @@ enum class FocusSection {
     SUBMENU_EXTERNAL,
     SUBMENU_DURATION,
     SUBMENU_ANIMATION,
+    SUBMENU_ABOUT,
     CONTEXT_MENU
 }
