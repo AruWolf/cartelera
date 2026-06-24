@@ -1,7 +1,11 @@
 package com.litvy.carteleria.ui.slideshow
 
+import android.content.Context
+import android.util.Log
+
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.litvy.carteleria.R
 import com.litvy.carteleria.data.CartelConfig
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.ContentSource
@@ -21,8 +25,14 @@ class SlideShowViewModel(
     private val externalProvider: AppStorageSlideProvider,
     private val prefs: CartelPreferences,
     private val server: CartelServer,
-    private val usbImporter: UsbImporter
+    private val usbImporter: UsbImporter,
+    private val context: Context
 ) : ViewModel() {
+
+    private companion object {
+        const val TAG = "SlideShowViewModel"
+        const val SLIDES_BETWEEN_ADVERTISING = 20
+    }
 
     private val _uiState = MutableStateFlow(SlideShowUiState())
     val uiState = _uiState.asStateFlow()
@@ -61,6 +71,8 @@ class SlideShowViewModel(
     }
 
     fun selectExternalFolder(folder: File) {
+        if (_uiState.value.isAdvertisingShowing) return
+
         val slides = externalProvider.loadFromFolder(folder)
 
         _uiState.value = _uiState.value.copy(
@@ -78,6 +90,7 @@ class SlideShowViewModel(
     }
 
     fun changeGlobalImageDuration(durationMs: Long) {
+        if (_uiState.value.isAdvertisingShowing) return
         if (!ImageSlideDurations.isAllowed(durationMs)) return
         _uiState.value = _uiState.value.copy(globalImageDurationMs = durationMs)
         saveConfig()
@@ -123,7 +136,7 @@ class SlideShowViewModel(
 
     fun nextSlide() {
         val state = _uiState.value
-        if (state.slides.isEmpty()) return
+        if (state.slides.isEmpty() || state.isAdvertisingShowing) return
 
         _uiState.value = state.copy(
             currentIndex = (state.currentIndex + 1) % state.slides.size,
@@ -133,7 +146,7 @@ class SlideShowViewModel(
 
     fun previousSlide() {
         val state = _uiState.value
-        if (state.slides.isEmpty()) return
+        if (state.slides.isEmpty() || state.isAdvertisingShowing) return
 
         val newIndex =
             if (state.currentIndex - 1 < 0)
@@ -148,12 +161,16 @@ class SlideShowViewModel(
     }
 
     fun togglePause() {
+        if (_uiState.value.isAdvertisingShowing) return
+
         _uiState.value = _uiState.value.copy(
             isPaused = !_uiState.value.isPaused
         )
     }
 
     fun toggleMenu() {
+        if (_uiState.value.isAdvertisingShowing) return
+
         _uiState.value = _uiState.value.copy(
             menuVisible = !_uiState.value.menuVisible
         )
@@ -167,8 +184,32 @@ class SlideShowViewModel(
         val state = _uiState.value
         if (state.slides.isEmpty()) return
 
+        if (state.isAdvertisingShowing) {
+            Log.d(TAG, "Advertising slide finished")
+            Log.d(TAG, "Advertising counter reset")
+            _uiState.value = state.copy(
+                isAdvertisingShowing = false,
+                currentIndex = (state.currentIndex + 1) % state.slides.size,
+                slidesShownSinceLastAdvertising = 0
+            )
+            return
+        }
+
+        val completedCount = state.slidesShownSinceLastAdvertising + 1
+        if (completedCount >= SLIDES_BETWEEN_ADVERTISING) {
+            Log.d(TAG, "Advertising slide scheduled")
+            _uiState.value = state.copy(
+                slidesShownSinceLastAdvertising = completedCount,
+                isAdvertisingShowing = true,
+                menuVisible = false,
+                showSlideIndicator = false
+            )
+            return
+        }
+
         _uiState.value = state.copy(
-            currentIndex = (state.currentIndex + 1) % state.slides.size
+            currentIndex = (state.currentIndex + 1) % state.slides.size,
+            slidesShownSinceLastAdvertising = completedCount
         )
     }
 
@@ -195,6 +236,7 @@ class SlideShowViewModel(
     }
 
     fun openMenu() {
+        if (_uiState.value.isAdvertisingShowing) return
         _uiState.update { it.copy(menuVisible = true) }
     }
 
@@ -229,14 +271,14 @@ class SlideShowViewModel(
 
         _uiState.value = _uiState.value.copy(
             isUsbLoading = true,
-            usbMessage = "🔍 Buscando USB..."
+            usbMessage = context.getString(R.string.usb_searching)
         )
 
         when (val result = usbImporter.forceScan()) {
 
             is UsbScanResult.Imported -> {
                 _uiState.value = _uiState.value.copy(
-                    usbMessage = "✅ Se importaron ${result.count} archivos",
+                    usbMessage = context.resources.getQuantityString(R.plurals.usb_files_imported, result.count, result.count),
                     isUsbLoading = false
                 )
                 delay(3000)
@@ -246,7 +288,7 @@ class SlideShowViewModel(
 
             UsbScanResult.NoChanges -> {
                 _uiState.value = _uiState.value.copy(
-                    usbMessage = "📁 No hay cambios para importar",
+                    usbMessage = context.getString(R.string.usb_no_changes),
                     isUsbLoading = false
                 )
                 delay(3000)
@@ -256,7 +298,7 @@ class SlideShowViewModel(
 
             else -> {
                 _uiState.value = _uiState.value.copy(
-                    usbMessage = "⚠️ No se encontró USB",
+                    usbMessage = context.getString(R.string.usb_not_found),
                     isUsbLoading = false
                 )
                 delay(3000)
@@ -267,3 +309,4 @@ class SlideShowViewModel(
     }
 
 }
+

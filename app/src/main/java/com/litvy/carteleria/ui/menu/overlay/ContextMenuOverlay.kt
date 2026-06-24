@@ -1,12 +1,18 @@
-package com.litvy.carteleria.ui.menu.overlay
+﻿package com.litvy.carteleria.ui.menu.overlay
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.R
 import com.litvy.carteleria.ui.menu.MenuItemView
 import com.litvy.carteleria.ui.navigation.ContextAction
 import com.litvy.carteleria.ui.navigation.ContextTarget
@@ -36,15 +42,31 @@ fun BoxScope.ContextMenuOverlay(
         options.forEachIndexed { index, action ->
 
             val isSelected = state.selectedIndex == index
+            val label = action.localizedLabel()
 
             MenuItemView(
-                text = if (isSelected)
-                    "▶ ${action.label}"
-                else
-                    action.label,
+                text = if (isSelected) "\u25B6 $label" else label,
                 selected = isSelected,
                 onClick = {}
             )
         }
+    }
+}
+
+@Composable
+private fun ContextAction.localizedLabel(): String {
+    return when (this) {
+        ContextAction.Cancel -> stringResource(R.string.context_cancel)
+        ContextAction.Delete -> stringResource(R.string.context_delete)
+        ContextAction.OpenFolder -> stringResource(R.string.context_open_folder)
+        ContextAction.PlayFolder -> stringResource(R.string.context_play_folder)
+        ContextAction.NumericShortcut -> stringResource(R.string.context_numeric_shortcut)
+        ContextAction.ApplyGlobalDuration -> stringResource(R.string.context_apply_global_duration)
+        ContextAction.Preview -> stringResource(R.string.context_preview)
+        ContextAction.Duration -> stringResource(R.string.context_duration)
+        ContextAction.Copy -> stringResource(R.string.context_copy)
+        ContextAction.Cut -> stringResource(R.string.context_cut)
+        ContextAction.Hide -> stringResource(R.string.context_hide)
+        ContextAction.Show -> stringResource(R.string.context_show)
     }
 }

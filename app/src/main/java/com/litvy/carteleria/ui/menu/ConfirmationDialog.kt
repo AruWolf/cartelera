@@ -22,7 +22,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.R
 import androidx.compose.ui.window.Dialog
 
 @Composable
@@ -91,7 +93,7 @@ fun ConfirmationDialog(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MenuItemView(
-                    text = "Cancelar",
+                    text = stringResource(R.string.cancel),
                     selected = selectedIndex == 0,
                     onClick = onDismiss,
                     modifier = Modifier.width(150.dp),
@@ -99,7 +101,7 @@ fun ConfirmationDialog(
                 )
 
                 MenuItemView(
-                    text = "Confirmar",
+                    text = stringResource(R.string.confirm),
                     selected = selectedIndex == 1,
                     onClick = onConfirm,
                     modifier = Modifier.width(160.dp),

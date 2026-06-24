@@ -13,10 +13,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import com.litvy.carteleria.R
 import com.litvy.carteleria.slides.ImageSlideDurations
+import com.litvy.carteleria.ui.menu.SubMenues.localizedDurationLabel
 
 @Composable
 fun DurationPickerDialog(
@@ -32,10 +35,10 @@ fun DurationPickerDialog(
     )
 
     val options = buildList {
-        if (includeGlobalOption) add(DurationOption("Duraci\u00f3n global", null))
+        if (includeGlobalOption) add(DurationOption(stringResource(R.string.global_duration), null))
         addAll(
             ImageSlideDurations.allowedValuesMs.map { durationMs ->
-                DurationOption(ImageSlideDurations.labelFor(durationMs), durationMs)
+                DurationOption(localizedDurationLabel(durationMs), durationMs)
             }
         )
     }

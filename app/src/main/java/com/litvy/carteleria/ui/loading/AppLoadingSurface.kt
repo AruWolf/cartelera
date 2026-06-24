@@ -21,10 +21,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.airbnb.lottie.compose.LottieAnimation
+import com.litvy.carteleria.R
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.LottieCompositionResult
@@ -129,7 +131,7 @@ fun AppLoadingSurface(
         }
 
         Text(
-            text = "Powered by Litvy S.A.S.",
+            text = stringResource(R.string.powered_by_litvy),
             color = Color.White.copy(alpha = 0.58f),
             fontSize = 12.sp,
             textAlign = TextAlign.Center,

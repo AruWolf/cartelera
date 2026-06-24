@@ -1,6 +1,7 @@
 package com.litvy.carteleria.util.network
 
 import android.content.Context
+import com.litvy.carteleria.R
 import com.litvy.carteleria.content.ContentStorage
 import fi.iki.elonen.NanoHTTPD
 import java.io.File
@@ -21,7 +22,7 @@ class LocalHttpServer(
 
             Method.POST -> handlePost(session)
 
-            else -> newFixedLengthResponse("Método no soportado")
+            else -> newFixedLengthResponse(context.getString(R.string.web_method_not_supported))
         }
     }
 
@@ -32,6 +33,10 @@ class LocalHttpServer(
             ?.joinToString("") { folder ->
                 "<option value='${folder.name}'>${folder.name}</option>"
             } ?: ""
+
+        val panelTitle = context.getString(R.string.web_panel_title)
+        val newFolderPlaceholder = context.getString(R.string.web_new_folder_placeholder)
+        val uploadFile = context.getString(R.string.web_upload_file)
 
         val html = """
             <html>
@@ -64,11 +69,11 @@ class LocalHttpServer(
             </head>
             <body>
                 <div class="container">
-                    <h2>Panel Cartelería TV</h2>
+                    <h2>$panelTitle</h2>
 
                     <form method="post" enctype="multipart/form-data">
                         <div>
-                            <input type="text" name="newFolder" placeholder="Nueva carpeta (opcional)" />
+                            <input type="text" name="newFolder" placeholder="$newFolderPlaceholder" />
                         </div>
 
                         <div>
@@ -82,7 +87,7 @@ class LocalHttpServer(
                         </div>
 
                         <div>
-                            <button type="submit">Subir archivo</button>
+                            <button type="submit">$uploadFile</button>
                         </div>
                     </form>
                 </div>
@@ -131,11 +136,11 @@ class LocalHttpServer(
             return newFixedLengthResponse(
                 Response.Status.OK,
                 "text/plain",
-                "Archivo subido correctamente a carpeta: ${targetFolder.name}"
+                context.getString(R.string.web_upload_success, targetFolder.name)
             )
         }
 
-        return newFixedLengthResponse("Error al subir archivo")
+        return newFixedLengthResponse(context.getString(R.string.web_upload_error))
     }
 
 }

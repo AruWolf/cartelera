@@ -12,26 +12,33 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.text.BasicText
 import com.litvy.carteleria.BuildConfig
+import com.litvy.carteleria.R
 import com.litvy.carteleria.config.ExternalLinks
 import com.litvy.carteleria.util.qr.generateQrCode
 
 @Composable
 fun AboutSubMenu() {
-    val qrBitmap = remember {
-        generateQrCode(ExternalLinks.COMPANY_URL, size = 360).asImageBitmap()
+    val websiteQrBitmap = remember {
+        generateQrCode(ExternalLinks.WEBSITE_URL, size = 360).asImageBitmap()
+    }
+    val userManualQrBitmap = remember {
+        generateQrCode(ExternalLinks.USER_MANUAL_URL, size = 360).asImageBitmap()
     }
 
     Row(
@@ -46,64 +53,99 @@ fun AboutSubMenu() {
             modifier = Modifier.widthIn(max = 360.dp)
         ) {
             AboutText(
-                text = "Cartelera Digital TV",
+                text = stringResource(R.string.about_app_title),
                 fontSize = 24,
                 fontWeight = FontWeight.SemiBold
             )
             Spacer(modifier = Modifier.height(8.dp))
-            AboutText(text = "Versi\u00f3n ${BuildConfig.VERSION_NAME}")
+            AboutText(text = stringResource(R.string.about_version, BuildConfig.VERSION_NAME))
             AboutText(
-                text = "Powered by Litvy S.A.S.",
+                text = stringResource(R.string.about_app_description),
+                color = Color.White.copy(alpha = 0.68f),
+                fontSize = 18
+            )
+            AboutText(
+                text = stringResource(R.string.powered_by_litvy),
                 color = Color.White.copy(alpha = 0.68f),
                 fontSize = 18
             )
 
             AboutSectionSpacer()
 
-            AboutHeading("EMPRESA")
-            AboutText("Litvy S.A.S.")
+            AboutHeading(stringResource(R.string.about_company_heading))
+            AboutText(stringResource(R.string.about_company_name))
             AboutText(
-                text = "Sitio Web",
+                text = stringResource(R.string.about_website_label),
                 color = Color.White.copy(alpha = 0.78f),
                 fontSize = 18
             )
             AboutText(
-                text = ExternalLinks.COMPANY_URL,
+                text = ExternalLinks.WEBSITE_URL,
                 color = Color.White.copy(alpha = 0.78f),
                 fontSize = 18
             )
 
             AboutSectionSpacer()
 
-            AboutHeading("DESARROLLADOR")
-            AboutText("Leo")
-            AboutText("LinkedIn", color = Color.White.copy(alpha = 0.78f), fontSize = 18)
-            AboutText("GitHub", color = Color.White.copy(alpha = 0.78f), fontSize = 18)
+            AboutHeading(stringResource(R.string.about_developer_heading))
+            AboutText(stringResource(R.string.about_developer_name))
+            AboutText(ExternalLinks.LINKEDIN_URL, color = Color.White.copy(alpha = 0.78f), fontSize = 18)
+            AboutText(ExternalLinks.GITHUB_URL, color = Color.White.copy(alpha = 0.78f), fontSize = 18)
 
             AboutSectionSpacer()
 
             AboutText(
-                text = "\u00a9 Litvy S.A.S.",
+                text = stringResource(R.string.about_copyright),
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 18
             )
             AboutText(
-                text = "Todos los derechos reservados.",
+                text = stringResource(R.string.about_rights_reserved),
                 color = Color.White.copy(alpha = 0.7f),
                 fontSize = 18
             )
         }
 
         Column(
-            modifier = Modifier.padding(top = 104.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.padding(top = 48.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(28.dp)
         ) {
-            Image(
-                bitmap = qrBitmap,
-                contentDescription = null,
-                modifier = Modifier.size(172.dp)
+            AboutQrBlock(
+                title = stringResource(R.string.about_litvy_page),
+                bitmap = websiteQrBitmap
+            )
+            AboutQrBlock(
+                title = stringResource(R.string.manual_privacy_title),
+                bitmap = userManualQrBitmap
             )
         }
+    }
+}
+
+@Composable
+private fun AboutQrBlock(
+    title: String,
+    bitmap: ImageBitmap
+) {
+    Column(
+        modifier = Modifier.width(180.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        AboutText(
+            text = title,
+            modifier = Modifier.width(180.dp),
+            color = Color.White.copy(alpha = 0.86f),
+            fontSize = 16,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(10.dp))
+        Image(
+            bitmap = bitmap,
+            contentDescription = null,
+            modifier = Modifier.size(172.dp)
+        )
     }
 }
 
@@ -126,16 +168,20 @@ private fun AboutHeading(text: String) {
 @Composable
 private fun AboutText(
     text: String,
+    modifier: Modifier = Modifier,
     color: Color = Color.White,
     fontSize: Int = 20,
-    fontWeight: FontWeight = FontWeight.Normal
+    fontWeight: FontWeight = FontWeight.Normal,
+    textAlign: TextAlign = TextAlign.Start
 ) {
     BasicText(
         text = text,
+        modifier = modifier,
         style = TextStyle(
             color = color,
             fontSize = fontSize.sp,
-            fontWeight = fontWeight
+            fontWeight = fontWeight,
+            textAlign = textAlign
         )
     )
 }

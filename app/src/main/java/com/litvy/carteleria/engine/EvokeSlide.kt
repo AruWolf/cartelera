@@ -20,14 +20,15 @@ class EvokeSlide(
     fun Render(
         modifier: Modifier = Modifier,
         currentIndex: Int,
+        currentSlideOverride: Slide? = null,
         isPaused: Boolean,
         onAutoNext: () -> Unit
     ) {
 
         if (slides.isEmpty() || currentIndex !in slides.indices) return
-        val currentSlide = slides[currentIndex]
+        val currentSlide = currentSlideOverride ?: slides[currentIndex]
 
-        LaunchedEffect(currentIndex, isPaused, globalImageDurationMs, currentSlide.customDurationMs) {
+        LaunchedEffect(currentSlide.id, currentIndex, isPaused, globalImageDurationMs, currentSlide.customDurationMs) {
 
             if (isPaused) return@LaunchedEffect
 
@@ -49,9 +50,12 @@ class EvokeSlide(
 
                 slide.Render(
                     isPaused = isPaused,
-                    onFinished = { onAutoNext() }
+                    onFinished = {
+                        if (slide.id == currentSlide.id) onAutoNext()
+                    }
                 )
             }
         }
     }
 }
+

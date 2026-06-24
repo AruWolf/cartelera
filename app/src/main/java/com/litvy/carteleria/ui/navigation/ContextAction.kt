@@ -1,23 +1,23 @@
 package com.litvy.carteleria.ui.navigation
 
 // Clase utilizada para contextualizar el menu de acciones de archivos y carpetas
-sealed class ContextAction(val label: String) {
+sealed class ContextAction {
 
-    object Cancel : ContextAction("Cancelar")
-    object Delete : ContextAction("Eliminar")
+    object Cancel : ContextAction()
+    object Delete : ContextAction()
 
     // Carpetas
-    object OpenFolder : ContextAction("Abrir")
-    object PlayFolder : ContextAction("Reproducir")
-    object NumericShortcut : ContextAction("Atajo Num\u00e9rico")
-    object ApplyGlobalDuration : ContextAction("Aplicar duraci\u00f3n global")
+    object OpenFolder : ContextAction()
+    object PlayFolder : ContextAction()
+    object NumericShortcut : ContextAction()
+    object ApplyGlobalDuration : ContextAction()
 
     // Archivos
-    object Preview : ContextAction("Previsualizar")
-    object Duration : ContextAction("Duraci\u00f3n")
-    object Copy : ContextAction("Copiar")
-    object Cut : ContextAction("Cortar")
+    object Preview : ContextAction()
+    object Duration : ContextAction()
+    object Copy : ContextAction()
+    object Cut : ContextAction()
 
-    object Hide : ContextAction("Ocultar")
-    object Show : ContextAction("Mostrar")
+    object Hide : ContextAction()
+    object Show : ContextAction()
 }

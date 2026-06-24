@@ -1,4 +1,4 @@
-package com.litvy.carteleria.ui.menu.SubMenues
+﻿package com.litvy.carteleria.ui.menu.SubMenues
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -14,11 +14,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.R
 import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.MenuItemView
 import com.litvy.carteleria.ui.navigation.ExternalNavigationController
-import com.litvy.carteleria.slides.ImageSlideDurations
 
 @Composable
 fun ExternalContentSubMenu(
@@ -51,7 +52,7 @@ fun ExternalContentSubMenu(
         if (!state.isInFolder) {
             item {
                 MenuItemView(
-                    text = "\uD83D\uDCF1 Cargar contenido (QR)",
+                    text = "\uD83D\uDCF1 ${stringResource(R.string.load_content_qr)}",
                     selected = !isPreviewMode && navigation.state.folderIndex == 0,
                     onClick = {}
                 )
@@ -59,7 +60,7 @@ fun ExternalContentSubMenu(
 
             item {
                 MenuItemView(
-                    text = "\uD83D\uDD04 Actualizar desde USB",
+                    text = "\uD83D\uDD04 ${stringResource(R.string.update_from_usb)}",
                     selected = !isPreviewMode && navigation.state.folderIndex == 1,
                     onClick = {}
                 )
@@ -84,8 +85,9 @@ fun ExternalContentSubMenu(
             if (hasClipboard) {
                 item {
                     val isSelected = !isPreviewMode && navigation.state.fileIndex == 0
+                    val pasteHere = "\uD83D\uDCCB ${stringResource(R.string.paste_here)}"
                     MenuItemView(
-                        text = if (isSelected) "\u25B6 \uD83D\uDCCB Pegar aquí" else "\uD83D\uDCCB Pegar aquí",
+                        text = if (isSelected) "\u25B6 $pasteHere" else pasteHere,
                         selected = isSelected,
                         onClick = {}
                     )
@@ -96,7 +98,7 @@ fun ExternalContentSubMenu(
 
             item {
                 MenuItemView(
-                    text = "< Volver",
+                    text = "< ${stringResource(R.string.back)}",
                     selected = !isPreviewMode && navigation.state.fileIndex == backIndex,
                     onClick = {}
                 )
@@ -109,7 +111,7 @@ fun ExternalContentSubMenu(
                 val globalIndex = index + offset
                 val isSelected = !isPreviewMode && navigation.state.fileIndex == globalIndex
                 val durationIndicator = if (file.isImage) {
-                    val label = file.customDurationMs?.let { ImageSlideDurations.labelFor(it) } ?: "Global"
+                    val label = file.customDurationMs?.let { localizedDurationLabel(it) } ?: stringResource(R.string.global)
                     "  \u23F1 $label"
                 } else {
                     ""

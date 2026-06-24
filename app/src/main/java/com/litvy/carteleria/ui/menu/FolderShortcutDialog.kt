@@ -17,8 +17,10 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.litvy.carteleria.R
 import com.litvy.carteleria.data.external.FolderShortcutManager
 
 @Composable
@@ -81,7 +83,7 @@ fun FolderShortcutDialog(
         ) {
             options.forEachIndexed { index, option ->
                 val isSelected = selectedIndex == index
-                val label = option?.toString() ?: "Sin Atajo"
+                val label = option?.toString() ?: stringResource(R.string.no_shortcut)
 
                 MenuItemView(
                     text = if (isSelected) "\u25B6 $label" else label,

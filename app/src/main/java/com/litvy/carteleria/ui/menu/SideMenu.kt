@@ -25,7 +25,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.litvy.carteleria.R
 import com.litvy.carteleria.ui.menu.SubMenues.AnimationSubMenu
 import com.litvy.carteleria.ui.menu.SubMenues.AboutSubMenu
 import com.litvy.carteleria.ui.menu.SubMenues.DurationSubMenu
@@ -76,11 +78,11 @@ fun SideMenu(
     var shortcutConflict by remember { mutableStateOf<Pair<String, Int>?>(null) }
 
     val mainMenuItems = listOf(
-        "Contenido",
-        "Animación",
-        "Duraci\u00f3n",
-        "Acerca de",
-        "Cerrar"
+        stringResource(R.string.menu_content),
+        stringResource(R.string.menu_animation),
+        stringResource(R.string.menu_duration),
+        stringResource(R.string.menu_about),
+        stringResource(R.string.menu_close)
     )
 
     LaunchedEffect(Unit) {
@@ -765,7 +767,7 @@ fun SideMenu(
 
         if (showGlobalDurationDialog) {
             DurationPickerDialog(
-                title = "Duraci\u00f3n",
+                title = stringResource(R.string.menu_duration),
                 initialDurationMs = currentGlobalImageDurationMs,
                 includeGlobalOption = false,
                 onDurationSelected = { durationMs ->
@@ -778,7 +780,7 @@ fun SideMenu(
 
         imageDurationTargetPath?.let { targetPath ->
             DurationPickerDialog(
-                title = "Duraci\u00f3n",
+                title = stringResource(R.string.menu_duration),
                 initialDurationMs = imageDurationInitialMs,
                 includeGlobalOption = true,
                 onDurationSelected = { durationMs ->
@@ -799,12 +801,12 @@ fun SideMenu(
 
         if (confirmAllDurations) {
             ConfirmationDialog(
-                text = "\u00bfAplicar duraci\u00f3n global a todas las im\u00e1genes?",
+                text = stringResource(R.string.confirm_apply_global_duration_all),
                 onConfirm = {
                     onUseGlobalDurationForAllImages()
                     Toast.makeText(
                         context,
-                        "Duraci\u00f3n global aplicada a todas las im\u00e1genes",
+                        context.getString(R.string.toast_global_duration_applied_all),
                         Toast.LENGTH_SHORT
                     ).show()
                     confirmAllDurations = false
@@ -815,12 +817,12 @@ fun SideMenu(
 
         confirmFolderDurationPath?.let { folderPath ->
             ConfirmationDialog(
-                text = "\u00bfAplicar duraci\u00f3n global a todas las im\u00e1genes de esta carpeta?",
+                text = stringResource(R.string.confirm_apply_global_duration_folder),
                 onConfirm = {
                     onUseGlobalDurationForFolder(folderPath)
                     Toast.makeText(
                         context,
-                        "Duraci\u00f3n global aplicada a la carpeta",
+                        context.getString(R.string.toast_global_duration_applied_folder),
                         Toast.LENGTH_SHORT
                     ).show()
                     confirmFolderDurationPath = null
@@ -862,7 +864,12 @@ fun SideMenu(
             }
 
             ConfirmationDialog(
-                text = "El n\u00famero $selectedShortcut ya est\u00e1 asignado a:\n\n\"${conflictFolder?.name.orEmpty()}\"\n\n\u00bfDesea reemplazarlo y asignarlo a:\n\n\"${targetFolder?.name.orEmpty()}\"?",
+                text = stringResource(
+                    R.string.confirm_replace_shortcut,
+                    selectedShortcut,
+                    conflictFolder?.name.orEmpty(),
+                    targetFolder?.name.orEmpty()
+                ),
                 onConfirm = {
                     val targetPath = shortcutTargetPath
                     if (targetPath != null) {

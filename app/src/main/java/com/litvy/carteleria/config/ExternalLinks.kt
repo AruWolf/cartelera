@@ -2,11 +2,11 @@ package com.litvy.carteleria.config
 
 object ExternalLinks {
 
-    const val COMPANY_URL = "https://litvy.com.ar"
+    const val WEBSITE_URL = "https://litvy.com.ar"
 
-    // TODO: REEMPLAZAR_URL_LINKEDIN
-    const val LINKEDIN_URL = ""
+    const val USER_MANUAL_URL = "https://drive.google.com/file/d/1sLQB7J5_HakEzI3qaA-0mHxuofJpqJ-u/view?usp=sharing"
 
-    // TODO: REEMPLAZAR_URL_GITHUB
-    const val GITHUB_URL = ""
+    const val LINKEDIN_URL = "https://www.linkedin.com/in/leonardomorales314"
+
+    const val GITHUB_URL = "https://github.com/leinho314"
 }

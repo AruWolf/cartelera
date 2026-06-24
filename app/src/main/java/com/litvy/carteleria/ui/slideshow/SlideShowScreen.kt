@@ -40,8 +40,10 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.animations.TvTransitions
+import com.litvy.carteleria.config.ExternalLinks
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.external.AppStorageExternalRepository
 import com.litvy.carteleria.data.external.FolderShortcutManager
@@ -58,6 +60,7 @@ import com.litvy.carteleria.domain.external.usecase.MoveExternalFileUseCase
 import com.litvy.carteleria.domain.external.usecase.SetFolderShortcutUseCase
 import com.litvy.carteleria.domain.external.usecase.ShowExternalFileUseCase
 import com.litvy.carteleria.engine.EvokeSlide
+import com.litvy.carteleria.slides.AdvertisingSlide
 import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.slides.Slide
 import com.litvy.carteleria.ui.loading.AppLoadingSurface
@@ -88,7 +91,8 @@ fun SlideShowScreen() {
             externalProvider = AppStorageSlideProvider(context, hiddenManager, imageDurationManager),
             prefs = CartelPreferences(context),
             server = LocalCartelServer(context),
-            usbImporter = UsbContentManager(context)
+            usbImporter = UsbContentManager(context),
+            context = context
         )
     }
     val state by viewModel.uiState.collectAsState()
@@ -164,6 +168,8 @@ fun SlideShowScreen() {
     }
 
     fun playFolderByShortcut(number: Int): Boolean {
+        if (state.isAdvertisingShowing) return true
+
         val folder = externalMenuState.folders.firstOrNull { it.shortcutNumber == number }
             ?: return false
 
@@ -180,6 +186,8 @@ fun SlideShowScreen() {
     }
 
     fun handleSlideshowRemoteKey(keyCode: Int): Boolean {
+        if (state.isAdvertisingShowing) return true
+
         if (state.menuVisible) return false
 
         if (ignoreNextCenter) {
@@ -232,7 +240,7 @@ fun SlideShowScreen() {
 
                     Toast.makeText(
                         context,
-                        "Presione nuevamente para salir",
+                        context.getString(R.string.press_again_to_exit),
                         Toast.LENGTH_SHORT
                     ).show()
 
@@ -259,6 +267,7 @@ fun SlideShowScreen() {
 
     LaunchedEffect(
         state.menuVisible,
+        state.isAdvertisingShowing,
         showQr,
         ignoreNextCenter,
         backPressedOnce
@@ -283,6 +292,13 @@ fun SlideShowScreen() {
         }
     }
 
+    LaunchedEffect(state.isAdvertisingShowing) {
+        if (state.isAdvertisingShowing) {
+            showQr = false
+            shortcutOverlayManager.clear()
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -290,6 +306,19 @@ fun SlideShowScreen() {
             .focusRequester(focusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
+                if (state.isAdvertisingShowing) {
+                    return@onPreviewKeyEvent event.nativeKeyEvent.keyCode in setOf(
+                        KeyEvent.KEYCODE_DPAD_CENTER,
+                        KeyEvent.KEYCODE_DPAD_LEFT,
+                        KeyEvent.KEYCODE_DPAD_RIGHT,
+                        KeyEvent.KEYCODE_DPAD_UP,
+                        KeyEvent.KEYCODE_DPAD_DOWN,
+                        KeyEvent.KEYCODE_BACK,
+                        KeyEvent.KEYCODE_MEDIA_NEXT,
+                        KeyEvent.KEYCODE_MEDIA_PREVIOUS
+                    )
+                }
+
                 if (state.menuVisible) return@onPreviewKeyEvent false
 
                 if (ignoreNextCenter) {
@@ -308,11 +337,12 @@ fun SlideShowScreen() {
             engine.Render(
                 modifier = Modifier.fillMaxSize(),
                 currentIndex = state.currentIndex,
+                currentSlideOverride = if (state.isAdvertisingShowing) AdvertisingSlide else null,
                 isPaused = state.isPaused,
                 onAutoNext = { viewModel.autoNext() }
             )
 
-            if (state.showSlideIndicator) {
+            if (state.showSlideIndicator && !state.isAdvertisingShowing) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -330,7 +360,7 @@ fun SlideShowScreen() {
                 }
             }
 
-            if (state.isPaused) {
+            if (state.isPaused && !state.isAdvertisingShowing) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -342,7 +372,7 @@ fun SlideShowScreen() {
                         .padding(20.dp)
                 ) {
                     Text(
-                        text = "Reproducción en pausa.\nPresione ARRIBA o el botón PAUSA para reanudar.",
+                        text = stringResource(R.string.playback_paused_message),
                         color = Color.White
                     )
                 }
@@ -353,15 +383,52 @@ fun SlideShowScreen() {
                 fallbackBackgroundColor = Color.DarkGray,
                 showLoadingIndicator = false
             )
+
+            val userManualQrBitmap = remember {
+                generateQrCode(ExternalLinks.USER_MANUAL_URL, size = 360).asImageBitmap()
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(32.dp)
+                    .background(
+                        color = Color.Black.copy(alpha = 0.85f),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .padding(16.dp)
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = stringResource(R.string.manual_privacy_title),
+                        color = Color.White
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    Image(
+                        bitmap = userManualQrBitmap,
+                        contentDescription = stringResource(R.string.qr_manual_content_description),
+                        modifier = Modifier.size(172.dp)
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Text(
+                        text = stringResource(R.string.scan_for_help),
+                        color = Color.Gray
+                    )
+                }
+            }
         }
 
         LaunchedEffect(state.menuVisible) {
-            if (state.menuVisible) {
+            if (state.menuVisible && !state.isAdvertisingShowing) {
                 delay(50)
             }
         }
 
-        if (state.menuVisible) {
+        if (state.menuVisible && !state.isAdvertisingShowing) {
             SideMenu(
                 currentAnimation = state.currentAnimation,
                 currentGlobalImageDurationMs = state.globalImageDurationMs,
@@ -416,7 +483,7 @@ fun SlideShowScreen() {
         }
 
         AnimatedVisibility(
-            visible = shortcutOverlayText != null,
+            visible = shortcutOverlayText != null && !state.isAdvertisingShowing,
             enter = fadeIn(tween(durationMillis = 160)),
             exit = fadeOut(tween(durationMillis = 160)),
             modifier = Modifier.align(Alignment.TopCenter)
@@ -437,7 +504,7 @@ fun SlideShowScreen() {
             }
         }
 
-        if (showQr && serverUrl.isNotEmpty()) {
+        if (showQr && serverUrl.isNotEmpty() && !state.isAdvertisingShowing) {
             val qrBitmap: Bitmap = remember(serverUrl) {
                 generateQrCode(serverUrl)
             }
@@ -459,7 +526,7 @@ fun SlideShowScreen() {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Escaneá para cargar contenido",
+                            text = stringResource(R.string.scan_to_upload_content),
                             color = Color.White
                         )
 
@@ -467,7 +534,7 @@ fun SlideShowScreen() {
 
                         Image(
                             bitmap = qrBitmap.asImageBitmap(),
-                            contentDescription = "QR",
+                            contentDescription = stringResource(R.string.qr_content_description),
                             modifier = Modifier.size(220.dp)
                         )
 
@@ -514,13 +581,13 @@ fun SlideShowScreen() {
         }
 
         AnimatedVisibility(
-            visible = isFolderLoading,
+            visible = isFolderLoading && !state.isAdvertisingShowing,
             enter = fadeIn(tween(durationMillis = LoadingUiDefaults.FOLDER_SELECTION_FADE_MS)),
             exit = fadeOut(tween(durationMillis = LoadingUiDefaults.FOLDER_SELECTION_FADE_MS))
         ) {
             AppLoadingSurface(
                 backgroundName = AppVisualAssets.EMPTY_CONTENT_BACKGROUND,
-                message = "Cargando contenido...",
+                message = stringResource(R.string.loading_content),
                 fallbackBackgroundColor = Color.Black,
                 showOverlayScrim = true
             )
@@ -528,12 +595,13 @@ fun SlideShowScreen() {
 
         Image(
             painter = painterResource(id = R.drawable.litvy_letter),
-            contentDescription = "Logo Litvy",
+            contentDescription = stringResource(R.string.logo_litvy_content_description),
             modifier = Modifier
                 .align(Alignment.BottomStart)
                 .padding(24.dp)
-                .height(25.dp)
-                .alpha(1f)
+                .height(45.dp)
+                .alpha(0.5f)
         )
     }
 }
+

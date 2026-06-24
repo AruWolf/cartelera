@@ -3,7 +3,7 @@ package com.litvy.carteleria.bootstrap
 import android.content.Context
 import com.litvy.carteleria.content.ContentStorage
 import java.io.File
-
+/*
 class BootstrapContentInitializer {
 
     companion object {
@@ -18,15 +18,15 @@ class BootstrapContentInitializer {
 
     private val demoAssets = listOf(
         DemoAsset(
-            assetPath = "content/productos/blue.png",
+            assetPath = "content/productos/",
             targetName = "demo_slide_1.png"
         ),
         DemoAsset(
-            assetPath = "content/productos/brahma.png",
+            assetPath = "content/productos/",
             targetName = "demo_slide_2.png"
         ),
         DemoAsset(
-            assetPath = "content/productos/Fernet.mp4",
+            assetPath = "content/productos/",
             targetName = "demo_slide_3.mp4"
         )
     )
@@ -67,3 +67,4 @@ class BootstrapContentInitializer {
         }
     }
 }
+*/

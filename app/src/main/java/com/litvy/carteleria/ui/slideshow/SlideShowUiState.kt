@@ -11,6 +11,8 @@ data class SlideShowUiState(
     val globalImageDurationMs: Long = ImageSlideDurations.DEFAULT_GLOBAL_DURATION_MS,
     val slides: List<Slide> = emptyList(),
     val isPaused: Boolean = false,
+    val isAdvertisingShowing: Boolean = false,
+    val slidesShownSinceLastAdvertising: Int = 0,
     val currentIndex: Int = 0,
     val showSlideIndicator: Boolean = false,
     val showQr: Boolean = false,
@@ -19,3 +21,4 @@ data class SlideShowUiState(
     val isUsbLoading: Boolean = false,
     val clipboardItem: ClipboardItem? = null
 )
+

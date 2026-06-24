@@ -29,8 +29,8 @@ fun ContentSubMenu(
             val isActive = folder == activeFolder
 
             val prefix = buildString {
-                if (isFocused) append("▶ ")
-                if (isActive) append("✔ ")
+                if (isFocused) append("? ")
+                if (isActive) append("? ")
             }
 
             MenuItemView(

@@ -1,0 +1,97 @@
+﻿<resources>
+    <string name="app_name">Signage</string>
+
+    <string name="menu_content">Content</string>
+    <string name="menu_animation">Animation</string>
+    <string name="menu_duration">Duration</string>
+    <string name="menu_about">About</string>
+    <string name="menu_close">Close</string>
+
+    <string name="load_content_qr">Load content (QR)</string>
+    <string name="update_from_usb">Update from USB</string>
+    <string name="paste_here">Paste here</string>
+    <string name="back">Back</string>
+    <string name="global">Global</string>
+
+    <string name="animation_random">Random</string>
+    <string name="animation_fade">Fade</string>
+    <string name="animation_scale">Scale</string>
+    <string name="animation_slide_left">Slide left</string>
+    <string name="animation_slide_up">Slide up</string>
+    <string name="animation_slide_right">Slide right</string>
+    <string name="animation_slide_down">Slide down</string>
+
+    <string name="custom_duration_with_value">Custom duration: %1$s</string>
+    <string name="apply_global_duration_all_images">Apply global duration to all images</string>
+    <string name="global_duration">Global duration</string>
+
+    <plurals name="duration_seconds">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
+    <plurals name="duration_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+
+    <string name="context_cancel">Cancel</string>
+    <string name="context_delete">Delete</string>
+    <string name="context_open_folder">Open</string>
+    <string name="context_play_folder">Play</string>
+    <string name="context_numeric_shortcut">Numeric shortcut</string>
+    <string name="context_apply_global_duration">Apply global duration</string>
+    <string name="context_preview">Preview</string>
+    <string name="context_duration">Duration</string>
+    <string name="context_copy">Copy</string>
+    <string name="context_cut">Cut</string>
+    <string name="context_hide">Hide</string>
+    <string name="context_show">Show</string>
+
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+    <string name="no_shortcut">No shortcut</string>
+
+    <string name="confirm_apply_global_duration_all">Apply global duration to all images?</string>
+    <string name="toast_global_duration_applied_all">Global duration applied to all images</string>
+    <string name="confirm_apply_global_duration_folder">Apply global duration to all images in this folder?</string>
+    <string name="toast_global_duration_applied_folder">Global duration applied to the folder</string>
+    <string name="confirm_replace_shortcut">Number %1$d is already assigned to:\n\n"%2$s"\n\nDo you want to replace it and assign it to:\n\n"%3$s"?</string>
+
+    <string name="about_app_title">Digital Signage TV</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_app_description">Digital signage application for Android TV.</string>
+    <string name="powered_by_litvy">Powered by Litvy S.A.S.</string>
+    <string name="about_company_heading">COMPANY</string>
+    <string name="about_company_name">Litvy S.A.S.</string>
+    <string name="about_website_label">Website</string>
+    <string name="about_developer_heading">DEVELOPER</string>
+    <string name="about_developer_name">Leonardo Morales</string>
+    <string name="about_copyright">© Litvy S.A.S.</string>
+    <string name="about_rights_reserved">All rights reserved.</string>
+    <string name="about_litvy_page">Litvy page</string>
+    <string name="manual_privacy_title">User manual and privacy policies</string>
+
+    <string name="press_again_to_exit">Press again to exit</string>
+    <string name="playback_paused_message">Playback paused.\nPress UP or the PAUSE button to resume.</string>
+    <string name="scan_for_help">Scan for help</string>
+    <string name="scan_to_upload_content">Scan to upload content</string>
+    <string name="loading_content">Loading content...</string>
+    <string name="logo_litvy_content_description">Litvy logo</string>
+    <string name="qr_content_description">QR</string>
+    <string name="qr_manual_content_description">User manual QR</string>
+
+    <string name="usb_searching">Searching for USB...</string>
+    <plurals name="usb_files_imported">
+        <item quantity="one">Imported %1$d file</item>
+        <item quantity="other">Imported %1$d files</item>
+    </plurals>
+    <string name="usb_no_changes">No changes to import</string>
+    <string name="usb_not_found">USB not found</string>
+
+    <string name="web_method_not_supported">Method not supported</string>
+    <string name="web_panel_title">Signage TV Panel</string>
+    <string name="web_new_folder_placeholder">New folder (optional)</string>
+    <string name="web_upload_file">Upload file</string>
+    <string name="web_upload_success">File uploaded successfully to folder: %1$s</string>
+    <string name="web_upload_error">Error uploading file</string>
+</resources>

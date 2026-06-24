@@ -22,18 +22,6 @@ object ImageSlideDurations {
     fun isAllowed(durationMs: Long): Boolean {
         return durationMs in allowedValuesMs
     }
-
-    fun labelFor(durationMs: Long): String {
-        val seconds = durationMs / 1000L
-        return when (seconds) {
-            60L -> "1 minuto"
-            120L -> "2 minutos"
-            180L -> "3 minutos"
-            240L -> "4 minutos"
-            300L -> "5 minutos"
-            else -> "$seconds segundos"
-        }
-    }
 }
 
 fun resolveImageSlideDuration(
