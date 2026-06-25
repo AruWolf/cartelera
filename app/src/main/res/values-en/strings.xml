@@ -9,6 +9,9 @@
 
     <string name="load_content_qr">Load content (QR)</string>
     <string name="update_from_usb">Update from USB</string>
+    <string name="import_from_files">Import from files</string>
+    <string name="import_from_gallery">Import from gallery</string>
+    <string name="importing_content">Importing content...</string>
     <string name="paste_here">Paste here</string>
     <string name="back">Back</string>
     <string name="global">Global</string>
@@ -87,6 +90,10 @@
     </plurals>
     <string name="usb_no_changes">No changes to import</string>
     <string name="usb_not_found">USB not found</string>
+    <plurals name="media_files_imported">
+        <item quantity="one">Imported %1$d file</item>
+        <item quantity="other">Imported %1$d files</item>
+    </plurals>
 
     <string name="web_method_not_supported">Method not supported</string>
     <string name="web_panel_title">Signage TV Panel</string>

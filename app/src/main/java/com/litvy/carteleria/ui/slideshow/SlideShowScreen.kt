@@ -2,7 +2,6 @@ package com.litvy.carteleria.ui.slideshow
 
 import com.litvy.carteleria.R
 import android.app.Activity
-import android.graphics.Bitmap
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -22,6 +21,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -71,6 +73,7 @@ import com.litvy.carteleria.ui.menu.SideMenu
 import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 import com.litvy.carteleria.util.network.LocalCartelServer
 import com.litvy.carteleria.util.qr.generateQrCode
+import com.litvy.carteleria.ui.touchremote.TouchDeviceDetector
 import com.litvy.carteleria.util.usb.UsbContentManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
@@ -96,10 +99,19 @@ fun SlideShowScreen() {
         )
     }
     val state by viewModel.uiState.collectAsState()
-    val serverUrl by viewModel.serverUrl.collectAsState()
 
     val focusRequester = remember { FocusRequester() }
-    var showQr by remember { mutableStateOf(false) }
+    val importFromFilesLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenMultipleDocuments()
+    ) { uris ->
+        viewModel.importMedia(uris)
+    }
+    val importFromGalleryLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.PickMultipleVisualMedia()
+    ) { uris ->
+        viewModel.importMedia(uris)
+    }
+    val canUseTouchImports = remember { TouchDeviceDetector.shouldShowTouchRemote(context) }
     val scope = rememberCoroutineScope()
     var isFolderLoading by remember { mutableStateOf(false) }
 
@@ -159,6 +171,10 @@ fun SlideShowScreen() {
         ExternalMenuViewModel(externalUseCases)
     }
     val externalMenuState by externalMenuViewModel.state.collectAsState()
+
+    LaunchedEffect(state.contentRevision) {
+        externalMenuViewModel.reloadCurrentView()
+    }
 
     var ignoreNextCenter by remember { mutableStateOf(false) }
     var shortcutOverlayText by remember { mutableStateOf<String?>(null) }
@@ -232,10 +248,7 @@ fun SlideShowScreen() {
             }
 
             KeyEvent.KEYCODE_BACK -> {
-                if (showQr) {
-                    showQr = false
-                    true
-                } else if (!backPressedOnce) {
+                if (!backPressedOnce) {
                     backPressedOnce = true
 
                     Toast.makeText(
@@ -262,13 +275,11 @@ fun SlideShowScreen() {
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
-        viewModel.startServer()
     }
 
     LaunchedEffect(
         state.menuVisible,
         state.isAdvertisingShowing,
-        showQr,
         ignoreNextCenter,
         backPressedOnce
     ) {
@@ -279,7 +290,6 @@ fun SlideShowScreen() {
 
     DisposableEffect(Unit) {
         onDispose {
-            viewModel.stopServer()
             shortcutPlaybackJob?.cancel()
             shortcutOverlayManager.clear()
         }
@@ -294,7 +304,6 @@ fun SlideShowScreen() {
 
     LaunchedEffect(state.isAdvertisingShowing) {
         if (state.isAdvertisingShowing) {
-            showQr = false
             shortcutOverlayManager.clear()
         }
     }
@@ -460,8 +469,19 @@ fun SlideShowScreen() {
                         isFolderLoading = false
                     }
                 },
-                onShowQr = {
-                    showQr = true
+                canImportFromDevice = canUseTouchImports,
+                onImportFromFiles = {
+                    importFromFilesLauncher.launch(arrayOf("image/*", "video/*"))
+                    viewModel.toggleMenu()
+                },
+                onImportFromGallery = {
+                    if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)) {
+                        importFromGalleryLauncher.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                        )
+                    } else {
+                        importFromFilesLauncher.launch(arrayOf("image/*", "video/*"))
+                    }
                     viewModel.toggleMenu()
                 },
                 onClose = {
@@ -501,51 +521,6 @@ fun SlideShowScreen() {
                     text = shortcutOverlayText.orEmpty(),
                     color = Color.White
                 )
-            }
-        }
-
-        if (showQr && serverUrl.isNotEmpty() && !state.isAdvertisingShowing) {
-            val qrBitmap: Bitmap = remember(serverUrl) {
-                generateQrCode(serverUrl)
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.25f))
-            ) {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(32.dp)
-                        .background(
-                            color = Color.Black.copy(alpha = 0.85f),
-                            shape = RoundedCornerShape(16.dp)
-                        )
-                        .padding(16.dp)
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = stringResource(R.string.scan_to_upload_content),
-                            color = Color.White
-                        )
-
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        Image(
-                            bitmap = qrBitmap.asImageBitmap(),
-                            contentDescription = stringResource(R.string.qr_content_description),
-                            modifier = Modifier.size(220.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        Text(
-                            text = serverUrl,
-                            color = Color.Gray
-                        )
-                    }
-                }
             }
         }
 

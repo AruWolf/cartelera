@@ -9,6 +9,9 @@
 
     <string name="load_content_qr">Cargar contenido (QR)</string>
     <string name="update_from_usb">Actualizar desde USB</string>
+    <string name="import_from_files">Importar desde archivos</string>
+    <string name="import_from_gallery">Importar desde galer&#237;a</string>
+    <string name="importing_content">Importando contenido...</string>
     <string name="paste_here">Pegar aquí</string>
     <string name="back">Volver</string>
     <string name="global">Global</string>
@@ -86,7 +89,11 @@
         <item quantity="other">Se importaron %1$d archivos</item>
     </plurals>
     <string name="usb_no_changes">No hay cambios para importar</string>
-    <string name="usb_not_found">No se encontró USB</string>
+    <string name="usb_not_found">No se encontr&#243; USB</string>
+    <plurals name="media_files_imported">
+        <item quantity="one">Se import&#243; %1$d archivo</item>
+        <item quantity="other">Se importaron %1$d archivos</item>
+    </plurals>
 
     <string name="web_method_not_supported">Método no soportado</string>
     <string name="web_panel_title">Panel Cartelería TV</string>

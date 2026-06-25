@@ -1,6 +1,7 @@
 package com.litvy.carteleria.ui.slideshow
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
 
 import androidx.lifecycle.ViewModel
@@ -9,16 +10,19 @@ import com.litvy.carteleria.R
 import com.litvy.carteleria.data.CartelConfig
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.ContentSource
+import com.litvy.carteleria.domain.importing.AndroidMediaImporter
 import com.litvy.carteleria.domain.server.CartelServer
 import com.litvy.carteleria.domain.usb.UsbImporter
 import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.slides.ImageSlideDurations
+import com.litvy.carteleria.util.storage.ContentDirectoryObserver
 import com.litvy.carteleria.util.usb.UsbScanResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.Job
 import java.io.File
 
 class SlideShowViewModel(
@@ -40,8 +44,16 @@ class SlideShowViewModel(
     private val _serverUrl = MutableStateFlow("")
     val serverUrl = _serverUrl.asStateFlow()
 
+    private val mediaImporter = AndroidMediaImporter(context)
+    private var contentRefreshJob: Job? = null
+    private val contentObserver = ContentDirectoryObserver(
+        root = com.litvy.carteleria.content.ContentStorage.ensureRootDirectory(context),
+        onChanged = { scheduleContentRefresh() }
+    )
+
     init {
         observePreferences()
+        contentObserver.start()
     }
 
     private fun observePreferences() {
@@ -59,7 +71,9 @@ class SlideShowViewModel(
 
                 _uiState.value = _uiState.value.copy(
                     selectedExternalFolder = folder.takeIf { it.exists() },
-                    slides = slides
+                    slides = slides,
+                    currentIndex = _uiState.value.currentIndex.coerceAtMost(slides.lastIndex.coerceAtLeast(0)),
+                    contentRevision = _uiState.value.contentRevision + 1
                 )
 
                 _uiState.value = _uiState.value.copy(
@@ -214,14 +228,9 @@ class SlideShowViewModel(
     }
 
     // --- MANEJO DE SERVIDOR LAN ---
-    // - Se inicia durante el ciclo de vida de la pantalla.
+    // Deshabilitado temporalmente: el codigo queda disponible para futuras versiones.
     fun startServer() {
-        try {
-            server.start()
-            _serverUrl.value = server.getUrl()
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        _serverUrl.value = ""
     }
 
     // - Se apaga durante al finalizar el ciclo de vida de la pantalla.
@@ -306,6 +315,50 @@ class SlideShowViewModel(
                 return false
             }
         }
+    }
+
+    fun importMedia(uris: List<Uri>) {
+        if (uris.isEmpty()) return
+
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(
+                isUsbLoading = true,
+                usbMessage = context.getString(R.string.importing_content)
+            )
+
+            val importedCount = mediaImporter.importUris(
+                uris = uris,
+                targetFolder = _uiState.value.selectedExternalFolder
+            )
+
+            reloadExternalFolderPreservingCurrentIndex()
+            _uiState.value = _uiState.value.copy(
+                isUsbLoading = false,
+                usbMessage = context.resources.getQuantityString(
+                    R.plurals.media_files_imported,
+                    importedCount,
+                    importedCount
+                ),
+                contentRevision = _uiState.value.contentRevision + 1
+            )
+            delay(3000)
+            clearUsbMessage()
+        }
+    }
+
+    private fun scheduleContentRefresh() {
+        contentRefreshJob?.cancel()
+        contentRefreshJob = viewModelScope.launch {
+            delay(250)
+            reloadExternalFolderPreservingCurrentIndex()
+            _uiState.value = _uiState.value.copy(contentRevision = _uiState.value.contentRevision + 1)
+        }
+    }
+
+    override fun onCleared() {
+        contentObserver.stop()
+        server.stop()
+        super.onCleared()
     }
 
 }

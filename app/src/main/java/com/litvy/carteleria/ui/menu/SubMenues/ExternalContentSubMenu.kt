@@ -1,4 +1,4 @@
-﻿package com.litvy.carteleria.ui.menu.SubMenues
+package com.litvy.carteleria.ui.menu.SubMenues
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -25,7 +25,8 @@ import com.litvy.carteleria.ui.navigation.ExternalNavigationController
 fun ExternalContentSubMenu(
     viewModel: ExternalMenuViewModel,
     navigation: ExternalNavigationController,
-    isPreviewMode: Boolean
+    isPreviewMode: Boolean,
+    canImportFromDevice: Boolean
 ) {
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
@@ -50,18 +51,32 @@ fun ExternalContentSubMenu(
             .padding(24.dp)
     ) {
         if (!state.isInFolder) {
-            item {
-                MenuItemView(
-                    text = "\uD83D\uDCF1 ${stringResource(R.string.load_content_qr)}",
-                    selected = !isPreviewMode && navigation.state.folderIndex == 0,
-                    onClick = {}
-                )
+            var nextIndex = 0
+
+            if (canImportFromDevice) {
+                item {
+                    MenuItemView(
+                        text = "[+] ${stringResource(R.string.import_from_files)}",
+                        selected = !isPreviewMode && navigation.state.folderIndex == 0,
+                        onClick = {}
+                    )
+                }
+
+                item {
+                    MenuItemView(
+                        text = "[+] ${stringResource(R.string.import_from_gallery)}",
+                        selected = !isPreviewMode && navigation.state.folderIndex == 1,
+                        onClick = {}
+                    )
+                }
+
+                nextIndex = 2
             }
 
             item {
                 MenuItemView(
-                    text = "\uD83D\uDD04 ${stringResource(R.string.update_from_usb)}",
-                    selected = !isPreviewMode && navigation.state.folderIndex == 1,
+                    text = "[USB] ${stringResource(R.string.update_from_usb)}",
+                    selected = !isPreviewMode && navigation.state.folderIndex == nextIndex,
                     onClick = {}
                 )
             }
@@ -69,11 +84,11 @@ fun ExternalContentSubMenu(
             item { Spacer(modifier = Modifier.height(16.dp)) }
 
             itemsIndexed(state.folders) { index, folder ->
-                val globalIndex = index + 2
+                val globalIndex = index + nextIndex + 1
                 val isSelected = !isPreviewMode && navigation.state.folderIndex == globalIndex
 
                 MenuItemView(
-                    text = if (isSelected) "\u25B6 ${folder.name}" else folder.name,
+                    text = if (isSelected) "> ${folder.name}" else folder.name,
                     selected = isSelected,
                     trailingText = folder.shortcutNumber?.let { "[$it]" },
                     onClick = {}
@@ -85,9 +100,9 @@ fun ExternalContentSubMenu(
             if (hasClipboard) {
                 item {
                     val isSelected = !isPreviewMode && navigation.state.fileIndex == 0
-                    val pasteHere = "\uD83D\uDCCB ${stringResource(R.string.paste_here)}"
+                    val pasteHere = "[Paste] ${stringResource(R.string.paste_here)}"
                     MenuItemView(
-                        text = if (isSelected) "\u25B6 $pasteHere" else pasteHere,
+                        text = if (isSelected) "> $pasteHere" else pasteHere,
                         selected = isSelected,
                         onClick = {}
                     )
@@ -112,7 +127,7 @@ fun ExternalContentSubMenu(
                 val isSelected = !isPreviewMode && navigation.state.fileIndex == globalIndex
                 val durationIndicator = if (file.isImage) {
                     val label = file.customDurationMs?.let { localizedDurationLabel(it) } ?: stringResource(R.string.global)
-                    "  \u23F1 $label"
+                    "  [$label]"
                 } else {
                     ""
                 }

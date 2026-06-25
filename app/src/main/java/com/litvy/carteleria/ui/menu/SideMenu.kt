@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -55,7 +56,9 @@ fun SideMenu(
     onUseGlobalDurationForFolder: (String) -> Unit,
     onUseGlobalDurationForAllImages: () -> Unit,
     onPlayExternalFolder: (String) -> Unit,
-    onShowQr: () -> Unit,
+    canImportFromDevice: Boolean,
+    onImportFromFiles: () -> Unit,
+    onImportFromGallery: () -> Unit,
     onClose: () -> Unit,
     onForceUsbScan: () -> Unit,
     onVisibilityChanged: () -> Unit
@@ -84,6 +87,9 @@ fun SideMenu(
         stringResource(R.string.menu_about),
         stringResource(R.string.menu_close)
     )
+    val importActionCount = if (canImportFromDevice) 2 else 0
+    val usbActionIndex = importActionCount
+    val firstFolderIndex = importActionCount + 1
 
     LaunchedEffect(Unit) {
         containerFocusRequester.requestFocus()
@@ -257,7 +263,7 @@ fun SideMenu(
 
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
-                            val max = externalState.folders.size + 1
+                            val max = externalState.folders.size + importActionCount
                             externalNavigation.moveFolderDown(max)
                         } else {
                             val extra = if (externalState.clipboardPath != null) 1 else 0
@@ -289,12 +295,12 @@ fun SideMenu(
                         if (!externalState.isInFolder) {
                             val index = externalNavigation.state.folderIndex
 
-                            when (index) {
-                                0 -> onShowQr()
-                                1 -> onForceUsbScan()
-
+                            when {
+                                canImportFromDevice && index == 0 -> onImportFromFiles()
+                                canImportFromDevice && index == 1 -> onImportFromGallery()
+                                index == usbActionIndex -> onForceUsbScan()
                                 else -> {
-                                    val folder = externalState.folders.getOrNull(index - 2)
+                                    val folder = externalState.folders.getOrNull(index - firstFolderIndex)
                                     folder?.let {
                                         contextMenuState = ContextMenuState(
                                             isVisible = true,
@@ -552,7 +558,7 @@ fun SideMenu(
 
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
-                                    val max = externalState.folders.size + 1
+                                    val max = externalState.folders.size + importActionCount
                                     externalNavigation.moveFolderDown(max)
                                 } else {
                                     val extra = if (externalState.clipboardPath != null) 1 else 0
@@ -584,12 +590,12 @@ fun SideMenu(
                                 if (!externalState.isInFolder) {
                                     val index = externalNavigation.state.folderIndex
 
-                                    when (index) {
-                                        0 -> onShowQr()
-                                        1 -> onForceUsbScan()
-
+                                    when {
+                                        canImportFromDevice && index == 0 -> onImportFromFiles()
+                                        canImportFromDevice && index == 1 -> onImportFromGallery()
+                                        index == usbActionIndex -> onForceUsbScan()
                                         else -> {
-                                            val folder = externalState.folders.getOrNull(index - 2)
+                                            val folder = externalState.folders.getOrNull(index - firstFolderIndex)
                                             folder?.let {
                                                 contextMenuState = ContextMenuState(
                                                     isVisible = true,
@@ -693,12 +699,26 @@ fun SideMenu(
                 null
             }
 
-        Row {
-            LazyColumn(
-                modifier = Modifier
-                    .width(260.dp)
-                    .padding(24.dp)
-            ) {
+        BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+            val windowSizeClass = when {
+                maxWidth < 600.dp -> MenuWindowSizeClass.Compact
+                maxWidth < 840.dp -> MenuWindowSizeClass.Medium
+                else -> MenuWindowSizeClass.Expanded
+            }
+            val compact = windowSizeClass == MenuWindowSizeClass.Compact
+            val mainMenuWidth = when (windowSizeClass) {
+                MenuWindowSizeClass.Compact -> 190.dp
+                MenuWindowSizeClass.Medium -> 220.dp
+                MenuWindowSizeClass.Expanded -> 260.dp
+            }
+            val sidePadding = if (compact) 12.dp else 24.dp
+
+            Row(modifier = Modifier.fillMaxSize()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .width(mainMenuWidth)
+                        .padding(sidePadding)
+                ) {
                 items(mainMenuItems.size) { index ->
                     val isSelected =
                         navState.section == FocusSection.MAIN_MENU && navState.mainIndex == index
@@ -742,7 +762,8 @@ fun SideMenu(
                     ExternalContentSubMenu(
                         viewModel = externalMenuViewModel,
                         navigation = externalNavigation,
-                        isPreviewMode = isPreviewMode
+                        isPreviewMode = isPreviewMode,
+                        canImportFromDevice = canImportFromDevice
                     )
 
                 FocusSection.SUBMENU_ABOUT ->
@@ -751,9 +772,10 @@ fun SideMenu(
                 else -> Unit
             }
 
-            if (selectedFile != null) {
-                Spacer(modifier = Modifier.width(24.dp))
-                FilePreviewPanel(selectedFile)
+                if (selectedFile != null && !compact) {
+                    Spacer(modifier = Modifier.width(24.dp))
+                    FilePreviewPanel(selectedFile)
+                }
             }
         }
 
@@ -882,4 +904,10 @@ fun SideMenu(
             )
         }
     }
+}
+
+private enum class MenuWindowSizeClass {
+    Compact,
+    Medium,
+    Expanded
 }

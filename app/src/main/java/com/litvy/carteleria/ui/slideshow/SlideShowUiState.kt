@@ -19,6 +19,7 @@ data class SlideShowUiState(
     val menuVisible: Boolean = false,
     val usbMessage: String? = null,
     val isUsbLoading: Boolean = false,
-    val clipboardItem: ClipboardItem? = null
+    val clipboardItem: ClipboardItem? = null,
+    val contentRevision: Long = 0L
 )
 
