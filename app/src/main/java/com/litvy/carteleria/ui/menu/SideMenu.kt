@@ -103,7 +103,6 @@ fun SideMenu(
                     if (file?.isHidden == true) ContextAction.Show else ContextAction.Hide
 
                 buildList {
-                    add(ContextAction.Preview)
                     if (file?.isImage == true) add(ContextAction.Duration)
                     add(visibilityAction)
                     add(ContextAction.Copy)

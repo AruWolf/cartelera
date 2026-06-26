@@ -5,11 +5,16 @@ import android.widget.NumberPicker
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -47,6 +52,8 @@ fun DurationPickerDialog(
         .takeIf { it >= 0 }
         ?: 0
 
+    var selectedIndex by remember { mutableIntStateOf(initialIndex) }
+
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
@@ -68,6 +75,9 @@ fun DurationPickerDialog(
                         maxValue = options.lastIndex
                         displayedValues = labels
                         value = initialIndex
+                        setOnValueChangedListener { _, _, newValue ->
+                            selectedIndex = newValue
+                        }
                         wrapSelectorWheel = true
                         descendantFocusability = NumberPicker.FOCUS_BLOCK_DESCENDANTS
                         setOnKeyListener { _, keyCode, event ->
@@ -91,8 +101,29 @@ fun DurationPickerDialog(
                     picker.minValue = 0
                     picker.maxValue = options.lastIndex
                     picker.displayedValues = labels
+                    picker.value = selectedIndex
                 }
             )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ){
+                MenuItemView(
+                    text = stringResource(R.string.cancel),
+                    onClick = onDismiss,
+                    modifier = Modifier.width(130.dp)
+                )
+
+                MenuItemView(
+                    text = stringResource(R.string.confirm),
+                    onClick = {
+                        onDurationSelected(
+                            options[selectedIndex].durationMs
+                        )
+                    },
+                    modifier = Modifier.width(130.dp)
+                )
+            }
         }
     }
 }

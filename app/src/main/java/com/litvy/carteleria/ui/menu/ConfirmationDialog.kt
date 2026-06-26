@@ -104,7 +104,7 @@ fun ConfirmationDialog(
                     text = stringResource(R.string.confirm),
                     selected = selectedIndex == 1,
                     onClick = onConfirm,
-                    modifier = Modifier.width(160.dp),
+                    modifier = Modifier.width(190.dp),
                     textColor = Color.White
                 )
             }

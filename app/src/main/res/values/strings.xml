@@ -43,7 +43,6 @@
     <string name="context_play_folder">Reproducir</string>
     <string name="context_numeric_shortcut">Atajo numérico</string>
     <string name="context_apply_global_duration">Aplicar duración global</string>
-    <string name="context_preview">Previsualizar</string>
     <string name="context_duration">Duración</string>
     <string name="context_copy">Copiar</string>
     <string name="context_cut">Cortar</string>

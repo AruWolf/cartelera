@@ -62,7 +62,6 @@ private fun ContextAction.localizedLabel(): String {
         ContextAction.PlayFolder -> stringResource(R.string.context_play_folder)
         ContextAction.NumericShortcut -> stringResource(R.string.context_numeric_shortcut)
         ContextAction.ApplyGlobalDuration -> stringResource(R.string.context_apply_global_duration)
-        ContextAction.Preview -> stringResource(R.string.context_preview)
         ContextAction.Duration -> stringResource(R.string.context_duration)
         ContextAction.Copy -> stringResource(R.string.context_copy)
         ContextAction.Cut -> stringResource(R.string.context_cut)

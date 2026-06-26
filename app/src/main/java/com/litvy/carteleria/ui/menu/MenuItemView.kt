@@ -2,6 +2,7 @@ package com.litvy.carteleria.ui.menu
 
 import android.view.KeyEvent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -42,6 +43,9 @@ fun MenuItemView(
                 if (selected) Color.Gray.copy(alpha = 0.3f)
                 else Color.Transparent
             )
+            .clickable{
+                onClick()
+            }
             .then(
                 if (focusRequester != null)
                     Modifier.focusRequester(focusRequester)

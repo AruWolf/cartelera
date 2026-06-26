@@ -13,7 +13,6 @@ sealed class ContextAction {
     object ApplyGlobalDuration : ContextAction()
 
     // Archivos
-    object Preview : ContextAction()
     object Duration : ContextAction()
     object Copy : ContextAction()
     object Cut : ContextAction()
