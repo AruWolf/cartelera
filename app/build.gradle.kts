@@ -11,8 +11,8 @@ android {
         applicationId = "com.litvy.carteleria"
         minSdk = 21
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 5
+        versionName = "1.4"
     }
 
     buildFeatures {
@@ -72,6 +72,10 @@ dependencies {
     // Videos - Media3
     implementation("androidx.media3:media3-exoplayer:1.3.1")
     implementation("androidx.media3:media3-ui:1.3.1")
+
+    // Motor de actualizaciones
+    implementation("com.google.android.play:app-update:2.1.0")
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
 
     // Debug

@@ -2,17 +2,37 @@ package com.litvy.carteleria
 
 import android.content.pm.ActivityInfo
 import android.os.Bundle
+import android.util.Log
 import android.view.MotionEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.WindowCompat
 import com.litvy.carteleria.ui.loading.CarteleriaAppRoot
 import com.litvy.carteleria.ui.touchremote.TouchDeviceDetector
 import com.litvy.carteleria.ui.touchremote.TouchRemoteOverlayController
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
+import com.litvy.carteleria.update.InAppUpdateManager
 
 
 // TODO: Deseleccionar images
 class MainActivity : ComponentActivity() {
     private var touchRemoteOverlayController: TouchRemoteOverlayController? = null
+    private lateinit var inAppUpdateManager: InAppUpdateManager
+
+    private val updateLauncher =
+        registerForActivityResult(
+            ActivityResultContracts.StartIntentSenderForResult()
+        ) { result ->
+
+            if (result.resultCode != RESULT_OK) {
+                Log.w(
+                    "InAppUpdate",
+                    "Actualización cancelada o fallida."
+                )
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -20,6 +40,23 @@ class MainActivity : ComponentActivity() {
         if (TouchDeviceDetector.shouldShowTouchRemote(this)) {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            hide(WindowInsetsCompat.Type.systemBars())
+
+            systemBarsBehavior =
+                WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        }
+
+        inAppUpdateManager =
+            InAppUpdateManager(
+                activity = this,
+                launcher = updateLauncher
+            )
+
+        inAppUpdateManager.registerListener()
 
         setContent {
             CarteleriaAppRoot()
@@ -36,27 +73,29 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
+        inAppUpdateManager.unregisterListener()
+
         touchRemoteOverlayController?.detach()
         touchRemoteOverlayController = null
         super.onDestroy()
     }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+
+        if (hasFocus) {
+            WindowInsetsControllerCompat(window, window.decorView).apply {
+                hide(WindowInsetsCompat.Type.systemBars())
+
+                systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        inAppUpdateManager.checkForUpdates()
+    }
 }
-/*
-@Composable
-fun SlideShow() {
-    val playlist = Propaganda1().slides()
-
-    val engine = EvokeSlide(
-        slides = playlist,
-        transitions = mapOf(
-            "fade" to TvTransitions.fade(ms = 700),
-            "scale" to TvTransitions.scale(ms = 700),
-            "left" to TvTransitions.slideLeft(ms = 700),
-            "up" to TvTransitions.slideUp(ms = 700),
-        ),
-        defaultTransition = TvTransitions.fade(ms = 700),
-        transitionMs = 700
-    )
-
-    engine.Render()
-}*/
