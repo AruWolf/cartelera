@@ -16,6 +16,8 @@ import com.litvy.carteleria.R
 import com.litvy.carteleria.ui.menu.MenuItemView
 import com.litvy.carteleria.ui.navigation.ContextAction
 import com.litvy.carteleria.ui.navigation.ContextTarget
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 
 data class ContextMenuState(
     val isVisible: Boolean = false,
@@ -36,6 +38,7 @@ fun BoxScope.ContextMenuOverlay(
             .offset(x = 340.dp)
             .width(220.dp)
             .background(Color.Black.copy(alpha = 0.95f))
+            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
 

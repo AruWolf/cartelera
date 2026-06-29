@@ -15,6 +15,13 @@
     <string name="paste_here">Pegar aquí</string>
     <string name="back">Volver</string>
     <string name="global">Global</string>
+    <string name="new_folder">Nueva carpeta</string>
+    <string name="folder_name">Nombre</string>
+    <string name="create">Crear</string>
+    <string name="select_folder">Seleccione una carpeta</string>
+    <string name="continue_action">Continuar</string>
+    <string name="folder_already_exists">Ya existe una carpeta con ese nombre</string>
+    <string name="select_folder_required">Seleccione una carpeta</string>
 
     <string name="animation_random">Aleatorio</string>
     <string name="animation_fade">Fade</string>
@@ -100,4 +107,8 @@
     <string name="web_upload_file">Subir archivo</string>
     <string name="web_upload_success">Archivo subido correctamente a carpeta: %1$s</string>
     <string name="web_upload_error">Error al subir archivo</string>
+
+    <string name="touch_remote_hidden_message">
+    Control oculto. Toque la pantalla tres veces para volver a mostrarlo.
+    </string>
 </resources>

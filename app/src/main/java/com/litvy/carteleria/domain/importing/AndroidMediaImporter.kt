@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import android.webkit.MimeTypeMap
-import com.litvy.carteleria.content.ContentStorage
 import java.io.File
 
 class AndroidMediaImporter(
@@ -13,8 +12,8 @@ class AndroidMediaImporter(
 
     private val supportedExtensions = setOf("jpg", "jpeg", "png", "webp", "mp4", "webm", "mkv")
 
-    fun importUris(uris: List<Uri>, targetFolder: File?): Int {
-        val destination = (targetFolder ?: ContentStorage.defaultFolder(context)).apply { mkdirs() }
+    fun importUris(uris: List<Uri>, targetFolder: File): Int {
+        val destination = targetFolder.apply { mkdirs() }
         return uris.count { uri -> copyUri(uri, destination) }
     }
 

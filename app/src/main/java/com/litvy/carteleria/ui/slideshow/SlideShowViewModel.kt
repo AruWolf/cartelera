@@ -182,6 +182,26 @@ class SlideShowViewModel(
         )
     }
 
+    fun pausePlayback() {
+        if (_uiState.value.isAdvertisingShowing) return
+
+        if (!_uiState.value.isPaused) {
+            _uiState.value = _uiState.value.copy(
+                isPaused = true
+            )
+        }
+    }
+
+    fun resumePlayback() {
+        if (_uiState.value.isAdvertisingShowing) return
+
+        if (_uiState.value.isPaused) {
+            _uiState.value = _uiState.value.copy(
+                isPaused = false
+            )
+        }
+    }
+
     fun toggleMenu() {
         if (_uiState.value.isAdvertisingShowing) return
 
@@ -317,7 +337,7 @@ class SlideShowViewModel(
         }
     }
 
-    fun importMedia(uris: List<Uri>) {
+    fun importMedia(uris: List<Uri>, targetFolder: File) {
         if (uris.isEmpty()) return
 
         viewModelScope.launch {
@@ -328,7 +348,7 @@ class SlideShowViewModel(
 
             val importedCount = mediaImporter.importUris(
                 uris = uris,
-                targetFolder = _uiState.value.selectedExternalFolder
+                targetFolder = targetFolder
             )
 
             reloadExternalFolderPreservingCurrentIndex()

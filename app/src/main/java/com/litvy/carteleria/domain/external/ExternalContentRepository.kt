@@ -6,6 +6,8 @@ interface ExternalContentRepository {
 
     fun listFiles(folderPath: String): List<ExternalFile>
 
+    fun createFolder(name: String): ExternalFolder?
+
     fun deleteFile(path: String)
 
     fun deleteFolder(path: String)

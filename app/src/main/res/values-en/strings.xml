@@ -15,6 +15,13 @@
     <string name="paste_here">Paste here</string>
     <string name="back">Back</string>
     <string name="global">Global</string>
+    <string name="new_folder">New folder</string>
+    <string name="folder_name">Name</string>
+    <string name="create">Create</string>
+    <string name="select_folder">Select a folder</string>
+    <string name="continue_action">Continue</string>
+    <string name="folder_already_exists">A folder with that name already exists</string>
+    <string name="select_folder_required">Select a folder</string>
 
     <string name="animation_random">Random</string>
     <string name="animation_fade">Fade</string>

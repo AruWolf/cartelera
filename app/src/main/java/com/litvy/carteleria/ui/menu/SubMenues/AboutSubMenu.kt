@@ -31,14 +31,29 @@ import com.litvy.carteleria.BuildConfig
 import com.litvy.carteleria.R
 import com.litvy.carteleria.config.ExternalLinks
 import com.litvy.carteleria.util.qr.generateQrCode
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.platform.LocalContext
+import com.litvy.carteleria.util.DeviceUtils
+import androidx.compose.ui.text.style.TextDecoration
 
 @Composable
 fun AboutSubMenu() {
+
+    val context = LocalContext.current
+    val isMobile = !DeviceUtils.isTv(context)
+
     val websiteQrBitmap = remember {
         generateQrCode(ExternalLinks.WEBSITE_URL, size = 360).asImageBitmap()
     }
     val userManualQrBitmap = remember {
         generateQrCode(ExternalLinks.USER_MANUAL_URL, size = 360).asImageBitmap()
+    }
+
+    fun openUrl(url: String){
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        context.startActivity(intent)
     }
 
     Row(
@@ -82,15 +97,41 @@ fun AboutSubMenu() {
             AboutText(
                 text = ExternalLinks.WEBSITE_URL,
                 color = Color.White.copy(alpha = 0.78f),
-                fontSize = 18
+                fontSize = 18,
+                modifier = if (isMobile){
+                    Modifier.clickable { openUrl(ExternalLinks.WEBSITE_URL) }
+                } else {
+                    Modifier
+                },
+                isLink = isMobile
             )
 
             AboutSectionSpacer()
 
             AboutHeading(stringResource(R.string.about_developer_heading))
             AboutText(stringResource(R.string.about_developer_name))
-            AboutText(ExternalLinks.LINKEDIN_URL, color = Color.White.copy(alpha = 0.78f), fontSize = 18)
-            AboutText(ExternalLinks.GITHUB_URL, color = Color.White.copy(alpha = 0.78f), fontSize = 18)
+            AboutText(
+                ExternalLinks.LINKEDIN_URL,
+                color = Color.White.copy(alpha = 0.78f),
+                fontSize = 18,
+                modifier = if (isMobile){
+                    Modifier.clickable { openUrl(ExternalLinks.LINKEDIN_URL) }
+                } else {
+                    Modifier
+                },
+                isLink = isMobile
+            )
+            AboutText(
+                ExternalLinks.GITHUB_URL,
+                color = Color.White.copy(alpha = 0.78f),
+                fontSize = 18,
+                modifier = if (isMobile){
+                    Modifier.clickable { openUrl(ExternalLinks.GITHUB_URL) }
+                } else {
+                    Modifier
+                },
+                isLink = isMobile
+            )
 
             AboutSectionSpacer()
 
@@ -113,11 +154,15 @@ fun AboutSubMenu() {
         ) {
             AboutQrBlock(
                 title = stringResource(R.string.about_litvy_page),
-                bitmap = websiteQrBitmap
+                bitmap = websiteQrBitmap,
+                clickable = isMobile,
+                onClick = { openUrl(ExternalLinks.WEBSITE_URL) }
             )
             AboutQrBlock(
                 title = stringResource(R.string.manual_privacy_title),
-                bitmap = userManualQrBitmap
+                bitmap = userManualQrBitmap,
+                clickable = isMobile,
+                onClick = {openUrl(ExternalLinks.USER_MANUAL_URL)}
             )
         }
     }
@@ -126,7 +171,9 @@ fun AboutSubMenu() {
 @Composable
 private fun AboutQrBlock(
     title: String,
-    bitmap: ImageBitmap
+    bitmap: ImageBitmap,
+    clickable: Boolean,
+    onClick: () -> Unit
 ) {
     Column(
         modifier = Modifier.width(180.dp),
@@ -144,7 +191,15 @@ private fun AboutQrBlock(
         Image(
             bitmap = bitmap,
             contentDescription = null,
-            modifier = Modifier.size(172.dp)
+            modifier = Modifier
+                .size(172.dp)
+                .then(
+                    if (clickable) {
+                        Modifier.clickable { onClick() }
+                    } else {
+                        Modifier
+                    }
+                )
         )
     }
 }
@@ -172,7 +227,8 @@ private fun AboutText(
     color: Color = Color.White,
     fontSize: Int = 20,
     fontWeight: FontWeight = FontWeight.Normal,
-    textAlign: TextAlign = TextAlign.Start
+    textAlign: TextAlign = TextAlign.Start,
+    isLink: Boolean = false
 ) {
     BasicText(
         text = text,
@@ -181,7 +237,8 @@ private fun AboutText(
             color = color,
             fontSize = fontSize.sp,
             fontWeight = fontWeight,
-            textAlign = textAlign
+            textAlign = textAlign,
+            textDecoration = if (isLink) TextDecoration.Underline else TextDecoration.None
         )
     )
 }

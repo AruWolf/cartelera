@@ -24,6 +24,15 @@ class AppStorageExternalRepository(
         return shortcutManager.applyPersistedShortcuts(folders)
     }
 
+    override fun createFolder(name: String): ExternalFolder? {
+        return provider.createFolder(name)?.let {
+            ExternalFolder(
+                name = it.name,
+                path = it.absolutePath
+            )
+        }
+    }
+
     override fun listFiles(folderPath: String): List<ExternalFile> {
 
         val folder = File(folderPath)

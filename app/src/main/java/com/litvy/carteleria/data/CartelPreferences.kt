@@ -30,19 +30,22 @@ class CartelPreferences(private val context: Context) {
 
             val type = prefs[SOURCE_TYPE] ?: INTERNAL
             val value = prefs[SOURCE_VALUE] ?: ""
-            val defaultFolder = ContentStorage.defaultFolder(context)
+            val rootDirectory = ContentStorage.ensureRootDirectory(context)
+            val firstFolder = rootDirectory.listFiles()
+                ?.firstOrNull { it.isDirectory }
+                ?: rootDirectory
 
             val source = when (type) {
-                EXTERNAL -> ContentSource.External(value)
+                EXTERNAL -> ContentSource.External(value.ifBlank { firstFolder.absolutePath })
                 INTERNAL -> {
                     val migratedFolder = if (value.isBlank()) {
-                        defaultFolder
+                        firstFolder
                     } else {
-                        File(ContentStorage.ensureRootDirectory(context), value)
+                        File(rootDirectory, value)
                     }
                     ContentSource.External(migratedFolder.absolutePath)
                 }
-                else -> ContentSource.External(defaultFolder.absolutePath)
+                else -> ContentSource.External(firstFolder.absolutePath)
             }
 
             CartelConfig(

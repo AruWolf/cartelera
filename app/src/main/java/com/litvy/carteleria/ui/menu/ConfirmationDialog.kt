@@ -22,10 +22,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.R
 import androidx.compose.ui.window.Dialog
+import com.litvy.carteleria.util.DeviceUtils
 
 @Composable
 fun ConfirmationDialog(
@@ -39,6 +41,9 @@ fun ConfirmationDialog(
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
+
+    val context = LocalContext.current
+    val isTv = DeviceUtils.isTv(context)
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
@@ -97,7 +102,8 @@ fun ConfirmationDialog(
                     selected = selectedIndex == 0,
                     onClick = onDismiss,
                     modifier = Modifier.width(150.dp),
-                    textColor = Color.White
+                    textColor = Color.White,
+                    enableTouch = !isTv
                 )
 
                 MenuItemView(
@@ -105,7 +111,8 @@ fun ConfirmationDialog(
                     selected = selectedIndex == 1,
                     onClick = onConfirm,
                     modifier = Modifier.width(190.dp),
-                    textColor = Color.White
+                    textColor = Color.White,
+                    enableTouch = !isTv
                 )
             }
         }

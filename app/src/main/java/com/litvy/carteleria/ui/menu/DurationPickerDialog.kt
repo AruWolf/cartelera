@@ -25,6 +25,8 @@ import androidx.compose.ui.window.Dialog
 import com.litvy.carteleria.R
 import com.litvy.carteleria.slides.ImageSlideDurations
 import com.litvy.carteleria.ui.menu.SubMenues.localizedDurationLabel
+import androidx.compose.ui.platform.LocalContext
+import com.litvy.carteleria.util.DeviceUtils
 
 @Composable
 fun DurationPickerDialog(
@@ -38,6 +40,9 @@ fun DurationPickerDialog(
         val label: String,
         val durationMs: Long?
     )
+
+    val context = LocalContext.current
+    val isTv = DeviceUtils.isTv(context)
 
     val options = buildList {
         if (includeGlobalOption) add(DurationOption(stringResource(R.string.global_duration), null))
@@ -93,7 +98,9 @@ fun DurationPickerDialog(
                                 false
                             }
                         }
-                        post { requestFocus() }
+                        if (isTv) {
+                            post { requestFocus() }
+                        }
                     }
                 },
                 update = { picker ->
@@ -105,24 +112,29 @@ fun DurationPickerDialog(
                 }
             )
 
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ){
-                MenuItemView(
-                    text = stringResource(R.string.cancel),
-                    onClick = onDismiss,
-                    modifier = Modifier.width(130.dp)
-                )
+            if (!isTv) {
 
-                MenuItemView(
-                    text = stringResource(R.string.confirm),
-                    onClick = {
-                        onDurationSelected(
-                            options[selectedIndex].durationMs
-                        )
-                    },
-                    modifier = Modifier.width(130.dp)
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    MenuItemView(
+                        text = stringResource(R.string.cancel),
+                        onClick = onDismiss,
+                        modifier = Modifier.width(130.dp),
+                        enableTouch = !isTv
+                    )
+
+                    MenuItemView(
+                        text = stringResource(R.string.confirm),
+                        onClick = {
+                            onDurationSelected(
+                                options[selectedIndex].durationMs
+                            )
+                        },
+                        modifier = Modifier.width(130.dp),
+                        enableTouch = !isTv
+                    )
+                }
             }
         }
     }

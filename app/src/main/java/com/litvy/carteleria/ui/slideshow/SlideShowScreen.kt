@@ -52,6 +52,7 @@ import com.litvy.carteleria.data.external.FolderShortcutManager
 import com.litvy.carteleria.data.external.HiddenFileManager
 import com.litvy.carteleria.data.external.ImageDurationManager
 import com.litvy.carteleria.domain.external.usecase.CopyExternalFileUseCase
+import com.litvy.carteleria.domain.external.usecase.CreateExternalFolderUseCase
 import com.litvy.carteleria.domain.external.usecase.DeleteExternalFileUseCase
 import com.litvy.carteleria.domain.external.usecase.DeleteExternalFolderUseCase
 import com.litvy.carteleria.domain.external.usecase.ExternalContentUseCases
@@ -69,6 +70,8 @@ import com.litvy.carteleria.ui.loading.AppLoadingSurface
 import com.litvy.carteleria.ui.loading.AppVisualAssets
 import com.litvy.carteleria.ui.loading.LoadingUiDefaults
 import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
+import com.litvy.carteleria.ui.menu.ImportDestinationDialog
+import com.litvy.carteleria.ui.menu.NewFolderNameDialog
 import com.litvy.carteleria.ui.menu.SideMenu
 import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 import com.litvy.carteleria.util.network.LocalCartelServer
@@ -79,6 +82,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+
+private enum class MediaImportSource {
+    Files,
+    Gallery
+}
 
 @Composable
 fun SlideShowScreen() {
@@ -99,17 +111,32 @@ fun SlideShowScreen() {
         )
     }
     val state by viewModel.uiState.collectAsState()
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
     val focusRequester = remember { FocusRequester() }
+    var pendingImportTargetPath by remember { mutableStateOf<String?>(null) }
+    var pendingImportSource by remember { mutableStateOf<MediaImportSource?>(null) }
+    var destinationFolderPath by remember { mutableStateOf<String?>(null) }
+    var showDestinationDialog by remember { mutableStateOf(false) }
+    var showDestinationNewFolderDialog by remember { mutableStateOf(false) }
+
     val importFromFilesLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
     ) { uris ->
-        viewModel.importMedia(uris)
+        val targetPath = pendingImportTargetPath
+        pendingImportTargetPath = null
+        if (targetPath != null) {
+            viewModel.importMedia(uris, File(targetPath))
+        }
     }
     val importFromGalleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.PickMultipleVisualMedia()
     ) { uris ->
-        viewModel.importMedia(uris)
+        val targetPath = pendingImportTargetPath
+        pendingImportTargetPath = null
+        if (targetPath != null) {
+            viewModel.importMedia(uris, File(targetPath))
+        }
     }
     val canUseTouchImports = remember { TouchDeviceDetector.shouldShowTouchRemote(context) }
     val scope = rememberCoroutineScope()
@@ -157,6 +184,7 @@ fun SlideShowScreen() {
         ExternalContentUseCases(
             listFolders = ListExternalFoldersUseCase(externalRepository),
             listFiles = ListExternalFilesUseCase(externalRepository),
+            createFolder = CreateExternalFolderUseCase(externalRepository),
             deleteFile = DeleteExternalFileUseCase(externalRepository),
             deleteFolder = DeleteExternalFolderUseCase(externalRepository),
             setFolderShortcut = SetFolderShortcutUseCase(externalRepository),
@@ -171,6 +199,33 @@ fun SlideShowScreen() {
         ExternalMenuViewModel(externalUseCases)
     }
     val externalMenuState by externalMenuViewModel.state.collectAsState()
+
+    fun launchImport(source: MediaImportSource, targetPath: String) {
+        pendingImportTargetPath = targetPath
+        when (source) {
+            MediaImportSource.Files -> importFromFilesLauncher.launch(arrayOf("image/*", "video/*"))
+            MediaImportSource.Gallery -> {
+                if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)) {
+                    importFromGalleryLauncher.launch(
+                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                    )
+                } else {
+                    importFromFilesLauncher.launch(arrayOf("image/*", "video/*"))
+                }
+            }
+        }
+    }
+
+    fun requestImport(source: MediaImportSource, targetPath: String?) {
+        if (targetPath != null) {
+            launchImport(source, targetPath)
+            viewModel.toggleMenu()
+        } else {
+            pendingImportSource = source
+            destinationFolderPath = externalMenuState.folders.firstOrNull()?.path
+            showDestinationDialog = true
+        }
+    }
 
     LaunchedEffect(state.contentRevision) {
         externalMenuViewModel.reloadCurrentView()
@@ -292,6 +347,31 @@ fun SlideShowScreen() {
         onDispose {
             shortcutPlaybackJob?.cancel()
             shortcutOverlayManager.clear()
+        }
+    }
+
+    DisposableEffect(lifecycleOwner) {
+
+        val observer = LifecycleEventObserver { _, event ->
+
+            when (event) {
+
+                Lifecycle.Event.ON_STOP -> {
+                    viewModel.pausePlayback()
+                }
+
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.resumePlayback()
+                }
+
+                else -> Unit
+            }
+        }
+
+        lifecycleOwner.lifecycle.addObserver(observer)
+
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
 
@@ -470,19 +550,11 @@ fun SlideShowScreen() {
                     }
                 },
                 canImportFromDevice = canUseTouchImports,
-                onImportFromFiles = {
-                    importFromFilesLauncher.launch(arrayOf("image/*", "video/*"))
-                    viewModel.toggleMenu()
+                onImportFromFiles = { targetPath ->
+                    requestImport(MediaImportSource.Files, targetPath)
                 },
-                onImportFromGallery = {
-                    if (ActivityResultContracts.PickVisualMedia.isPhotoPickerAvailable(context)) {
-                        importFromGalleryLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                        )
-                    } else {
-                        importFromFilesLauncher.launch(arrayOf("image/*", "video/*"))
-                    }
-                    viewModel.toggleMenu()
+                onImportFromGallery = { targetPath ->
+                    requestImport(MediaImportSource.Gallery, targetPath)
                 },
                 onClose = {
                     ignoreNextCenter = true
@@ -499,6 +571,43 @@ fun SlideShowScreen() {
                 onVisibilityChanged = {
                     viewModel.reloadExternalFolderIfSelected()
                 }
+            )
+        }
+
+        if (showDestinationDialog) {
+            ImportDestinationDialog(
+                folders = externalMenuState.folders,
+                selectedFolderPath = destinationFolderPath,
+                onFolderSelected = { destinationFolderPath = it },
+                onCreateFolderRequested = { showDestinationNewFolderDialog = true },
+                onContinue = {
+                    val source = pendingImportSource
+                    val targetPath = destinationFolderPath
+                    if (source != null && targetPath != null) {
+                        showDestinationDialog = false
+                        pendingImportSource = null
+                        launchImport(source, targetPath)
+                        viewModel.toggleMenu()
+                    }
+                },
+                onDismiss = {
+                    showDestinationDialog = false
+                    pendingImportSource = null
+                    destinationFolderPath = null
+                }
+            )
+        }
+
+        if (showDestinationNewFolderDialog) {
+            NewFolderNameDialog(
+                folderExists = { externalMenuViewModel.folderNameExists(it) },
+                onCreate = { folderName ->
+                    externalMenuViewModel.createFolder(folderName)?.let { createdFolder ->
+                        destinationFolderPath = createdFolder.path
+                        showDestinationNewFolderDialog = false
+                    }
+                },
+                onDismiss = { showDestinationNewFolderDialog = false }
             )
         }
 

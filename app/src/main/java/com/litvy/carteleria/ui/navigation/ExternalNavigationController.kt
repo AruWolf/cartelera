@@ -43,6 +43,14 @@ class ExternalNavigationController {
         state = state.copy(fileIndex = 0)
     }
 
+    fun setFolderIndex(index: Int) {
+        state = state.copy(folderIndex = index.coerceAtLeast(0))
+    }
+
+    fun setFileIndex(index: Int) {
+        state = state.copy(fileIndex = index.coerceAtLeast(0))
+    }
+
     fun reset() {
         state = ExternalNavigationState()
     }

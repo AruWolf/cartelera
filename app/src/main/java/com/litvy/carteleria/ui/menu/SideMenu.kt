@@ -42,6 +42,7 @@ import com.litvy.carteleria.ui.navigation.ExternalNavigationController
 import com.litvy.carteleria.ui.navigation.FocusSection
 import com.litvy.carteleria.ui.navigation.TvNavigationController
 import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
+import com.litvy.carteleria.util.DeviceUtils
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -57,14 +58,15 @@ fun SideMenu(
     onUseGlobalDurationForAllImages: () -> Unit,
     onPlayExternalFolder: (String) -> Unit,
     canImportFromDevice: Boolean,
-    onImportFromFiles: () -> Unit,
-    onImportFromGallery: () -> Unit,
+    onImportFromFiles: (String?) -> Unit,
+    onImportFromGallery: (String?) -> Unit,
     onClose: () -> Unit,
     onForceUsbScan: () -> Unit,
     onVisibilityChanged: () -> Unit
 ) {
 
     val context = LocalContext.current
+    val isTv = remember { DeviceUtils.isTv(context) }
     val navigation = remember { TvNavigationController() }
     val navState = navigation.state
     val externalNavigation = remember { ExternalNavigationController() }
@@ -79,6 +81,7 @@ fun SideMenu(
     var confirmFolderDurationPath by remember { mutableStateOf<String?>(null) }
     var shortcutTargetPath by remember { mutableStateOf<String?>(null) }
     var shortcutConflict by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    var showCreateFolderDialog by remember { mutableStateOf(false) }
 
     val mainMenuItems = listOf(
         stringResource(R.string.menu_content),
@@ -88,11 +91,101 @@ fun SideMenu(
         stringResource(R.string.menu_close)
     )
     val importActionCount = if (canImportFromDevice) 2 else 0
-    val usbActionIndex = importActionCount
-    val firstFolderIndex = importActionCount + 1
+    val newFolderIndex = importActionCount
+    val usbActionIndex = importActionCount + 1
+    val firstFolderIndex = importActionCount + 2
+    val folderImportActionCount = if (canImportFromDevice) 2 else 0
 
     LaunchedEffect(Unit) {
         containerFocusRequester.requestFocus()
+    }
+
+    fun focusFolder(path: String) {
+        val folderIndex = externalMenuViewModel.state.value.folders.indexOfFirst { it.path == path }
+        if (folderIndex >= 0) {
+            externalNavigation.setFolderIndex(firstFolderIndex + folderIndex)
+        }
+    }
+
+    fun createAutomaticFolder() {
+        externalMenuViewModel.createAutomaticFolder()?.let { createdFolder ->
+            focusFolder(createdFolder.path)
+        }
+    }
+
+    fun createNamedFolder(name: String): Boolean {
+        val createdFolder = externalMenuViewModel.createFolder(name) ?: return false
+        focusFolder(createdFolder.path)
+        return true
+    }
+
+    fun requestCreateFolder() {
+        if (isTv) {
+            createAutomaticFolder()
+        } else {
+            showCreateFolderDialog = true
+        }
+    }
+
+    fun handleRootExternalSelection() {
+        val index = externalNavigation.state.folderIndex
+
+        when {
+            canImportFromDevice && index == 0 -> onImportFromFiles(null)
+            canImportFromDevice && index == 1 -> onImportFromGallery(null)
+            index == newFolderIndex -> requestCreateFolder()
+            index == usbActionIndex -> onForceUsbScan()
+            else -> {
+                val folder = externalState.folders.getOrNull(index - firstFolderIndex)
+                folder?.let {
+                    contextMenuState = ContextMenuState(
+                        isVisible = true,
+                        target = ContextTarget.Folder(it.name, it.path)
+                    )
+                }
+            }
+        }
+    }
+
+    fun handleFolderExternalSelection() {
+        val fileIndex = externalNavigation.state.fileIndex
+        val currentFolderPath = externalState.currentFolderPath
+
+        if (canImportFromDevice && fileIndex == 0) {
+            onImportFromFiles(currentFolderPath)
+            return
+        }
+
+        if (canImportFromDevice && fileIndex == 1) {
+            onImportFromGallery(currentFolderPath)
+            return
+        }
+
+        val hasClipboard = externalState.clipboardPath != null
+        val pasteIndex = folderImportActionCount
+
+        if (hasClipboard && fileIndex == pasteIndex) {
+            externalMenuViewModel.paste()
+            return
+        }
+
+        val backIndex = folderImportActionCount + if (hasClipboard) 1 else 0
+
+        if (fileIndex == backIndex) {
+            externalMenuViewModel.goBack()
+            externalNavigation.resetFileIndex()
+            return
+        }
+
+        val offset = folderImportActionCount + if (hasClipboard) 2 else 1
+        val file = externalState.files.getOrNull(fileIndex - offset)
+
+        file?.let {
+            contextMenuState = ContextMenuState(
+                isVisible = true,
+                target = ContextTarget.FileItem(it.name, it.path)
+            )
+        }
     }
 
     val contextOptions = remember(contextMenuState, externalState) {
@@ -262,10 +355,10 @@ fun SideMenu(
 
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
-                            val max = externalState.folders.size + importActionCount
+                            val max = externalState.folders.size + importActionCount + 1
                             externalNavigation.moveFolderDown(max)
                         } else {
-                            val extra = if (externalState.clipboardPath != null) 1 else 0
+                            val extra = folderImportActionCount + if (externalState.clipboardPath != null) 1 else 0
                             val total = externalState.files.size + extra
                             externalNavigation.moveFileDown(total)
                         }
@@ -292,46 +385,9 @@ fun SideMenu(
 
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
-                            val index = externalNavigation.state.folderIndex
-
-                            when {
-                                canImportFromDevice && index == 0 -> onImportFromFiles()
-                                canImportFromDevice && index == 1 -> onImportFromGallery()
-                                index == usbActionIndex -> onForceUsbScan()
-                                else -> {
-                                    val folder = externalState.folders.getOrNull(index - firstFolderIndex)
-                                    folder?.let {
-                                        contextMenuState = ContextMenuState(
-                                            isVisible = true,
-                                            target = ContextTarget.Folder(it.name, it.path)
-                                        )
-                                    }
-                                }
-                            }
+                            handleRootExternalSelection()
                         } else {
-                            val fileIndex = externalNavigation.state.fileIndex
-                            val hasClipboard = externalState.clipboardPath != null
-
-                            if (hasClipboard && fileIndex == 0) {
-                                externalMenuViewModel.paste()
-                            } else {
-                                val backIndex = if (hasClipboard) 1 else 0
-
-                                if (fileIndex == backIndex) {
-                                    externalMenuViewModel.goBack()
-                                    externalNavigation.resetFileIndex()
-                                } else {
-                                    val offset = if (hasClipboard) 2 else 1
-                                    val file = externalState.files.getOrNull(fileIndex - offset)
-
-                                    file?.let {
-                                        contextMenuState = ContextMenuState(
-                                            isVisible = true,
-                                            target = ContextTarget.FileItem(it.name, it.path)
-                                        )
-                                    }
-                                }
-                            }
+                            handleFolderExternalSelection()
                         }
                     }
 
@@ -557,10 +613,10 @@ fun SideMenu(
 
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
-                                    val max = externalState.folders.size + importActionCount
+                                    val max = externalState.folders.size + importActionCount + 1
                                     externalNavigation.moveFolderDown(max)
                                 } else {
-                                    val extra = if (externalState.clipboardPath != null) 1 else 0
+                                    val extra = folderImportActionCount + if (externalState.clipboardPath != null) 1 else 0
                                     val total = externalState.files.size + extra
                                     externalNavigation.moveFileDown(total)
                                 }
@@ -587,46 +643,9 @@ fun SideMenu(
 
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
-                                    val index = externalNavigation.state.folderIndex
-
-                                    when {
-                                        canImportFromDevice && index == 0 -> onImportFromFiles()
-                                        canImportFromDevice && index == 1 -> onImportFromGallery()
-                                        index == usbActionIndex -> onForceUsbScan()
-                                        else -> {
-                                            val folder = externalState.folders.getOrNull(index - firstFolderIndex)
-                                            folder?.let {
-                                                contextMenuState = ContextMenuState(
-                                                    isVisible = true,
-                                                    target = ContextTarget.Folder(it.name, it.path)
-                                                )
-                                            }
-                                        }
-                                    }
+                                    handleRootExternalSelection()
                                 } else {
-                                    val fileIndex = externalNavigation.state.fileIndex
-                                    val hasClipboard = externalState.clipboardPath != null
-
-                                    if (hasClipboard && fileIndex == 0) {
-                                        externalMenuViewModel.paste()
-                                    } else {
-                                        val backIndex = if (hasClipboard) 1 else 0
-
-                                        if (fileIndex == backIndex) {
-                                            externalMenuViewModel.goBack()
-                                            externalNavigation.resetFileIndex()
-                                        } else {
-                                            val offset = if (hasClipboard) 2 else 1
-                                            val file = externalState.files.getOrNull(fileIndex - offset)
-
-                                            file?.let {
-                                                contextMenuState = ContextMenuState(
-                                                    isVisible = true,
-                                                    target = ContextTarget.FileItem(it.name, it.path)
-                                                )
-                                            }
-                                        }
-                                    }
+                                    handleFolderExternalSelection()
                                 }
                             }
 
@@ -692,7 +711,7 @@ fun SideMenu(
         val selectedFile =
             if (navState.section == FocusSection.SUBMENU_EXTERNAL && externalState.isInFolder) {
                 val hasClipboard = externalState.clipboardPath != null
-                val offset = if (hasClipboard) 2 else 1
+                val offset = folderImportActionCount + if (hasClipboard) 2 else 1
                 externalState.files.getOrNull(externalNavigation.state.fileIndex - offset)
             } else {
                 null
@@ -762,7 +781,17 @@ fun SideMenu(
                         viewModel = externalMenuViewModel,
                         navigation = externalNavigation,
                         isPreviewMode = isPreviewMode,
-                        canImportFromDevice = canImportFromDevice
+                        canImportFromDevice = canImportFromDevice,
+                        onImportFromFiles = { onImportFromFiles(externalState.currentFolderPath) },
+                        onImportFromGallery = { onImportFromGallery(externalState.currentFolderPath) },
+                        onCreateFolder = { requestCreateFolder() },
+                        onForceUsbScan = onForceUsbScan,
+                        onFolderSelected = { folder ->
+                            contextMenuState = ContextMenuState(
+                                isVisible = true,
+                                target = ContextTarget.Folder(folder.name, folder.path)
+                            )
+                        }
                     )
 
                 FocusSection.SUBMENU_ABOUT ->
@@ -875,6 +904,18 @@ fun SideMenu(
                     }
                 },
                 onDismiss = { shortcutTargetPath = null }
+            )
+        }
+
+        if (showCreateFolderDialog) {
+            NewFolderNameDialog(
+                folderExists = { externalMenuViewModel.folderNameExists(it) },
+                onCreate = { folderName ->
+                    if (createNamedFolder(folderName)) {
+                        showCreateFolderDialog = false
+                    }
+                },
+                onDismiss = { showCreateFolderDialog = false }
             )
         }
 

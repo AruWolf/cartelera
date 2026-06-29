@@ -29,6 +29,16 @@ class AppStorageSlideProvider(
             ?: emptyList()
     }
 
+    fun createFolder(name: String): File? {
+        val folderName = name.trim()
+        if (folderName.isBlank()) return null
+        if (folderName.any { it in setOf('\\', '/', ':', '*', '?', '"', '<', '>', '|') }) return null
+        if (listFolders().any { it.name.equals(folderName, ignoreCase = true) }) return null
+
+        val folder = File(resourcesDir, folderName)
+        return if (folder.mkdirs()) folder else null
+    }
+
     fun loadFromFolder(folder: File): List<Slide> {
 
         return folder.listFiles()

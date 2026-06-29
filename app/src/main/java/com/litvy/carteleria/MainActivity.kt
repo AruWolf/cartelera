@@ -98,4 +98,9 @@ class MainActivity : ComponentActivity() {
 
         inAppUpdateManager.checkForUpdates()
     }
+
+    override fun onStop(){
+        super.onStop()
+
+    }
 }

@@ -8,6 +8,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import com.litvy.carteleria.R
+import android.widget.Toast
 
 class TouchRemoteOverlayController(
     private val activity: Activity,
@@ -66,6 +67,12 @@ class TouchRemoteOverlayController(
 
     fun hide() {
         overlayView?.visibility = View.GONE
+
+        Toast.makeText(
+            activity,
+            activity.getString(R.string.touch_remote_hidden_message),
+            Toast.LENGTH_LONG
+        ).show()
     }
 
     fun detach() {
