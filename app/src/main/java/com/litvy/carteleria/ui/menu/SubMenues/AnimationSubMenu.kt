@@ -1,6 +1,9 @@
 ﻿package com.litvy.carteleria.ui.menu.SubMenues
 
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -28,14 +31,23 @@ fun AnimationSubMenu(
         "down" to stringResource(R.string.animation_slide_down)
     )
 
-    Column(
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex >= 0 && selectedIndex < animations.size) {
+            listState.animateScrollToItem(selectedIndex)
+        }
+    }
+
+    LazyColumn(
+        state = listState,
         modifier = Modifier
             .width(240.dp)
             .fillMaxHeight()
             .padding(24.dp)
     ) {
 
-        animations.forEachIndexed { index, (key, label) ->
+        itemsIndexed(animations) { index, (key, label) ->
 
             val isFocused = selectedIndex == index
             val isActive = key == activeAnimation
