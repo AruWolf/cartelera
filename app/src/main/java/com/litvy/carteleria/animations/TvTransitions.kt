@@ -34,6 +34,34 @@ object TvTransitions {
                 slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Down)
     }
 
+    fun <T> fadeScale(ms: Int = 700) = TvTransition<T> {
+        (fadeIn(tween(ms)) + scaleIn(
+            initialScale = 0.95f,
+            animationSpec = tween(ms)
+        )) togetherWith
+                (fadeOut(tween(ms)) + scaleOut(
+                    targetScale = 1.05f,
+                    animationSpec = tween(ms)
+                ))
+    }
+
+    fun <T> fadeSlideLeft(ms: Int = 700) = TvTransition<T> {
+        (
+                fadeIn(tween(ms)) +
+                        slideIntoContainer(
+                            AnimatedContentTransitionScope.SlideDirection.Left,
+                            tween(ms)
+                        )
+                ) togetherWith
+                (
+                        fadeOut(tween(ms)) +
+                                slideOutOfContainer(
+                                    AnimatedContentTransitionScope.SlideDirection.Left,
+                                    tween(ms)
+                                )
+                        )
+    }
+
     fun <T> random(ms: Int = 700) = TvTransition<T> {
 
         val options = listOf<(AnimatedContentTransitionScope<T>) -> ContentTransform>(

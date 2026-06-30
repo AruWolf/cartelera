@@ -345,7 +345,7 @@ fun SideMenu(
                         navigation.moveMainDown(mainMenuItems.lastIndex)
 
                     FocusSection.SUBMENU_ANIMATION ->
-                        navigation.moveSubDown(6)
+                        navigation.moveSubDown(8)
 
                     FocusSection.SUBMENU_DURATION ->
                         navigation.moveSubDown(1)
@@ -399,7 +399,9 @@ fun SideMenu(
                             "left",
                             "up",
                             "right",
-                            "down"
+                            "down",
+                            "fadeScale",
+                            "fadeSlideLeft"
                         )
 
                         animations.getOrNull(navState.subIndex)
@@ -603,7 +605,7 @@ fun SideMenu(
                                 navigation.moveMainDown(mainMenuItems.lastIndex)
 
                             FocusSection.SUBMENU_ANIMATION ->
-                                navigation.moveSubDown(6)
+                                navigation.moveSubDown(8)
 
                             FocusSection.SUBMENU_DURATION ->
                                 navigation.moveSubDown(1)
@@ -657,7 +659,9 @@ fun SideMenu(
                                     "left",
                                     "up",
                                     "right",
-                                    "down"
+                                    "down",
+                                    "fadeScale",
+                                    "fadeSlideLeft"
                                 )
 
                                 animations.getOrNull(navState.subIndex)

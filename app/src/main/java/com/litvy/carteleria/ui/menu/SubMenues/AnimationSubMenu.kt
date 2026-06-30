@@ -28,7 +28,9 @@ fun AnimationSubMenu(
         "left" to stringResource(R.string.animation_slide_left),
         "up" to stringResource(R.string.animation_slide_up),
         "right" to stringResource(R.string.animation_slide_right),
-        "down" to stringResource(R.string.animation_slide_down)
+        "down" to stringResource(R.string.animation_slide_down),
+        "fadeScale" to stringResource(R.string.fade_scale),
+        "fadeSlideLeft" to stringResource(R.string.fade_slide_left)
     )
 
     val listState = rememberLazyListState()

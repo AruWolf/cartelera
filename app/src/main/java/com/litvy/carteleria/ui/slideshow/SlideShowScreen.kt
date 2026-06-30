@@ -82,10 +82,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.io.File
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.litvy.carteleria.util.DeviceUtils
 import androidx.compose.foundation.clickable
 
@@ -161,6 +159,8 @@ fun SlideShowScreen(
             "up" -> TvTransitions.slideUp<Slide>()
             "right" -> TvTransitions.slideRight<Slide>()
             "down" -> TvTransitions.slideDown<Slide>()
+            "fadeScale" -> TvTransitions.fadeScale<Slide>()
+            "fadeSlideLeft" -> TvTransitions.fadeSlideLeft<Slide>()
             "random" -> TvTransitions.random<Slide>()
             else -> TvTransitions.fade()
         }
@@ -288,10 +288,12 @@ fun SlideShowScreen(
 
         if (state.menuVisible) return false
 
-        if (ignoreNextCenter) {
+        /*if (ignoreNextCenter && keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
             ignoreNextCenter = false
             return true
-        }
+        }*/
+
+        ignoreNextCenter = false
 
         return when (keyCode) {
             KeyEvent.KEYCODE_0,
@@ -479,7 +481,7 @@ fun SlideShowScreen(
             if (state.isPaused && !state.isAdvertisingShowing) {
                 Box(
                     modifier = Modifier
-                        .align(Alignment.BottomStart)
+                        .align(Alignment.TopStart)
                         .padding(24.dp)
                         .background(
                             Color.Black.copy(alpha = 0.75f),

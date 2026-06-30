@@ -30,6 +30,8 @@
     <string name="animation_slide_up">Deslizar arriba</string>
     <string name="animation_slide_right">Deslizar der.</string>
     <string name="animation_slide_down">Deslizar abajo</string>
+    <string name="fade_scale">Fade Scale</string>
+    <string name="fade_slide_left">Fade Deslizar izq.</string>
 
     <string name="custom_duration_with_value">Duración personalizada: %1$s</string>
     <string name="apply_global_duration_all_images">Aplicar duración global a todas las imágenes</string>
