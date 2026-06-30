@@ -86,6 +86,8 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import com.litvy.carteleria.util.DeviceUtils
+import androidx.compose.foundation.clickable
 
 private enum class MediaImportSource {
     Files,
@@ -93,13 +95,18 @@ private enum class MediaImportSource {
 }
 
 @Composable
-fun SlideShowScreen() {
+fun SlideShowScreen(
+    onShowTouchRemote: () -> Unit = {}
+) {
     val context = LocalContext.current
     var backPressedOnce by remember { mutableStateOf(false) }
 
     val hiddenManager = remember { HiddenFileManager(context) }
     val imageDurationManager = remember { ImageDurationManager(context) }
     val folderShortcutManager = remember { FolderShortcutManager(context) }
+
+    val isMobile = !DeviceUtils.isTv(context)
+
 
     val viewModel = remember {
         SlideShowViewModel(
@@ -257,7 +264,27 @@ fun SlideShowScreen() {
     }
 
     fun handleSlideshowRemoteKey(keyCode: Int): Boolean {
-        if (state.isAdvertisingShowing) return true
+        if (state.isAdvertisingShowing) {
+            return when (keyCode) {
+
+                KeyEvent.KEYCODE_DPAD_RIGHT,
+                KeyEvent.KEYCODE_DPAD_LEFT,
+                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
+                KeyEvent.KEYCODE_DPAD_UP,
+                KeyEvent.KEYCODE_0,
+                KeyEvent.KEYCODE_1,
+                KeyEvent.KEYCODE_2,
+                KeyEvent.KEYCODE_3,
+                KeyEvent.KEYCODE_4,
+                KeyEvent.KEYCODE_5,
+                KeyEvent.KEYCODE_6,
+                KeyEvent.KEYCODE_7,
+                KeyEvent.KEYCODE_8,
+                KeyEvent.KEYCODE_9 -> true
+
+                else -> false
+            }
+        }
 
         if (state.menuVisible) return false
 
@@ -517,7 +544,7 @@ fun SlideShowScreen() {
             }
         }
 
-        if (state.menuVisible && !state.isAdvertisingShowing) {
+        if (state.menuVisible) {
             SideMenu(
                 currentAnimation = state.currentAnimation,
                 currentGlobalImageDurationMs = state.globalImageDurationMs,
@@ -685,6 +712,16 @@ fun SlideShowScreen() {
                 .padding(24.dp)
                 .height(45.dp)
                 .alpha(0.5f)
+                .then(
+                    if (isMobile){
+                        Modifier.clickable {
+                            viewModel.openMenu()
+                            onShowTouchRemote()
+                        }
+                    } else {
+                        Modifier
+                    }
+                )
         )
     }
 }

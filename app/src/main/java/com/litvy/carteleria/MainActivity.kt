@@ -4,6 +4,7 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
+import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -16,7 +17,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.litvy.carteleria.update.InAppUpdateManager
 
 
-// TODO: Deseleccionar images
 class MainActivity : ComponentActivity() {
     private var touchRemoteOverlayController: TouchRemoteOverlayController? = null
     private lateinit var inAppUpdateManager: InAppUpdateManager
@@ -41,6 +41,8 @@ class MainActivity : ComponentActivity() {
             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
 
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         WindowInsetsControllerCompat(window, window.decorView).apply {
@@ -59,7 +61,11 @@ class MainActivity : ComponentActivity() {
         inAppUpdateManager.registerListener()
 
         setContent {
-            CarteleriaAppRoot()
+            CarteleriaAppRoot(
+                onShowTouchRemote = {
+                    touchRemoteOverlayController?.show()
+                }
+            )
         }
 
         touchRemoteOverlayController = TouchRemoteOverlayController(this).also {

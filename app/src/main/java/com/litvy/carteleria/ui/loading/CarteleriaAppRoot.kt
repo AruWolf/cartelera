@@ -16,7 +16,9 @@ import com.litvy.carteleria.ui.slideshow.SlideShowScreen
 import kotlinx.coroutines.delay
 
 @Composable
-fun CarteleriaAppRoot() {
+fun CarteleriaAppRoot(
+    onShowTouchRemote: () -> Unit = {}
+) {
     var showStartupLoading by rememberSaveable { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -25,7 +27,9 @@ fun CarteleriaAppRoot() {
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        SlideShowScreen()
+        SlideShowScreen(
+            onShowTouchRemote = onShowTouchRemote
+        )
 
         AnimatedVisibility(
             visible = showStartupLoading,

@@ -235,7 +235,6 @@ class SlideShowViewModel(
             _uiState.value = state.copy(
                 slidesShownSinceLastAdvertising = completedCount,
                 isAdvertisingShowing = true,
-                menuVisible = false,
                 showSlideIndicator = false
             )
             return
@@ -245,17 +244,6 @@ class SlideShowViewModel(
             currentIndex = (state.currentIndex + 1) % state.slides.size,
             slidesShownSinceLastAdvertising = completedCount
         )
-    }
-
-    // --- MANEJO DE SERVIDOR LAN ---
-    // Deshabilitado temporalmente: el codigo queda disponible para futuras versiones.
-    fun startServer() {
-        _serverUrl.value = ""
-    }
-
-    // - Se apaga durante al finalizar el ciclo de vida de la pantalla.
-    fun stopServer() {
-        server.stop()
     }
 
     // --- USB ---
