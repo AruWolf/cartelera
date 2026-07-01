@@ -1,7 +1,6 @@
 package com.litvy.carteleria.animations
 
 import androidx.compose.animation.*
-import androidx.compose.animation.core.AnimationConstants
 import androidx.compose.animation.core.tween
 
 object TvTransitions {
@@ -102,7 +101,29 @@ object TvTransitions {
                     AnimatedContentTransitionScope.SlideDirection.Down,
                     tween(ms)
                 )
+            },
+            {
+                (fadeIn(tween(ms)) + scaleIn(
+                    initialScale = 0.95f,
+                    animationSpec = tween(ms)
+                )) togetherWith
+                        (fadeOut(tween(ms)) + scaleOut(
+                            targetScale = 1.05f,
+                            animationSpec = tween(ms)
+                        ))
+            },
+            {
+                (fadeIn(tween(ms)) + slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    tween(ms)
+                    )
+                ) togetherWith(fadeOut(tween(ms)) + slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Left,
+                    tween(ms)
+                    )
+                )
             }
+
         )
 
         options.random()(this)

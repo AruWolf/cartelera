@@ -21,6 +21,7 @@ class CartelPreferences(private val context: Context) {
         private val ANIMATION = stringPreferencesKey("animation")
         private val GLOBAL_IMAGE_DURATION_MS = longPreferencesKey("global_image_duration_ms")
 
+        // TODO: Eliminar referencias a contenido externo/interno
         private const val INTERNAL = "INTERNAL"
         private const val EXTERNAL = "EXTERNAL"
     }

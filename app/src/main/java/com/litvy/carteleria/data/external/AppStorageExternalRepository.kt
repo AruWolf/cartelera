@@ -11,8 +11,10 @@ class AppStorageExternalRepository(
     private val shortcutManager: FolderShortcutManager
 ) : ExternalContentRepository {
 
+    // Formatos aceptados
     private val imageExtensions = setOf("png", "jpg", "jpeg", "webp")
 
+    // Metodo de listado de carpetas
     override fun listFolders(): List<ExternalFolder> {
         val folders = provider.listFolders().map {
             ExternalFolder(
@@ -24,6 +26,7 @@ class AppStorageExternalRepository(
         return shortcutManager.applyPersistedShortcuts(folders)
     }
 
+    // Metodo de creacion de carpetas
     override fun createFolder(name: String): ExternalFolder? {
         return provider.createFolder(name)?.let {
             ExternalFolder(
@@ -33,13 +36,14 @@ class AppStorageExternalRepository(
         }
     }
 
+    // Metodo de listado de archivos en una carpeta
     override fun listFiles(folderPath: String): List<ExternalFile> {
 
         val folder = File(folderPath)
 
         return folder.listFiles()
             ?.filter { it.isFile }
-            ?.map {
+            ?.map { // Aplica propiedades para el proceso posterior de reproduccion
                 val isImage = it.extension.lowercase() in imageExtensions
                 ExternalFile(
                     name = it.name,
@@ -48,7 +52,7 @@ class AppStorageExternalRepository(
                     isImage = isImage,
                     customDurationMs = if (isImage) durationManager.getDuration(it.absolutePath) else null
                 )
-            }
+            } // Ordenamiento de archivos alfabeticamente
             ?.sortedWith(
                 compareBy<ExternalFile> { it.isHidden }
                     .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
@@ -56,19 +60,23 @@ class AppStorageExternalRepository(
             ?: emptyList()
     }
 
+    // Metodo para eliminar archivos
     override fun deleteFile(path: String) {
         provider.deleteFile(File(path))
     }
 
+    // Metodo para eliminar carpetas
     override fun deleteFolder(path: String) {
         provider.deleteFolder(File(path))
         shortcutManager.clearShortcut(path)
     }
 
+    // Metodo para aplicar atajo numerico a una carpeta
     override fun setFolderShortcut(path: String, shortcutNumber: Int?) {
         shortcutManager.setShortcut(path, shortcutNumber)
     }
 
+    // Metodo para copiar un archivo
     override fun copyFile(sourcePath: String, targetFolderPath: String) {
         provider.duplicateFileToFolder(
             File(sourcePath),
@@ -76,6 +84,7 @@ class AppStorageExternalRepository(
         )
     }
 
+    // Metodo para cortar o mover un archivo
     override fun moveFile(sourcePath: String, targetFolderPath: String) {
         provider.moveFileToFolder(
             File(sourcePath),
@@ -83,10 +92,12 @@ class AppStorageExternalRepository(
         )
     }
 
+    // Metodo para ocultar un archivo en reproduccion
     override fun hideFile(path: String) {
         hiddenManager.hide(path)
     }
 
+    // Metodo para volver a mostrar un archivo en reproduccion
     override fun showFile(path: String) {
         hiddenManager.show(path)
     }

@@ -39,7 +39,8 @@ fun ExternalContentSubMenu(
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
     val context = LocalContext.current
-    val enableTouch = !DeviceUtils.isTv(context)
+    val isTv = DeviceUtils.isTv(context)
+    val enableTouch = !isTv
 
     LaunchedEffect(
         navigation.state.folderIndex,
@@ -104,17 +105,19 @@ fun ExternalContentSubMenu(
                 )
             }
 
-            val usbIndex = nextIndex++
-            item {
-                MenuItemView(
-                    text = "[USB] ${stringResource(R.string.update_from_usb)}",
-                    selected = !isPreviewMode && navigation.state.folderIndex == usbIndex,
-                    onClick = {
-                        navigation.setFolderIndex(usbIndex)
-                        onForceUsbScan()
-                    },
-                    enableTouch = enableTouch
-                )
+            if (isTv) {
+                val usbIndex = nextIndex++
+                item {
+                    MenuItemView(
+                        text = "[USB] ${stringResource(R.string.update_from_usb)}",
+                        selected = !isPreviewMode && navigation.state.folderIndex == usbIndex,
+                        onClick = {
+                            navigation.setFolderIndex(usbIndex)
+                            onForceUsbScan()
+                        },
+                        enableTouch = enableTouch
+                    )
+                }
             }
 
             item { Spacer(modifier = Modifier.height(16.dp)) }

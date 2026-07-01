@@ -11,7 +11,6 @@ import com.litvy.carteleria.data.CartelConfig
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.ContentSource
 import com.litvy.carteleria.domain.importing.AndroidMediaImporter
-import com.litvy.carteleria.domain.server.CartelServer
 import com.litvy.carteleria.domain.usb.UsbImporter
 import com.litvy.carteleria.slides.AppStorageSlideProvider
 import com.litvy.carteleria.slides.ImageSlideDurations
@@ -28,7 +27,6 @@ import java.io.File
 class SlideShowViewModel(
     private val externalProvider: AppStorageSlideProvider,
     private val prefs: CartelPreferences,
-    private val server: CartelServer,
     private val usbImporter: UsbImporter,
     private val context: Context
 ) : ViewModel() {
@@ -365,7 +363,6 @@ class SlideShowViewModel(
 
     override fun onCleared() {
         contentObserver.stop()
-        server.stop()
         super.onCleared()
     }
 

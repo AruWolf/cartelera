@@ -74,7 +74,6 @@ import com.litvy.carteleria.ui.menu.ImportDestinationDialog
 import com.litvy.carteleria.ui.menu.NewFolderNameDialog
 import com.litvy.carteleria.ui.menu.SideMenu
 import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
-import com.litvy.carteleria.util.network.LocalCartelServer
 import com.litvy.carteleria.util.qr.generateQrCode
 import com.litvy.carteleria.ui.touchremote.TouchDeviceDetector
 import com.litvy.carteleria.util.usb.UsbContentManager
@@ -110,7 +109,6 @@ fun SlideShowScreen(
         SlideShowViewModel(
             externalProvider = AppStorageSlideProvider(context, hiddenManager, imageDurationManager),
             prefs = CartelPreferences(context),
-            server = LocalCartelServer(context),
             usbImporter = UsbContentManager(context),
             context = context
         )

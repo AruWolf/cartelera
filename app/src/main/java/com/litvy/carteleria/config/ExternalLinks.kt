@@ -1,5 +1,6 @@
 package com.litvy.carteleria.config
 
+// Links de interes
 object ExternalLinks {
 
     const val WEBSITE_URL = "https://litvy.com.ar"

@@ -3,10 +3,12 @@ package com.litvy.carteleria.data.external
 import android.content.Context
 import com.litvy.carteleria.domain.external.ExternalFolder
 
+// Clase de gestion de atajos numericos de carpetas
 class FolderShortcutManager(context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
+    // Metodo para almacenar los atajos asignados para cada carpeta
     fun applyPersistedShortcuts(folders: List<ExternalFolder>): List<ExternalFolder> {
         val folderPaths = folders.map { it.path }.toSet()
         val editor = prefs.edit()
@@ -49,6 +51,7 @@ class FolderShortcutManager(context: Context) {
         return foldersWithShortcuts
     }
 
+    // Aplicar atajo numerico a una carpeta
     fun setShortcut(folderPath: String, shortcutNumber: Int?) {
         val editor = prefs.edit()
 
@@ -67,6 +70,7 @@ class FolderShortcutManager(context: Context) {
         editor.apply()
     }
 
+    // Metodo para quitar un atajo numerico a una carpeta
     fun clearShortcut(folderPath: String) {
         prefs.edit().remove(folderPath).apply()
     }

@@ -91,9 +91,10 @@ fun SideMenu(
         stringResource(R.string.menu_close)
     )
     val importActionCount = if (canImportFromDevice) 2 else 0
+    val usbActionCount = if (isTv) 1 else 0
     val newFolderIndex = importActionCount
     val usbActionIndex = importActionCount + 1
-    val firstFolderIndex = importActionCount + 2
+    val firstFolderIndex = importActionCount + 1 + usbActionCount
     val folderImportActionCount = if (canImportFromDevice) 2 else 0
 
     LaunchedEffect(Unit) {
@@ -134,7 +135,7 @@ fun SideMenu(
             canImportFromDevice && index == 0 -> onImportFromFiles(null)
             canImportFromDevice && index == 1 -> onImportFromGallery(null)
             index == newFolderIndex -> requestCreateFolder()
-            index == usbActionIndex -> onForceUsbScan()
+            isTv && index == usbActionIndex -> onForceUsbScan()
             else -> {
                 val folder = externalState.folders.getOrNull(index - firstFolderIndex)
                 folder?.let {
@@ -355,7 +356,7 @@ fun SideMenu(
 
                     FocusSection.SUBMENU_EXTERNAL -> {
                         if (!externalState.isInFolder) {
-                            val max = externalState.folders.size + importActionCount + 1
+                            val max = externalState.folders.size + importActionCount + usbActionCount
                             externalNavigation.moveFolderDown(max)
                         } else {
                             val extra = folderImportActionCount + if (externalState.clipboardPath != null) 1 else 0
@@ -615,7 +616,7 @@ fun SideMenu(
 
                             FocusSection.SUBMENU_EXTERNAL -> {
                                 if (!externalState.isInFolder) {
-                                    val max = externalState.folders.size + importActionCount + 1
+                                    val max = externalState.folders.size + importActionCount + usbActionCount
                                     externalNavigation.moveFolderDown(max)
                                 } else {
                                     val extra = folderImportActionCount + if (externalState.clipboardPath != null) 1 else 0
