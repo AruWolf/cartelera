@@ -39,9 +39,6 @@ class SlideShowViewModel(
     private val _uiState = MutableStateFlow(SlideShowUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val _serverUrl = MutableStateFlow("")
-    val serverUrl = _serverUrl.asStateFlow()
-
     private val mediaImporter = AndroidMediaImporter(context)
     private var contentRefreshJob: Job? = null
     private val contentObserver = ContentDirectoryObserver(

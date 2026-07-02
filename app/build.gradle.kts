@@ -11,8 +11,8 @@ android {
         applicationId = "com.litvy.carteleria"
         minSdk = 21
         targetSdk = 35
-        versionCode = 9
-        versionName = "1.8"
+        versionCode = 10
+        versionName = "1.9"
     }
 
     buildFeatures {
@@ -53,8 +53,6 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.03"))
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    // Prueba Servidor local
-    implementation("org.nanohttpd:nanohttpd:2.3.1")
     // QR
     implementation("com.google.zxing:core:3.5.1")
     // COIL
@@ -76,7 +74,6 @@ dependencies {
     // Motor de actualizaciones
     implementation("com.google.android.play:app-update:2.1.0")
     implementation("com.google.android.play:app-update-ktx:2.1.0")
-
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
