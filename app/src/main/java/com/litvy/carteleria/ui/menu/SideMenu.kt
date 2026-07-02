@@ -1,5 +1,6 @@
 package com.litvy.carteleria.ui.menu
 
+import android.annotation.SuppressLint
 import android.view.KeyEvent
 import android.widget.Toast
 import androidx.compose.foundation.background
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -44,6 +46,7 @@ import com.litvy.carteleria.ui.navigation.TvNavigationController
 import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 import com.litvy.carteleria.util.DeviceUtils
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SideMenu(
@@ -72,6 +75,8 @@ fun SideMenu(
     val externalNavigation = remember { ExternalNavigationController() }
     val externalState by externalMenuViewModel.state.collectAsState()
 
+    val menuListState = rememberLazyListState()
+
     val containerFocusRequester = remember { FocusRequester() }
     var contextMenuState by remember { mutableStateOf(ContextMenuState()) }
     var imageDurationTargetPath by remember { mutableStateOf<String?>(null) }
@@ -99,6 +104,10 @@ fun SideMenu(
 
     LaunchedEffect(Unit) {
         containerFocusRequester.requestFocus()
+    }
+
+    LaunchedEffect(navState.mainIndex){
+        menuListState.animateScrollToItem(navState.mainIndex)
     }
 
     fun focusFolder(path: String) {
@@ -738,10 +747,12 @@ fun SideMenu(
 
             Row(modifier = Modifier.fillMaxSize()) {
                 LazyColumn(
+                    state = menuListState,
                     modifier = Modifier
                         .width(mainMenuWidth)
                         .padding(sidePadding)
                 ) {
+                    
                 items(mainMenuItems.size) { index ->
                     val isSelected =
                         navState.section == FocusSection.MAIN_MENU && navState.mainIndex == index

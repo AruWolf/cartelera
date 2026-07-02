@@ -117,7 +117,8 @@ fun DurationPickerDialog(
                         text = stringResource(R.string.cancel),
                         onClick = onDismiss,
                         modifier = Modifier.width(130.dp),
-                        enableTouch = !isTv
+                        enableTouch = !isTv,
+                        textColor = Color.White
                     )
 
                     MenuItemView(
@@ -128,7 +129,8 @@ fun DurationPickerDialog(
                             )
                         },
                         modifier = Modifier.width(130.dp),
-                        enableTouch = !isTv
+                        enableTouch = !isTv,
+                        textColor = Color.White
                     )
                 }
             }
@@ -150,7 +152,7 @@ fun DurationWheel(
     val scrollPosition = remember { Animatable(selectedIndex.toFloat()) }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val itemHeight = 40.dp
+    val itemHeight = 34.dp
     val wheelHeight = itemHeight * 7f
     val itemHeightPx = with(density) { itemHeight.toPx() }
     val wheelSpring = spring<Float>(
@@ -308,7 +310,7 @@ fun DurationWheel(
 
         val centerStep = scrollPosition.value.roundToInt()
 
-        (centerStep - 4..centerStep + 4).forEach { itemStep ->
+        (centerStep - 3..centerStep + 3).forEach { itemStep ->
             val optionIndex = wheelIndex(itemStep)
             val itemOffsetPx = (itemStep - scrollPosition.value) * itemHeightPx
             val distanceFromCenter = abs(itemOffsetPx / itemHeightPx)
