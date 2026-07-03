@@ -31,13 +31,19 @@ import com.litvy.carteleria.util.DeviceUtils
 
 @Composable
 fun ConfirmationDialog(
+    title: String? = null,
     text: String,
+    confirmText: String = stringResource(R.string.confirm),
+    cancelText: String = stringResource(R.string.cancel),
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    modifier: Modifier = Modifier,
+    initialSelection: Int = 0
 ) {
     val focusRequester = remember { FocusRequester() }
-    var selectedIndex by remember { mutableIntStateOf(1) }
-
+    var selectedIndex by remember {
+        mutableIntStateOf(initialSelection.coerceIn(0, 1))
+    }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
@@ -47,7 +53,7 @@ fun ConfirmationDialog(
 
     Dialog(onDismissRequest = onDismiss) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .width(420.dp)
                 .background(Color.Black.copy(alpha = 0.95f), RoundedCornerShape(12.dp))
                 .focusRequester(focusRequester)
@@ -88,17 +94,19 @@ fun ConfirmationDialog(
                 .padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
-            Text(
-                text = text,
-                color = Color.White
-            )
+            if (title != null) {
+                Text(
+                    text = text,
+                    color = Color.White
+                )
+            }
 
             Row(
                 modifier = Modifier.align(Alignment.End),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MenuItemView(
-                    text = stringResource(R.string.cancel),
+                    text = cancelText,
                     selected = selectedIndex == 0,
                     onClick = onDismiss,
                     modifier = Modifier.width(150.dp),
@@ -107,7 +115,7 @@ fun ConfirmationDialog(
                 )
 
                 MenuItemView(
-                    text = stringResource(R.string.confirm),
+                    text = confirmText,
                     selected = selectedIndex == 1,
                     onClick = onConfirm,
                     modifier = Modifier.width(190.dp),

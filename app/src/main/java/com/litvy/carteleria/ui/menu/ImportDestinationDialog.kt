@@ -19,6 +19,8 @@ import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.R
 import com.litvy.carteleria.domain.external.ExternalFolder
 
+private val textColor: Color = Color.LightGray.copy(alpha = 0.90f)
+
 @Composable
 fun ImportDestinationDialog(
     folders: List<ExternalFolder>,
@@ -29,8 +31,9 @@ fun ImportDestinationDialog(
     onDismiss: () -> Unit
 ) {
     AlertDialog(
+        containerColor = Color.Black.copy(alpha = 0.90f),
         onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.select_folder)) },
+        title = { Text(text = stringResource(R.string.select_folder), color = textColor) },
         text = {
             Column {
                 folders.forEach { folder ->
@@ -41,12 +44,12 @@ fun ImportDestinationDialog(
                             selected = selectedFolderPath == folder.path,
                             onClick = { onFolderSelected(folder.path) }
                         )
-                        Text(text = folder.name)
+                        Text(text = folder.name, color = textColor)
                     }
                 }
 
                 TextButton(onClick = onCreateFolderRequested) {
-                    Text(text = stringResource(R.string.new_folder))
+                    Text(text = stringResource(R.string.new_folder), color = textColor)
                 }
             }
         },
@@ -55,12 +58,12 @@ fun ImportDestinationDialog(
                 enabled = selectedFolderPath != null,
                 onClick = onContinue
             ) {
-                Text(stringResource(R.string.continue_action))
+                Text(stringResource(R.string.continue_action), color = textColor)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(R.string.cancel), color = textColor)
             }
         }
     )
@@ -78,14 +81,15 @@ fun NewFolderNameDialog(
     val canCreate = trimmedName.isNotEmpty() && !duplicate
 
     AlertDialog(
+        containerColor = Color.Black.copy(alpha = 0.90f),
         onDismissRequest = onDismiss,
-        title = { Text(text = stringResource(R.string.new_folder)) },
+        title = { Text(text = stringResource(R.string.new_folder), color = textColor) },
         text = {
             Column {
                 OutlinedTextField(
                     value = folderName,
                     onValueChange = { folderName = it },
-                    label = { Text(stringResource(R.string.folder_name)) },
+                    label = { Text(stringResource(R.string.folder_name), color = textColor) },
                     isError = duplicate,
                     singleLine = true
                 )
@@ -104,12 +108,12 @@ fun NewFolderNameDialog(
                 enabled = canCreate,
                 onClick = { onCreate(trimmedName) }
             ) {
-                Text(stringResource(R.string.create))
+                Text(stringResource(R.string.create), color = textColor)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text(stringResource(R.string.cancel))
+                Text(stringResource(R.string.cancel), color = textColor)
             }
         }
     )

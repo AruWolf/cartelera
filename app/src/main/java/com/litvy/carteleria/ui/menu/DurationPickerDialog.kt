@@ -86,6 +86,7 @@ fun DurationPickerDialog(
         Column(
             modifier = Modifier
                 .width(320.dp)
+                .fillMaxWidth(0.9f)
                 .background(Color(0xFF111111), RoundedCornerShape(12.dp))
                 .padding(horizontal = 20.dp, vertical = 18.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -148,12 +149,15 @@ fun DurationWheel(
 ) {
     if (options.isEmpty()) return
 
+    val isTv = DeviceUtils.isTv(LocalContext.current)
+
     val focusRequester = remember { FocusRequester() }
     val scrollPosition = remember { Animatable(selectedIndex.toFloat()) }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
-    val itemHeight = 34.dp
-    val wheelHeight = itemHeight * 7f
+    val itemHeight = if (isTv) 34.dp else 28.dp
+    val visibleItems = if (isTv) 7 else 5
+    val wheelHeight = itemHeight * visibleItems.toFloat()
     val itemHeightPx = with(density) { itemHeight.toPx() }
     val wheelSpring = spring<Float>(
         dampingRatio = Spring.DampingRatioNoBouncy,

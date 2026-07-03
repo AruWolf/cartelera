@@ -6,6 +6,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +21,7 @@ import com.litvy.carteleria.ui.navigation.ContextAction
 import com.litvy.carteleria.ui.navigation.ContextTarget
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.runtime.LaunchedEffect
 
 data class ContextMenuState(
     val isVisible: Boolean = false,
@@ -32,17 +36,23 @@ fun BoxScope.ContextMenuOverlay(
     onActionSelected: (ContextAction) -> Unit
 ) {
 
-    Column(
+    val listState = rememberLazyListState()
+
+    LaunchedEffect(state.selectedIndex) {
+        listState.animateScrollToItem(state.selectedIndex)
+    }
+
+    LazyColumn(
+        state = listState,
         modifier = Modifier
             .align(Alignment.CenterStart)
             .offset(x = 340.dp)
             .width(220.dp)
             .background(Color.Black.copy(alpha = 0.95f))
-            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
 
-        options.forEachIndexed { index, action ->
+        itemsIndexed(options) { index, action ->
 
             val isSelected = state.selectedIndex == index
             val label = action.localizedLabel()

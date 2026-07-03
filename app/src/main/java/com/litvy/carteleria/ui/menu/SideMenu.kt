@@ -87,6 +87,8 @@ fun SideMenu(
     var shortcutTargetPath by remember { mutableStateOf<String?>(null) }
     var shortcutConflict by remember { mutableStateOf<Pair<String, Int>?>(null) }
     var showCreateFolderDialog by remember { mutableStateOf(false) }
+    var fileToDelete by remember {mutableStateOf<String?>(null)}
+    var folderToDelete by remember {mutableStateOf<String?>(null)}
 
     val mainMenuItems = listOf(
         stringResource(R.string.menu_content),
@@ -275,7 +277,7 @@ fun SideMenu(
                                         confirmFolderDurationPath = target.path
 
                                     ContextAction.Delete ->
-                                        externalMenuViewModel.deleteFolder(target.path)
+                                        folderToDelete = target.path
 
                                     else -> Unit
                                 }
@@ -290,7 +292,7 @@ fun SideMenu(
                                         externalMenuViewModel.cutFile(target.path)
 
                                     ContextAction.Delete ->
-                                        externalMenuViewModel.deleteFile(target.path)
+                                        fileToDelete = target.path
 
                                     ContextAction.Hide -> {
                                         externalMenuViewModel.hideFile(target.path)
@@ -535,7 +537,7 @@ fun SideMenu(
                                                 confirmFolderDurationPath = target.path
 
                                             ContextAction.Delete ->
-                                                externalMenuViewModel.deleteFolder(target.path)
+                                                folderToDelete = target.path
 
                                             else -> Unit
                                         }
@@ -550,7 +552,7 @@ fun SideMenu(
                                                 externalMenuViewModel.cutFile(target.path)
 
                                             ContextAction.Delete ->
-                                                externalMenuViewModel.deleteFile(target.path)
+                                                fileToDelete = target.path
 
                                             ContextAction.Hide -> {
                                                 externalMenuViewModel.hideFile(target.path)
@@ -959,6 +961,43 @@ fun SideMenu(
                 onDismiss = { shortcutConflict = null }
             )
         }
+
+        fileToDelete?.let {path ->
+
+            ConfirmationDialog(
+                title = "Eliminar archivo",
+                text = "¿Desea eliminar este archivo?",
+                confirmText = "Eliminar",
+                onConfirm = {
+                    externalMenuViewModel.deleteFile(path)
+                    fileToDelete = null
+                    Toast.makeText(context, "Archivo eliminado correctamente", Toast.LENGTH_SHORT).show()
+
+                },
+                onDismiss = {
+                    fileToDelete = null
+                }
+            )
+
+        }
+
+        folderToDelete?.let { path ->
+
+            ConfirmationDialog(
+                title = "Eliminar carpeta",
+                text = "¿Desea eliminar esta carpeta y todo su contenido?",
+                confirmText = "Eliminar",
+                onConfirm = {
+                    externalMenuViewModel.deleteFolder(path)
+                    folderToDelete = null
+                    Toast.makeText(context, "Carpeta eliminada correctamente", Toast.LENGTH_SHORT).show()
+                },
+                onDismiss = {
+                    folderToDelete = null
+                }
+            )
+        }
+
     }
 }
 

@@ -109,7 +109,7 @@ fun ExternalContentSubMenu(
                 val usbIndex = nextIndex++
                 item {
                     MenuItemView(
-                        text = "[USB] ${stringResource(R.string.update_from_usb)}",
+                        text = "${stringResource(R.string.update_from_usb)}",
                         selected = !isPreviewMode && navigation.state.folderIndex == usbIndex,
                         onClick = {
                             navigation.setFolderIndex(usbIndex)
