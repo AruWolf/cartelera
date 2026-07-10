@@ -869,7 +869,7 @@ fun SideMenu(
 
         if (confirmAllDurations) {
             ConfirmationDialog(
-                title = "Cambiar duración general",
+                title = stringResource(R.string.context_global_duration_title),
                 text = stringResource(R.string.confirm_apply_global_duration_all),
                 onConfirm = {
                     onUseGlobalDurationForAllImages()
@@ -886,7 +886,7 @@ fun SideMenu(
 
         confirmFolderDurationPath?.let { folderPath ->
             ConfirmationDialog(
-                title = "Cambiar duración",
+                title = stringResource(R.string.context_change_duration_title),
                 text = stringResource(R.string.confirm_apply_global_duration_folder),
                 onConfirm = {
                     onUseGlobalDurationForFolder(folderPath)
@@ -967,13 +967,13 @@ fun SideMenu(
         fileToDelete?.let {path ->
 
             ConfirmationDialog(
-                title = "Eliminar archivo",
-                text = "¿Desea eliminar este archivo?",
-                confirmText = "Eliminar",
+                title = stringResource(R.string.context_delete_file_title),
+                text = stringResource(R.string.context_delete_file_message),
+                confirmText = stringResource(R.string.context_delete),
                 onConfirm = {
                     externalMenuViewModel.deleteFile(path)
                     fileToDelete = null
-                    Toast.makeText(context, "Archivo eliminado correctamente", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.file_delete_succesful), Toast.LENGTH_SHORT).show()
 
                 },
                 onDismiss = {
@@ -986,13 +986,13 @@ fun SideMenu(
         folderToDelete?.let { path ->
 
             ConfirmationDialog(
-                title = "Eliminar carpeta",
-                text = "¿Desea eliminar esta carpeta y todo su contenido?",
-                confirmText = "Eliminar",
+                title = stringResource(R.string.context_delete_folder_title),
+                text = stringResource(R.string.context_delete_folder_message),
+                confirmText = stringResource(R.string.context_delete),
                 onConfirm = {
                     externalMenuViewModel.deleteFolder(path)
                     folderToDelete = null
-                    Toast.makeText(context, "Carpeta eliminada correctamente", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.folder_delete_succesful), Toast.LENGTH_SHORT).show()
                 },
                 onDismiss = {
                     folderToDelete = null

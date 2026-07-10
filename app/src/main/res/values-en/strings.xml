@@ -1,5 +1,8 @@
-﻿<resources>
+﻿<!-- STRING XML (ENGLISH FILE) -->
+<resources>
     <string name="app_name">Signage</string>
+
+<!-- __________________________________________MENU_____________________________________________________ -->
 
     <string name="menu_content">Content</string>
     <string name="menu_animation">Animation</string>
@@ -7,6 +10,9 @@
     <string name="menu_about">About</string>
     <string name="menu_close">Close</string>
 
+<!-- ___________________________________SIDE MENU FUNCTIONS______________________________________________ -->
+
+    <!-- CONTENT SUBMENU -->
     <string name="load_content_qr">Load content (QR)</string>
     <string name="update_from_usb">Update from USB</string>
     <string name="import_from_files">Import from files</string>
@@ -23,6 +29,7 @@
     <string name="folder_already_exists">A folder with that name already exists</string>
     <string name="select_folder_required">Select a folder</string>
 
+    <!-- ANIMATION SUBMENU -->
     <string name="animation_random">Random</string>
     <string name="animation_fade">Fade</string>
     <string name="animation_scale">Scale</string>
@@ -30,7 +37,9 @@
     <string name="animation_slide_up">Slide up</string>
     <string name="animation_slide_right">Slide right</string>
     <string name="animation_slide_down">Slide down</string>
+    <string name="fade_slide_left">Fade slide left.</string>
 
+    <!-- DURATION SUBMENU -->
     <string name="custom_duration_with_value">Custom duration: %1$s</string>
     <string name="apply_global_duration_all_images">Apply global duration to all images</string>
     <string name="global_duration">Global duration</string>
@@ -44,29 +53,7 @@
         <item quantity="other">%1$d minutes</item>
     </plurals>
 
-    <string name="context_cancel">Cancel</string>
-    <string name="context_delete">Delete</string>
-    <string name="context_open_folder">Open</string>
-    <string name="context_play_folder">Play</string>
-    <string name="context_numeric_shortcut">Numeric shortcut</string>
-    <string name="context_apply_global_duration">Apply global duration</string>
-    <string name="context_preview">Preview</string>
-    <string name="context_duration">Duration</string>
-    <string name="context_copy">Copy</string>
-    <string name="context_cut">Cut</string>
-    <string name="context_hide">Hide</string>
-    <string name="context_show">Show</string>
-
-    <string name="cancel">Cancel</string>
-    <string name="confirm">Confirm</string>
-    <string name="no_shortcut">No shortcut</string>
-
-    <string name="confirm_apply_global_duration_all">Apply global duration to all images?</string>
-    <string name="toast_global_duration_applied_all">Global duration applied to all images</string>
-    <string name="confirm_apply_global_duration_folder">Apply global duration to all images in this folder?</string>
-    <string name="toast_global_duration_applied_folder">Global duration applied to the folder</string>
-    <string name="confirm_replace_shortcut">Number %1$d is already assigned to:\n\n"%2$s"\n\nDo you want to replace it and assign it to:\n\n"%3$s"?</string>
-
+    <!-- ABOUT SUBMENU -->
     <string name="about_app_title">Digital Signage TV</string>
     <string name="about_version">Version %1$s</string>
     <string name="about_app_description">Digital signage application for Android TV.</string>
@@ -81,15 +68,57 @@
     <string name="about_litvy_page">Litvy page</string>
     <string name="manual_privacy_title">User manual and privacy policies</string>
 
-    <string name="press_again_to_exit">Press again to exit</string>
+<!-- _________________________________CONTEXT MENU_____________________________________________________ -->
+
+    <!-- GENERIC STRINGS -->
+    <string name="context_cancel">Cancel</string>
+    <string name="context_delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm">Confirm</string>
+
+    <!-- DELETE FILE DIALOG -->
+    <string name="context_delete_file_title">Delete File</string>
+    <string name="context_delete_file_message">Are you sure you want to delete the file?</string>
+
+    <!-- DELETE FOLDER DIALOG -->
+    <string name="context_delete_folder_title">Delete Folder</string>
+    <string name="context_delete_folder_message">Are you sure you want to delete the folder and all its content?</string>
+
+    <!-- CONTEXT FILE/FOLDER MENU STRINGS -->
+    <string name="context_open_folder">Open</string>
+    <string name="context_play_folder">Play</string>
+    <string name="context_numeric_shortcut">Numeric shortcut</string>
+    <string name="context_apply_global_duration">Apply global duration</string>
+    <string name="context_duration">Duration</string>
+    <string name="context_copy">Copy</string>
+    <string name="context_cut">Cut</string>
+    <string name="context_hide">Hide</string>
+    <string name="context_show">Show</string>
+
+    <!-- SHORTCUT DIALOG STRINGS-->
+    <string name="no_shortcut">No shortcut</string>
+
+    <!-- GLOBAL DURATION DIALOG STRINGS -->
+    <string name="context_change_duration_title">Change duration</string>
+    <string name="context_global_duration_title">Change global duration</string>
+    <string name="confirm_apply_global_duration_all">Apply global duration to all images?</string>
+    <string name="toast_global_duration_applied_all">Global duration applied to all images</string>
+    <string name="confirm_apply_global_duration_folder">Apply global duration to all images in this folder?</string>
+    <string name="toast_global_duration_applied_folder">Global duration applied to the folder</string>
+    <string name="confirm_replace_shortcut">Number %1$d is already assigned to:\n\n"%2$s"\n\nDo you want to replace it and assign it to:\n\n"%3$s"?</string>
+
+<!-- ________________________________MAIN WINDOW STRINGS______________________________-->
+
     <string name="playback_paused_message">Playback paused.\nPress UP or the PAUSE button to resume.</string>
     <string name="scan_for_help">Scan for help</string>
     <string name="scan_to_upload_content">Scan to upload content</string>
-    <string name="loading_content">Loading content...</string>
     <string name="logo_litvy_content_description">Litvy logo</string>
     <string name="qr_content_description">QR</string>
     <string name="qr_manual_content_description">User manual QR</string>
 
+<!-- ________________________________TOAST/SNACKBAR STRINGS__________________________________-->
+    <string name="press_again_to_exit">Press again to exit</string>
+    <string name="loading_content">Loading content...</string>
     <string name="usb_searching">Searching for USB...</string>
     <plurals name="usb_files_imported">
         <item quantity="one">Imported %1$d file</item>
@@ -102,10 +131,16 @@
         <item quantity="other">Imported %1$d files</item>
     </plurals>
 
+    <string name="folder_delete_succesful">Folder succesfuly deleted</string>
+    <string name="file_delete_succesful">File succesfully deleted</string>
+
     <string name="web_method_not_supported">Method not supported</string>
     <string name="web_panel_title">Signage TV Panel</string>
     <string name="web_new_folder_placeholder">New folder (optional)</string>
     <string name="web_upload_file">Upload file</string>
     <string name="web_upload_success">File uploaded successfully to folder: %1$s</string>
     <string name="web_upload_error">Error uploading file</string>
+    <string name="touch_remote_hidden_message">
+    Control hidden. Touch the screen three times to show it.
+    </string>
 </resources>

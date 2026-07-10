@@ -1,12 +1,17 @@
-﻿<resources>
+﻿<!-- STRINGS XML (ARCHIVO ESPAÑOL)-->
+<resources>
     <string name="app_name">Cartelería</string>
 
+    <!-- __________________________________________MENU_____________________________________________________ -->
     <string name="menu_content">Contenido</string>
     <string name="menu_animation">Animación</string>
     <string name="menu_duration">Duración</string>
     <string name="menu_about">Acerca de</string>
     <string name="menu_close">Cerrar</string>
 
+    <!-- _________________________________FUNCIONES MENU LATERAL____________________________________________ -->
+
+    <!-- SUBMENU CONTENIDO-->
     <string name="load_content_qr">Cargar contenido (QR)</string>
     <string name="update_from_usb">Actualizar desde USB</string>
     <string name="import_from_files">Importar desde archivos</string>
@@ -23,6 +28,7 @@
     <string name="folder_already_exists">Ya existe una carpeta con ese nombre</string>
     <string name="select_folder_required">Seleccione una carpeta</string>
 
+    <!-- SUBMENU ANIMACIONES-->
     <string name="animation_random">Aleatorio</string>
     <string name="animation_fade">Fade</string>
     <string name="animation_scale">Scale</string>
@@ -30,7 +36,9 @@
     <string name="animation_slide_up">Deslizar arriba</string>
     <string name="animation_slide_right">Deslizar der.</string>
     <string name="animation_slide_down">Deslizar abajo</string>
+    <string name="fade_slide_left">Fade Deslizar izq.</string>
 
+    <!-- SUBMENU DURACIÓN-->
     <string name="custom_duration_with_value">Duración personalizada: %1$s</string>
     <string name="apply_global_duration_all_images">Aplicar duración global a todas las imágenes</string>
     <string name="global_duration">Duración global</string>
@@ -44,29 +52,7 @@
         <item quantity="other">%1$d minutos</item>
     </plurals>
 
-    <string name="context_cancel">Cancelar</string>
-    <string name="context_delete">Eliminar</string>
-    <string name="context_open_folder">Abrir</string>
-    <string name="context_play_folder">Reproducir</string>
-    <string name="context_numeric_shortcut">Atajo numérico</string>
-    <string name="context_apply_global_duration">Aplicar duración global</string>
-    <string name="context_preview">Previsualizar</string>
-    <string name="context_duration">Duración</string>
-    <string name="context_copy">Copiar</string>
-    <string name="context_cut">Cortar</string>
-    <string name="context_hide">Ocultar</string>
-    <string name="context_show">Mostrar</string>
-
-    <string name="cancel">Cancelar</string>
-    <string name="confirm">Confirmar</string>
-    <string name="no_shortcut">Sin atajo</string>
-
-    <string name="confirm_apply_global_duration_all">¿Aplicar duración global a todas las imágenes?</string>
-    <string name="toast_global_duration_applied_all">Duración global aplicada a todas las imágenes</string>
-    <string name="confirm_apply_global_duration_folder">¿Aplicar duración global a todas las imágenes de esta carpeta?</string>
-    <string name="toast_global_duration_applied_folder">Duración global aplicada a la carpeta</string>
-    <string name="confirm_replace_shortcut">El número %1$d ya está asignado a:\n\n"%2$s"\n\n¿Desea reemplazarlo y asignarlo a:\n\n"%3$s"?</string>
-
+    <!-- SUBMENU ACERCA DE -->
     <string name="about_app_title">Cartelera Digital TV</string>
     <string name="about_version">Versión %1$s</string>
     <string name="about_app_description">Aplicación de cartelería digital para Android TV.</string>
@@ -81,15 +67,56 @@
     <string name="about_litvy_page">Página de Litvy</string>
     <string name="manual_privacy_title">Manual de usuario y políticas de privacidad</string>
 
-    <string name="press_again_to_exit">Presione nuevamente para salir</string>
+<!-- _________________________________CONTEXT MENU_____________________________________________________ -->
+
+    <!-- STRINGS GENERICOS-->
+    <string name="context_cancel">Cancelar</string>
+    <string name="context_delete">Eliminar</string>
+    <string name="cancel">Cancelar</string>
+    <string name="confirm">Confirmar</string>
+
+    <!-- DIALOG BORRAR ARCHIVO-->
+    <string name="context_delete_file_title">Eliminar Archivo</string>
+    <string name="context_delete_file_message">¿Está seguro que desea eliminar el archivo?</string>
+
+    <!-- DIALOG BORRAR CARPETA-->
+    <string name="context_delete_folder_title">Eliminar Carpeta</string>
+    <string name="context_delete_folder_message">¿Está seguro que desea eliminar la carpeta?</string>
+
+    <!-- STRINGS MENU CONTEXTUAL CARPETA/ARCHIVO-->
+    <string name="context_open_folder">Abrir</string>
+    <string name="context_play_folder">Reproducir</string>
+    <string name="context_numeric_shortcut">Atajo numérico</string>
+    <string name="context_apply_global_duration">Aplicar duración global</string>
+    <string name="context_duration">Duración</string>
+    <string name="context_copy">Copiar</string>
+    <string name="context_cut">Cortar</string>
+    <string name="context_hide">Ocultar</string>
+    <string name="context_show">Mostrar</string>
+
+    <!-- STRING DIALOG ATAJO NUMERICO -->
+    <string name="no_shortcut">Sin atajo</string>
+
+    <!-- DIALOG APLICAR DURACIÓN GLOBAL-->
+    <string name="context_change_duration_title">Cambiar duración</string>
+    <string name="context_global_duration_title">Cambiar duración general</string>
+    <string name="confirm_apply_global_duration_all">¿Aplicar duración global a todas las imágenes?</string>
+    <string name="toast_global_duration_applied_all">Duración global aplicada a todas las imágenes</string>
+    <string name="confirm_apply_global_duration_folder">¿Aplicar duración global a todas las imágenes de esta carpeta?</string>
+    <string name="toast_global_duration_applied_folder">Duración global aplicada a la carpeta</string>
+    <string name="confirm_replace_shortcut">El número %1$d ya está asignado a:\n\n"%2$s"\n\n¿Desea reemplazarlo y asignarlo a:\n\n"%3$s"?</string>
+
+    <!-- ________________________________STRINGS PANTALLA PRINCIPAL______________________________-->
     <string name="playback_paused_message">Reproducción en pausa.\nPresione ARRIBA o el botón PAUSA para reanudar.</string>
     <string name="scan_for_help">Escanear para obtener ayuda</string>
     <string name="scan_to_upload_content">Escaneá para cargar contenido</string>
-    <string name="loading_content">Cargando contenido...</string>
     <string name="logo_litvy_content_description">Logo Litvy</string>
     <string name="qr_content_description">QR</string>
     <string name="qr_manual_content_description">QR Manual de usuario</string>
 
+    <!-- ________________________________STRINGS TOAST/SNACKBAR__________________________________-->
+    <string name="press_again_to_exit">Presione nuevamente para salir</string>
+    <string name="loading_content">Cargando contenido...</string>
     <string name="usb_searching">Buscando USB...</string>
     <plurals name="usb_files_imported">
         <item quantity="one">Se importó %1$d archivo</item>
@@ -102,10 +129,16 @@
         <item quantity="other">Se importaron %1$d archivos</item>
     </plurals>
 
+    <string name="folder_delete_succesful">Carpeta eliminada correctamente</string>
+    <string name="file_delete_succesful">Archivo eliminado correctamente</string>
+
     <string name="web_method_not_supported">Método no soportado</string>
     <string name="web_panel_title">Panel Cartelería TV</string>
     <string name="web_new_folder_placeholder">Nueva carpeta (opcional)</string>
     <string name="web_upload_file">Subir archivo</string>
     <string name="web_upload_success">Archivo subido correctamente a carpeta: %1$s</string>
     <string name="web_upload_error">Error al subir archivo</string>
+    <string name="touch_remote_hidden_message">
+    Control oculto. Toque la pantalla tres veces para volver a mostrarlo.
+    </string>
 </resources>

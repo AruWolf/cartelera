@@ -109,7 +109,7 @@ fun ConfirmationDialog(
                     text = cancelText,
                     selected = selectedIndex == 0,
                     onClick = onDismiss,
-                    modifier = Modifier.width(150.dp),
+                    modifier = Modifier.weight(1f),
                     textColor = Color.White,
                     enableTouch = !isTv
                 )
@@ -118,7 +118,7 @@ fun ConfirmationDialog(
                     text = confirmText,
                     selected = selectedIndex == 1,
                     onClick = onConfirm,
-                    modifier = Modifier.width(190.dp),
+                    modifier = Modifier.weight(1f),
                     textColor = Color.White,
                     enableTouch = !isTv
                 )

@@ -11,8 +11,8 @@ android {
         applicationId = "com.litvy.carteleria"
         minSdk = 21
         targetSdk = 35
-        versionCode = 12
-        versionName = "1.9.3"
+        versionCode = 13
+        versionName = "1.9.4"
     }
 
     buildFeatures {
