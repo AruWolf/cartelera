@@ -82,7 +82,7 @@
 
     <!-- DIALOG BORRAR CARPETA-->
     <string name="context_delete_folder_title">Eliminar Carpeta</string>
-    <string name="context_delete_folder_message">¿Está seguro que desea eliminar la carpeta?</string>
+    <string name="context_delete_folder_message">¿Está seguro que desea eliminar la carpeta y todo su contenido?</string>
 
     <!-- STRINGS MENU CONTEXTUAL CARPETA/ARCHIVO-->
     <string name="context_open_folder">Abrir</string>

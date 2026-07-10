@@ -14,6 +14,7 @@ import com.litvy.carteleria.ui.touchremote.TouchDeviceDetector
 import com.litvy.carteleria.ui.touchremote.TouchRemoteOverlayController
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.litvy.carteleria.startup.StartupScreen
 import com.litvy.carteleria.update.InAppUpdateManager
 
 
@@ -61,11 +62,17 @@ class MainActivity : ComponentActivity() {
         inAppUpdateManager.registerListener()
 
         setContent {
-            CarteleriaAppRoot(
-                onShowTouchRemote = {
-                    touchRemoteOverlayController?.show()
-                }
-            )
+
+            StartupScreen {
+
+                CarteleriaAppRoot(
+                    onShowTouchRemote = {
+                        touchRemoteOverlayController?.show()
+                    }
+                )
+
+            }
+
         }
 
         touchRemoteOverlayController = TouchRemoteOverlayController(this).also {
