@@ -869,6 +869,7 @@ fun SideMenu(
 
         if (confirmAllDurations) {
             ConfirmationDialog(
+                title = "Cambiar duración general",
                 text = stringResource(R.string.confirm_apply_global_duration_all),
                 onConfirm = {
                     onUseGlobalDurationForAllImages()
@@ -885,6 +886,7 @@ fun SideMenu(
 
         confirmFolderDurationPath?.let { folderPath ->
             ConfirmationDialog(
+                title = "Cambiar duración",
                 text = stringResource(R.string.confirm_apply_global_duration_folder),
                 onConfirm = {
                     onUseGlobalDurationForFolder(folderPath)

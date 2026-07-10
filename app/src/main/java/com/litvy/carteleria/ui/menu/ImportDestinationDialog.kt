@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -91,7 +92,23 @@ fun NewFolderNameDialog(
                     onValueChange = { folderName = it },
                     label = { Text(stringResource(R.string.folder_name), color = textColor) },
                     isError = duplicate,
-                    singleLine = true
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        cursorColor = Color.White,
+
+                        focusedBorderColor = Color.White,
+                        unfocusedBorderColor = Color.Gray,
+
+                        focusedLabelColor = Color.White,
+                        unfocusedLabelColor = textColor,
+
+                        errorTextColor = Color.White,
+                        errorCursorColor = Color.White,
+                        errorBorderColor = Color.Red,
+                        errorLabelColor = Color.Red
+                    )
                 )
 
                 if (duplicate) {
