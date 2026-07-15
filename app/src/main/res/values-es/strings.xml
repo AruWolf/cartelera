@@ -96,6 +96,16 @@
 
     <!-- STRING DIALOG ATAJO NUMERICO -->
     <string name="no_shortcut">Sin atajo</string>
+    <string name="replace_shortcut_title">Conflicto de atajos</string>
+    <string name="confirm_replace_shortcut">
+    El atajo %1$d ya está asignado a:
+
+    "%2$s"
+
+    ¿Desea reasignarlo a:
+
+    "%3$s"?
+    </string>
 
     <!-- DIALOG APLICAR DURACIÓN GLOBAL-->
     <string name="context_change_duration_title">Cambiar duración</string>
@@ -104,7 +114,6 @@
     <string name="toast_global_duration_applied_all">Duración global aplicada a todas las imágenes</string>
     <string name="confirm_apply_global_duration_folder">¿Aplicar duración global a todas las imágenes de esta carpeta?</string>
     <string name="toast_global_duration_applied_folder">Duración global aplicada a la carpeta</string>
-    <string name="confirm_replace_shortcut">El número %1$d ya está asignado a:\n\n"%2$s"\n\n¿Desea reemplazarlo y asignarlo a:\n\n"%3$s"?</string>
 
     <!-- ________________________________STRINGS PANTALLA PRINCIPAL______________________________-->
     <string name="playback_paused_message">Reproducción en pausa.\nPresione ARRIBA o el botón PAUSA para reanudar.</string>

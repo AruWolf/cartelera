@@ -217,14 +217,16 @@ fun SideMenu(
                 }
             }
 
-            is ContextTarget.Folder -> listOf(
-                ContextAction.OpenFolder,
-                ContextAction.PlayFolder,
-                ContextAction.NumericShortcut,
-                ContextAction.ApplyGlobalDuration,
-                ContextAction.Delete,
-                ContextAction.Cancel
-            )
+            is ContextTarget.Folder -> buildList {
+                add(ContextAction.OpenFolder)
+                add(ContextAction.PlayFolder)
+                if (isTv) {
+                    add(ContextAction.NumericShortcut)
+                }
+                add(ContextAction.ApplyGlobalDuration)
+                add(ContextAction.Delete)
+                add(ContextAction.Cancel)
+            }
 
             else -> emptyList()
         }
@@ -946,6 +948,7 @@ fun SideMenu(
             }
 
             ConfirmationDialog(
+                title = stringResource(R.string.replace_shortcut_title),
                 text = stringResource(
                     R.string.confirm_replace_shortcut,
                     selectedShortcut,

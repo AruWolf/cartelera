@@ -3,8 +3,9 @@ package com.litvy.carteleria.ui.menu
 import android.view.KeyEvent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -22,6 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.litvy.carteleria.R
 import com.litvy.carteleria.data.external.FolderShortcutManager
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 
 @Composable
 fun FolderShortcutDialog(
@@ -31,6 +34,7 @@ fun FolderShortcutDialog(
 ) {
     val focusRequester = remember { FocusRequester() }
     val options = remember { listOf<Int?>(null) + FolderShortcutManager.VALID_SHORTCUTS.toList() }
+    val listState = rememberLazyListState()
     var selectedIndex by remember {
         mutableIntStateOf(options.indexOf(currentShortcut).takeIf { it >= 0 } ?: 0)
     }
@@ -39,8 +43,27 @@ fun FolderShortcutDialog(
         focusRequester.requestFocus()
     }
 
+    LaunchedEffect(selectedIndex) {
+        val visibleItems = listState.layoutInfo.visibleItemsInfo
+
+        if (visibleItems.isEmpty()) return@LaunchedEffect
+
+        val first = visibleItems.first().index
+        val last = visibleItems.last().index
+
+        when {
+            selectedIndex < (first + 1) ->
+                listState.animateScrollToItem(selectedIndex)
+
+            selectedIndex > (last - 1) ->
+                listState.animateScrollToItem(selectedIndex)
+        }
+    }
+
     Dialog(onDismissRequest = onDismiss) {
-        Column(
+        LazyColumn(
+            state = listState,
+            contentPadding = PaddingValues(vertical = 8.dp),
             modifier = Modifier
                 .width(260.dp)
                 .background(Color.Black.copy(alpha = 0.95f), RoundedCornerShape(12.dp))
@@ -81,14 +104,17 @@ fun FolderShortcutDialog(
                     }
                 }
         ) {
-            options.forEachIndexed { index, option ->
+            itemsIndexed(options) { index, option ->
+
                 val isSelected = selectedIndex == index
                 val label = option?.toString() ?: stringResource(R.string.no_shortcut)
 
                 MenuItemView(
                     text = if (isSelected) "\u25B6 $label" else label,
                     selected = isSelected,
-                    onClick = { onShortcutSelected(option) }
+                    onClick = {
+                        onShortcutSelected(option)
+                    }
                 )
             }
         }

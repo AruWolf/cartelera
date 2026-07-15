@@ -97,6 +97,13 @@
 
     <!-- SHORTCUT DIALOG STRINGS-->
     <string name="no_shortcut">No shortcut</string>
+    <string name="replace_shortcut_title">Shortcut conflict</string>
+    <string name="confirm_replace_shortcut">
+    Shortcut %1$d is already assigned to:
+    "%2$s".
+    Do you want to reassign it to:
+    "%3$s"?
+    </string>
 
     <!-- GLOBAL DURATION DIALOG STRINGS -->
     <string name="context_change_duration_title">Change duration</string>
@@ -105,7 +112,6 @@
     <string name="toast_global_duration_applied_all">Global duration applied to all images</string>
     <string name="confirm_apply_global_duration_folder">Apply global duration to all images in this folder?</string>
     <string name="toast_global_duration_applied_folder">Global duration applied to the folder</string>
-    <string name="confirm_replace_shortcut">Number %1$d is already assigned to:\n\n"%2$s"\n\nDo you want to replace it and assign it to:\n\n"%3$s"?</string>
 
 <!-- ________________________________MAIN WINDOW STRINGS______________________________-->
 
