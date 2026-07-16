@@ -2,8 +2,7 @@ package com.litvy.carteleria.ui.slideshow
 
 import com.litvy.carteleria.R
 import android.app.Activity
-import android.view.KeyEvent
-import android.widget.Toast
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -31,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -85,6 +85,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import com.litvy.carteleria.util.DeviceUtils
 import androidx.compose.foundation.clickable
+import com.litvy.carteleria.ui.slideshow.exit.ExitHandler
+import com.litvy.carteleria.ui.slideshow.input.SlideInputHandler
+import com.litvy.carteleria.ui.slideshow.input.SlideShowActions
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 
 private enum class MediaImportSource {
     Files,
@@ -96,7 +102,6 @@ fun SlideShowScreen(
     onShowTouchRemote: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    var backPressedOnce by remember { mutableStateOf(false) }
 
     val hiddenManager = remember { HiddenFileManager(context) }
     val imageDurationManager = remember { ImageDurationManager(context) }
@@ -143,6 +148,13 @@ fun SlideShowScreen(
     }
     val canUseTouchImports = remember { TouchDeviceDetector.shouldShowTouchRemote(context) }
     val scope = rememberCoroutineScope()
+    val exitHandler = remember(scope) {
+        ExitHandler(
+            context = context,
+            activity = context as? Activity,
+            scope = scope
+        )
+    }
     var isFolderLoading by remember { mutableStateOf(false) }
 
     val externalProvider = remember {
@@ -236,7 +248,6 @@ fun SlideShowScreen(
         externalMenuViewModel.reloadCurrentView()
     }
 
-    var ignoreNextCenter by remember { mutableStateOf(false) }
     var shortcutOverlayText by remember { mutableStateOf<String?>(null) }
     var shortcutPlaybackJob by remember { mutableStateOf<Job?>(null) }
     val shortcutOverlayManager = remember(scope) {
@@ -261,112 +272,34 @@ fun SlideShowScreen(
         return true
     }
 
-    fun handleSlideshowRemoteKey(keyCode: Int): Boolean {
-        if (state.isAdvertisingShowing) {
-            return when (keyCode) {
+    val isAdvertisingShowing by rememberUpdatedState(state.isAdvertisingShowing)
+    val isMenuVisible by rememberUpdatedState(state.menuVisible)
+    val isPlaybackPaused by rememberUpdatedState(state.isPaused)
 
-                KeyEvent.KEYCODE_DPAD_RIGHT,
-                KeyEvent.KEYCODE_DPAD_LEFT,
-                KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-                KeyEvent.KEYCODE_DPAD_UP,
-                KeyEvent.KEYCODE_0,
-                KeyEvent.KEYCODE_1,
-                KeyEvent.KEYCODE_2,
-                KeyEvent.KEYCODE_3,
-                KeyEvent.KEYCODE_4,
-                KeyEvent.KEYCODE_5,
-                KeyEvent.KEYCODE_6,
-                KeyEvent.KEYCODE_7,
-                KeyEvent.KEYCODE_8,
-                KeyEvent.KEYCODE_9 -> true
-
-                else -> false
-            }
-        }
-
-        if (state.menuVisible) return false
-
-        /*if (ignoreNextCenter && keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
-            ignoreNextCenter = false
-            return true
-        }*/
-
-        ignoreNextCenter = false
-
-        return when (keyCode) {
-            KeyEvent.KEYCODE_0,
-            KeyEvent.KEYCODE_1,
-            KeyEvent.KEYCODE_2,
-            KeyEvent.KEYCODE_3,
-            KeyEvent.KEYCODE_4,
-            KeyEvent.KEYCODE_5,
-            KeyEvent.KEYCODE_6,
-            KeyEvent.KEYCODE_7,
-            KeyEvent.KEYCODE_8,
-            KeyEvent.KEYCODE_9 -> {
-                val number = RemoteInputHandler.numberFromKeyCode(keyCode)
-                number?.let { playFolderByShortcut(it) } ?: false
-            }
-
-            KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                viewModel.nextSlide()
-                true
-            }
-
-            KeyEvent.KEYCODE_DPAD_LEFT -> {
-                viewModel.previousSlide()
-                true
-            }
-
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-            KeyEvent.KEYCODE_DPAD_UP -> {
-                viewModel.togglePause()
-                true
-            }
-
-            KeyEvent.KEYCODE_DPAD_CENTER -> {
-                viewModel.openMenu()
-                true
-            }
-
-            KeyEvent.KEYCODE_BACK -> {
-                if (!backPressedOnce) {
-                    backPressedOnce = true
-
-                    Toast.makeText(
-                        context,
-                        context.getString(R.string.press_again_to_exit),
-                        Toast.LENGTH_SHORT
-                    ).show()
-
-                    scope.launch {
-                        delay(2000)
-                        backPressedOnce = false
-                    }
-
-                    true
-                } else {
-                    (context as? Activity)?.finishAffinity()
-                    true
-                }
-            }
-
-            else -> false
-        }
+    val actions = remember(viewModel) {
+        SlideShowActions(
+            viewModel = viewModel,
+            isPlaybackPaused = { isPlaybackPaused },
+            playFolderByShortcut = ::playFolderByShortcut
+        )
     }
 
+    val inputHandler = remember(actions, exitHandler) {
+        SlideInputHandler(
+            actions = actions,
+            exitHandler = exitHandler,
+            isAdvertisingShowing = { isAdvertisingShowing },
+            isMenuVisible = { isMenuVisible },
+            isPlaybackPaused = { isPlaybackPaused }
+        )
+    }
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
     }
 
-    LaunchedEffect(
-        state.menuVisible,
-        state.isAdvertisingShowing,
-        ignoreNextCenter,
-        backPressedOnce
-    ) {
+    LaunchedEffect(Unit) {
         RemoteKeyEventBus.keyEvents.collect { keyCode ->
-            handleSlideshowRemoteKey(keyCode)
+            inputHandler.onRemoteKeyEvent(keyCode)
         }
     }
 
@@ -384,11 +317,11 @@ fun SlideShowScreen(
             when (event) {
 
                 Lifecycle.Event.ON_STOP -> {
-                    viewModel.pausePlayback()
+                    actions.pausePlayback()
                 }
 
                 Lifecycle.Event.ON_RESUME -> {
-                    viewModel.resumePlayback()
+                    actions.resumePlayback()
                 }
 
                 else -> Unit
@@ -418,36 +351,41 @@ fun SlideShowScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
+            .pointerInput(inputHandler) {
+                detectTapGestures(
+                    onPress = {
+                        val pressStartedAt = SystemClock.uptimeMillis()
+                        inputHandler.onPress()
+                        val released = try {
+                            tryAwaitRelease()
+                        } finally {
+                            inputHandler.onRelease()
+                        }
+                        if (
+                            released &&
+                            SystemClock.uptimeMillis() - pressStartedAt < viewConfiguration.longPressTimeoutMillis
+                        ) {
+                            inputHandler.onTap()
+                        }
+                    },
+                    onTap = {}
+                )
+            }
+            .pointerInput(inputHandler) {
+                var horizontalDistance = 0f
+                detectHorizontalDragGestures(
+                    onDragStart = { horizontalDistance = 0f },
+                    onHorizontalDrag = { _, dragAmount -> horizontalDistance += dragAmount },
+                    onDragEnd = { inputHandler.onSwipe(horizontalDistance) }
+                )
+            }
             .background(Color.Black)
             .focusRequester(focusRequester)
             .focusable()
             .onPreviewKeyEvent { event ->
-                if (state.isAdvertisingShowing) {
-                    return@onPreviewKeyEvent event.nativeKeyEvent.keyCode in setOf(
-                        KeyEvent.KEYCODE_DPAD_CENTER,
-                        KeyEvent.KEYCODE_DPAD_LEFT,
-                        KeyEvent.KEYCODE_DPAD_RIGHT,
-                        KeyEvent.KEYCODE_DPAD_UP,
-                        KeyEvent.KEYCODE_DPAD_DOWN,
-                        KeyEvent.KEYCODE_BACK,
-                        KeyEvent.KEYCODE_MEDIA_NEXT,
-                        KeyEvent.KEYCODE_MEDIA_PREVIOUS
-                    )
-                }
-
-                if (state.menuVisible) return@onPreviewKeyEvent false
-
-                if (ignoreNextCenter) {
-                    ignoreNextCenter = false
-                    return@onPreviewKeyEvent true
-                }
-
-                if (event.nativeKeyEvent.action != KeyEvent.ACTION_UP) {
-                    return@onPreviewKeyEvent false
-                }
-
-                handleSlideshowRemoteKey(event.nativeKeyEvent.keyCode)
+                inputHandler.onKeyEvent(event.nativeKeyEvent)
             }
+
     ) {
         if (state.slides.isNotEmpty() && engine != null) {
             engine.Render(
@@ -584,8 +522,7 @@ fun SlideShowScreen(
                     requestImport(MediaImportSource.Gallery, targetPath)
                 },
                 onClose = {
-                    ignoreNextCenter = true
-                    viewModel.closeMenu()
+                    inputHandler.closeMenu()
                 },
                 onForceUsbScan = {
                     scope.launch {
@@ -715,7 +652,7 @@ fun SlideShowScreen(
                 .then(
                     if (isMobile){
                         Modifier.clickable {
-                            viewModel.openMenu()
+                            inputHandler.openMenu()
                             onShowTouchRemote()
                         }
                     } else {
