@@ -13,6 +13,7 @@ class SlideInputHandler(
     private val isAdvertisingShowing: () -> Boolean,
     private val isMenuVisible: () -> Boolean,
     private val isPlaybackPaused: () -> Boolean,
+    private val onTemporaryPauseChanged: (Boolean) -> Unit,
     private val exitHandler: ExitHandler
 ) {
     private var wasPlayingBeforePress = false
@@ -94,11 +95,17 @@ class SlideInputHandler(
 
     fun onPress() {
         wasPlayingBeforePress = canHandlePlaybackInput() && !isPlaybackPaused()
-        if (wasPlayingBeforePress) actions.pausePlayback()
+        if (wasPlayingBeforePress) {
+            onTemporaryPauseChanged(true)
+            actions.pausePlayback()
+        }
     }
 
     fun onRelease() {
-        if (wasPlayingBeforePress) actions.resumePlayback()
+        if (wasPlayingBeforePress) {
+            actions.resumePlayback()
+            onTemporaryPauseChanged(false)
+        }
         wasPlayingBeforePress = false
     }
 

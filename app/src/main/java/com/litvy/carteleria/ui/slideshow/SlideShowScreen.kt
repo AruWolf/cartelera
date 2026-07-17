@@ -109,6 +109,8 @@ fun SlideShowScreen(
 
     val isMobile = !DeviceUtils.isTv(context)
 
+    var isTemporaryTouchPause by remember { mutableStateOf(false) }
+    var showTemporaryPauseMessage by remember { mutableStateOf(false) }
 
     val viewModel = remember {
         SlideShowViewModel(
@@ -248,6 +250,15 @@ fun SlideShowScreen(
         externalMenuViewModel.reloadCurrentView()
     }
 
+    LaunchedEffect(isTemporaryTouchPause){
+        if (isTemporaryTouchPause){
+            delay(200)
+            showTemporaryPauseMessage = true
+        } else{
+            showTemporaryPauseMessage = false
+        }
+    }
+
     var shortcutOverlayText by remember { mutableStateOf<String?>(null) }
     var shortcutPlaybackJob by remember { mutableStateOf<Job?>(null) }
     val shortcutOverlayManager = remember(scope) {
@@ -279,7 +290,6 @@ fun SlideShowScreen(
     val actions = remember(viewModel) {
         SlideShowActions(
             viewModel = viewModel,
-            isPlaybackPaused = { isPlaybackPaused },
             playFolderByShortcut = ::playFolderByShortcut
         )
     }
@@ -290,7 +300,10 @@ fun SlideShowScreen(
             exitHandler = exitHandler,
             isAdvertisingShowing = { isAdvertisingShowing },
             isMenuVisible = { isMenuVisible },
-            isPlaybackPaused = { isPlaybackPaused }
+            isPlaybackPaused = { isPlaybackPaused },
+            onTemporaryPauseChanged = { isTemporaryPause ->
+                isTemporaryTouchPause = isTemporaryPause
+            }
         )
     }
     LaunchedEffect(Unit) {
@@ -414,13 +427,17 @@ fun SlideShowScreen(
                 }
             }
 
-            if (state.isPaused && !state.isAdvertisingShowing) {
+            if (
+                state.isPaused &&
+                !state.isAdvertisingShowing &&
+                (!isTemporaryTouchPause || showTemporaryPauseMessage)
+            ) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(24.dp)
                         .background(
-                            Color.Black.copy(alpha = 0.75f),
+                            Color.Black.copy(alpha = 0.50f),
                             RoundedCornerShape(16.dp)
                         )
                         .padding(20.dp)

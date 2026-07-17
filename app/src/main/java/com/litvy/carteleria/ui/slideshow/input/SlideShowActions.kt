@@ -4,7 +4,6 @@ import com.litvy.carteleria.ui.slideshow.SlideShowViewModel
 
 class SlideShowActions(
     private val viewModel: SlideShowViewModel,
-    private val isPlaybackPaused: () -> Boolean,
     private val playFolderByShortcut: (Int) -> Boolean
 ) {
     fun nextSlide() {
@@ -24,11 +23,7 @@ class SlideShowActions(
     }
 
     fun togglePlayback() {
-        if (isPlaybackPaused()) {
-            resumePlayback()
-        } else {
-            pausePlayback()
-        }
+        viewModel.togglePause()
     }
 
     fun openMenu() {
