@@ -6,7 +6,7 @@ import java.io.File
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import android.provider.MediaStore
-import com.litvy.carteleria.content.ContentStorage
+import com.litvy.carteleria.data.content.ContentStorage
 import com.litvy.carteleria.domain.usb.UsbImporter
 
 // Lector de archivos usb --- Lee lo que esté dentro de la carpeta "Carteleria"

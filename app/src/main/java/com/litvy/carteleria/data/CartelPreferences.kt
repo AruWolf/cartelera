@@ -5,11 +5,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
-import com.litvy.carteleria.content.ContentStorage
+import com.litvy.carteleria.data.content.ContentStorage
 import com.litvy.carteleria.slides.ImageSlideDurations
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-import java.io.File
 
 private val Context.dataStore by preferencesDataStore(name = "cartel_prefs")
 
@@ -21,15 +20,13 @@ class CartelPreferences(private val context: Context) {
         private val ANIMATION = stringPreferencesKey("animation")
         private val GLOBAL_IMAGE_DURATION_MS = longPreferencesKey("global_image_duration_ms")
 
-        // TODO: Eliminar referencias a contenido externo/interno
-        private const val INTERNAL = "INTERNAL"
         private const val EXTERNAL = "EXTERNAL"
     }
 
     val preferencesFlow: Flow<CartelConfig> =
         context.dataStore.data.map { prefs ->
 
-            val type = prefs[SOURCE_TYPE] ?: INTERNAL
+            val type = prefs[SOURCE_TYPE] ?: EXTERNAL
             val value = prefs[SOURCE_VALUE] ?: ""
             val rootDirectory = ContentStorage.ensureRootDirectory(context)
             val firstFolder = rootDirectory.listFiles()
@@ -38,14 +35,6 @@ class CartelPreferences(private val context: Context) {
 
             val source = when (type) {
                 EXTERNAL -> ContentSource.External(value.ifBlank { firstFolder.absolutePath })
-                INTERNAL -> {
-                    val migratedFolder = if (value.isBlank()) {
-                        firstFolder
-                    } else {
-                        File(rootDirectory, value)
-                    }
-                    ContentSource.External(migratedFolder.absolutePath)
-                }
                 else -> ContentSource.External(firstFolder.absolutePath)
             }
 
@@ -67,13 +56,7 @@ class CartelPreferences(private val context: Context) {
                     prefs[SOURCE_VALUE] = config.source.path
                 }
 
-                is ContentSource.Internal -> {
-                    prefs[SOURCE_TYPE] = EXTERNAL
-                    prefs[SOURCE_VALUE] = File(
-                        ContentStorage.ensureRootDirectory(context),
-                        config.source.folder
-                    ).absolutePath
-                }
+                else -> {}
             }
 
             prefs[ANIMATION] = config.animation

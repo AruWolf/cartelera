@@ -7,6 +7,5 @@ data class CartelConfig(
 )
 
 sealed class ContentSource {
-    data class Internal(val folder: String) : ContentSource()
     data class External(val path: String) : ContentSource()
 }

@@ -69,9 +69,6 @@ import com.litvy.carteleria.slides.Slide
 import com.litvy.carteleria.ui.loading.AppLoadingSurface
 import com.litvy.carteleria.ui.loading.AppVisualAssets
 import com.litvy.carteleria.ui.loading.LoadingUiDefaults
-import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
-import com.litvy.carteleria.ui.menu.ImportDestinationDialog
-import com.litvy.carteleria.ui.menu.NewFolderNameDialog
 import com.litvy.carteleria.ui.menu.SideMenu
 import com.litvy.carteleria.ui.touchremote.RemoteKeyEventBus
 import com.litvy.carteleria.util.qr.generateQrCode
@@ -91,6 +88,9 @@ import com.litvy.carteleria.ui.slideshow.input.SlideShowActions
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
+import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
+import com.litvy.carteleria.ui.menu.ImportDestinationDialog
+import com.litvy.carteleria.ui.menu.NewFolderNameDialog
 
 private enum class MediaImportSource {
     Files,

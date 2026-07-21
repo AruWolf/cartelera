@@ -1,4 +1,4 @@
-package com.litvy.carteleria.content
+package com.litvy.carteleria.data.content
 
 import android.content.Context
 import java.io.File

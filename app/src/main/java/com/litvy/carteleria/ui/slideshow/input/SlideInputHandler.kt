@@ -114,7 +114,7 @@ class SlideInputHandler(
     }
 
     fun closeMenu() {
-        ignoreNextCenter = true
+        ignoreNextCenter = false
         actions.closeMenu()
     }
 

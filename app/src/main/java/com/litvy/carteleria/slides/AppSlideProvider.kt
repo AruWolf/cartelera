@@ -1,7 +1,7 @@
 package com.litvy.carteleria.slides
 
 import android.content.Context
-import com.litvy.carteleria.content.ContentStorage
+import com.litvy.carteleria.data.content.ContentStorage
 import java.io.File
 import com.litvy.carteleria.data.external.HiddenFileManager
 import com.litvy.carteleria.data.external.ImageDurationManager

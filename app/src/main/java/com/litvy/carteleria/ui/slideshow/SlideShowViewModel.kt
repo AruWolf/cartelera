@@ -10,6 +10,7 @@ import com.litvy.carteleria.R
 import com.litvy.carteleria.data.CartelConfig
 import com.litvy.carteleria.data.CartelPreferences
 import com.litvy.carteleria.data.ContentSource
+import com.litvy.carteleria.data.content.ContentStorage
 import com.litvy.carteleria.domain.importing.AndroidMediaImporter
 import com.litvy.carteleria.domain.usb.UsbImporter
 import com.litvy.carteleria.slides.AppStorageSlideProvider
@@ -42,7 +43,7 @@ class SlideShowViewModel(
     private val mediaImporter = AndroidMediaImporter(context)
     private var contentRefreshJob: Job? = null
     private val contentObserver = ContentDirectoryObserver(
-        root = com.litvy.carteleria.content.ContentStorage.ensureRootDirectory(context),
+        root = ContentStorage.ensureRootDirectory(context),
         onChanged = { scheduleContentRefresh() }
     )
 
@@ -56,7 +57,6 @@ class SlideShowViewModel(
             prefs.preferencesFlow.collect { config ->
                 val folder = when (val source = config.source) {
                     is ContentSource.External -> File(source.path)
-                    is ContentSource.Internal -> File(source.folder)
                 }
                 val slides = if (folder.exists()) {
                     externalProvider.loadFromFolder(folder)
