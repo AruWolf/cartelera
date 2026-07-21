@@ -1,4 +1,4 @@
-package com.litvy.carteleria.startup
+package com.litvy.carteleria.ui.startup
 
 import StartupManager
 import androidx.lifecycle.ViewModel

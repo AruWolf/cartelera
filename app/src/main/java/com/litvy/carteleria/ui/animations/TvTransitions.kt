@@ -1,4 +1,4 @@
-package com.litvy.carteleria.animations
+package com.litvy.carteleria.ui.animations
 
 import androidx.compose.animation.*
 import androidx.compose.animation.core.tween

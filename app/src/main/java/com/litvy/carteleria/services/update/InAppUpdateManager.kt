@@ -1,4 +1,4 @@
-package com.litvy.carteleria.update
+package com.litvy.carteleria.services.update
 
 import android.app.Activity
 import androidx.activity.result.ActivityResultLauncher

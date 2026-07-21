@@ -1,7 +1,7 @@
 package com.litvy.carteleria.data.external
 
 import com.litvy.carteleria.domain.external.*
-import com.litvy.carteleria.slides.AppStorageSlideProvider
+import com.litvy.carteleria.domain.slides.AppStorageSlideProvider
 import java.io.File
 
 class AppStorageExternalRepository(

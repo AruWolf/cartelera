@@ -1,14 +1,14 @@
-package com.litvy.carteleria.engine
+package com.litvy.carteleria.domain.playback.engine
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.litvy.carteleria.animations.TvTransition
-import com.litvy.carteleria.slides.ExternalImageSlide
-import com.litvy.carteleria.slides.Slide
-import com.litvy.carteleria.slides.resolveImageSlideDuration
+import com.litvy.carteleria.ui.animations.TvTransition
+import com.litvy.carteleria.domain.slides.ExternalImageSlide
+import com.litvy.carteleria.domain.slides.Slide
+import com.litvy.carteleria.domain.slides.resolveImageSlideDuration
 import kotlinx.coroutines.delay
 
 class EvokeSlide(

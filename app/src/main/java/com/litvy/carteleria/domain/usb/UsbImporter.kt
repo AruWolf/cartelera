@@ -1,7 +1,7 @@
 package com.litvy.carteleria.domain.usb
 
 import android.net.Uri
-import com.litvy.carteleria.util.usb.UsbScanResult
+import com.litvy.carteleria.services.usb.UsbScanResult
 
 
 interface UsbImporter {

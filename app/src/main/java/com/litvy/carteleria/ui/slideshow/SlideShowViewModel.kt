@@ -13,10 +13,10 @@ import com.litvy.carteleria.data.ContentSource
 import com.litvy.carteleria.data.content.ContentStorage
 import com.litvy.carteleria.domain.importing.AndroidMediaImporter
 import com.litvy.carteleria.domain.usb.UsbImporter
-import com.litvy.carteleria.slides.AppStorageSlideProvider
-import com.litvy.carteleria.slides.ImageSlideDurations
+import com.litvy.carteleria.domain.slides.AppStorageSlideProvider
+import com.litvy.carteleria.domain.slides.ImageSlideDurations
 import com.litvy.carteleria.util.storage.ContentDirectoryObserver
-import com.litvy.carteleria.util.usb.UsbScanResult
+import com.litvy.carteleria.services.usb.UsbScanResult
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

@@ -29,8 +29,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.litvy.carteleria.BuildConfig
 import com.litvy.carteleria.R
-import com.litvy.carteleria.config.ExternalLinks
-import com.litvy.carteleria.util.qr.generateQrCode
+import com.litvy.carteleria.util.ExternalLinks
+import com.litvy.carteleria.services.qr.generateQrCode
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable

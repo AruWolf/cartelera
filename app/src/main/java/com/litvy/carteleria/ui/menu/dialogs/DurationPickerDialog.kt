@@ -44,7 +44,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import com.litvy.carteleria.R
-import com.litvy.carteleria.slides.ImageSlideDurations
+import com.litvy.carteleria.domain.slides.ImageSlideDurations
 import com.litvy.carteleria.ui.menu.SubMenues.localizedDurationLabel
 import com.litvy.carteleria.util.DeviceUtils
 import kotlin.math.abs

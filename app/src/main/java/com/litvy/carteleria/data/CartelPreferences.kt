@@ -6,7 +6,7 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.litvy.carteleria.data.content.ContentStorage
-import com.litvy.carteleria.slides.ImageSlideDurations
+import com.litvy.carteleria.domain.slides.ImageSlideDurations
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 

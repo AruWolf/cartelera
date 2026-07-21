@@ -1,4 +1,4 @@
-package com.litvy.carteleria.slides
+package com.litvy.carteleria.domain.slides
 
 import android.net.Uri
 import androidx.compose.foundation.layout.fillMaxSize

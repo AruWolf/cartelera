@@ -1,4 +1,4 @@
-package com.litvy.carteleria.util.usb
+package com.litvy.carteleria.services.usb
 
 import android.content.Context
 import kotlinx.coroutines.*

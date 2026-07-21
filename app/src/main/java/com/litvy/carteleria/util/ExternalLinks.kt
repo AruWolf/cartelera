@@ -1,4 +1,4 @@
-package com.litvy.carteleria.config
+package com.litvy.carteleria.util
 
 // Links de interes
 object ExternalLinks {

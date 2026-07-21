@@ -10,7 +10,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.litvy.carteleria.R
-import com.litvy.carteleria.slides.ImageSlideDurations
 import com.litvy.carteleria.ui.menu.MenuItemView
 
 @Composable

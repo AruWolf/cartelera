@@ -1,4 +1,4 @@
-package com.litvy.carteleria.slides
+package com.litvy.carteleria.domain.slides
 
 object ImageSlideDurations {
     const val DEFAULT_GLOBAL_DURATION_MS = 5000L

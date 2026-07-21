@@ -14,8 +14,8 @@ import com.litvy.carteleria.ui.touchremote.TouchDeviceDetector
 import com.litvy.carteleria.ui.touchremote.TouchRemoteOverlayController
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import com.litvy.carteleria.startup.StartupScreen
-import com.litvy.carteleria.update.InAppUpdateManager
+import com.litvy.carteleria.ui.startup.StartupScreen
+import com.litvy.carteleria.services.update.InAppUpdateManager
 
 
 class MainActivity : ComponentActivity() {

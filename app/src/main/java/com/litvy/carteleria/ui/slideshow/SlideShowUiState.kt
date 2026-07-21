@@ -1,7 +1,7 @@
 package com.litvy.carteleria.ui.slideshow
 
-import com.litvy.carteleria.slides.Slide
-import com.litvy.carteleria.slides.ImageSlideDurations
+import com.litvy.carteleria.domain.slides.Slide
+import com.litvy.carteleria.domain.slides.ImageSlideDurations
 import com.litvy.carteleria.ui.menu.model.ClipboardItem
 import java.io.File
 

@@ -1,4 +1,4 @@
-package com.litvy.carteleria.slides
+package com.litvy.carteleria.domain.slides
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
