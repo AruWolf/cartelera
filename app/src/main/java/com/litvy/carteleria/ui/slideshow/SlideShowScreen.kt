@@ -92,6 +92,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import com.litvy.carteleria.ui.menu.ExternalMenuViewModel
 import com.litvy.carteleria.ui.menu.ImportDestinationDialog
 import com.litvy.carteleria.ui.menu.NewFolderNameDialog
+import com.litvy.carteleria.util.permissions.StoragePermissionManager
 
 private enum class MediaImportSource {
     Files,
@@ -131,6 +132,10 @@ fun SlideShowScreen(
     var showDestinationDialog by remember { mutableStateOf(false) }
     var showDestinationNewFolderDialog by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    val permissionManager = remember {
+        StoragePermissionManager(context)
+    }
 
     val importFromFilesLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
@@ -240,6 +245,31 @@ fun SlideShowScreen(
     }
     val externalMenuState by externalMenuViewModel.state.collectAsState()
 
+    val storagePermissionLauncher =
+        rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestMultiplePermissions()
+        ) { permissions ->
+
+            val granted = permissions.values.all { it }
+
+            if (granted) {
+
+                scope.launch {
+
+                    val imported =
+                        viewModel.forceUsbScanAndReturnResult()
+
+                    if (!imported) {
+                        importFromUsbTreeLauncher.launch(null)
+                    }
+
+                    if (imported) {
+                        externalMenuViewModel.reloadCurrentView()
+                    }
+                }
+            }
+        }
+
     fun launchImport(source: MediaImportSource, targetPath: String) {
         pendingImportTargetPath = targetPath
         when (source) {
@@ -324,7 +354,8 @@ fun SlideShowScreen(
             isPlaybackPaused = { isPlaybackPaused },
             onTemporaryPauseChanged = { isTemporaryPause ->
                 isTemporaryTouchPause = isTemporaryPause
-            }
+            },
+            isMobile = isMobile
         )
     }
     LaunchedEffect(Unit) {
@@ -564,20 +595,26 @@ fun SlideShowScreen(
                 },
                 onForceUsbScan = {
 
-                    scope.launch {
+                    if (!permissionManager.hasStoragePermission()) {
 
-                        val imported = viewModel.forceUsbScanAndReturnResult()
+                        storagePermissionLauncher.launch(
+                            permissionManager.requiredPermissions()
+                        )
 
-                        if (!imported) {
-                            try {
+                    } else {
+
+                        scope.launch {
+
+                            val imported =
+                                viewModel.forceUsbScanAndReturnResult()
+
+                            if (!imported) {
                                 importFromUsbTreeLauncher.launch(null)
-                            } catch (_: Throwable) {
-                                // El ViewModel ya mostró el mensaje correspondiente.
                             }
-                        }
 
-                        if (imported) {
-                            externalMenuViewModel.reloadCurrentView()
+                            if (imported) {
+                                externalMenuViewModel.reloadCurrentView()
+                            }
                         }
                     }
                 },

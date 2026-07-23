@@ -14,7 +14,8 @@ class SlideInputHandler(
     private val isMenuVisible: () -> Boolean,
     private val isPlaybackPaused: () -> Boolean,
     private val onTemporaryPauseChanged: (Boolean) -> Unit,
-    private val exitHandler: ExitHandler
+    private val exitHandler: ExitHandler,
+    private val isMobile: Boolean
 ) {
     private var wasPlayingBeforePress = false
     private var ignoreNextCenter = false
@@ -114,7 +115,10 @@ class SlideInputHandler(
     }
 
     fun closeMenu() {
-        ignoreNextCenter = false
+        if (isMobile){
+            ignoreNextCenter = false
+        }
+        ignoreNextCenter = true
         actions.closeMenu()
     }
 
