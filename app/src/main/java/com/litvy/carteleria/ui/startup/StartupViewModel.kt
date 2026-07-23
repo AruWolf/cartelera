@@ -1,6 +1,5 @@
 package com.litvy.carteleria.ui.startup
 
-import StartupManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow

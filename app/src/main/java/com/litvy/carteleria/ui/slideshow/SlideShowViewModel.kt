@@ -281,39 +281,100 @@ class SlideShowViewModel(
 
     suspend fun forceUsbScanAndReturnResult(): Boolean {
 
+
+        return importUsbAndReturnResult { usbImporter.forceScan() }
+    }
+
+    suspend fun importUsbTreeAndReturnResult(uri: Uri): Boolean {
+
+        return importUsbAndReturnResult { usbImporter.importFromUri(uri) }
+    }
+
+    private suspend fun importUsbAndReturnResult(
+        scan: suspend () -> UsbScanResult
+    ): Boolean {
+
         _uiState.value = _uiState.value.copy(
             isUsbLoading = true,
             usbMessage = context.getString(R.string.usb_searching)
         )
 
-        when (val result = usbImporter.forceScan()) {
+        val result = try {
+            scan()
+        } catch (t: Throwable) {
+
+            _uiState.value = _uiState.value.copy(
+                isUsbLoading = false,
+                usbMessage = "Error: ${t.javaClass.simpleName}"
+            )
+
+            delay(5000)
+            clearUsbMessage()
+            return false
+        }
+
+        when (result) {
 
             is UsbScanResult.Imported -> {
+
                 _uiState.value = _uiState.value.copy(
-                    usbMessage = context.resources.getQuantityString(R.plurals.usb_files_imported, result.count, result.count),
+                    usbMessage = context.resources.getQuantityString(
+                        R.plurals.usb_files_imported,
+                        result.count,
+                        result.count
+                    ),
                     isUsbLoading = false
                 )
+
                 delay(3000)
                 clearUsbMessage()
                 return true
             }
 
             UsbScanResult.NoChanges -> {
+
                 _uiState.value = _uiState.value.copy(
                     usbMessage = context.getString(R.string.usb_no_changes),
                     isUsbLoading = false
                 )
+
                 delay(3000)
                 clearUsbMessage()
                 return false
             }
 
-            else -> {
+            UsbScanResult.NoCarteleriaFolder -> {
+
+                _uiState.value = _uiState.value.copy(
+                    usbMessage = "Se encontró el USB pero no existe la carpeta Carteleria",
+                    isUsbLoading = false
+                )
+
+                delay(5000)
+                clearUsbMessage()
+                return false
+            }
+
+            UsbScanResult.NoUsbFound -> {
+
                 _uiState.value = _uiState.value.copy(
                     usbMessage = context.getString(R.string.usb_not_found),
                     isUsbLoading = false
                 )
+
                 delay(3000)
+                clearUsbMessage()
+                return false
+            }
+
+            is UsbScanResult.Debug -> {
+
+                _uiState.value = _uiState.value.copy(
+                    usbMessage = result.message,
+                    isUsbLoading = false
+                )
+
+                delay(10000)
                 clearUsbMessage()
                 return false
             }

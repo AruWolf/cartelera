@@ -1,63 +1,104 @@
-package com.litvy.carteleria.services.usb
+﻿package com.litvy.carteleria.services.usb
 
 import android.content.Context
-import kotlinx.coroutines.*
-import java.io.File
 import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
 import android.provider.MediaStore
+import androidx.documentfile.provider.DocumentFile
 import com.litvy.carteleria.data.content.ContentStorage
 import com.litvy.carteleria.domain.usb.UsbImporter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import android.util.Log
 
-// Lector de archivos usb --- Lee lo que esté dentro de la carpeta "Carteleria"
+/**
+ * Importa contenido elegido por el usuario mediante Storage Access Framework.
+ *
+ * No se intenta recorrer /storage ni otras rutas físicas: desde Android 11 ese
+ * acceso directo deja de estar disponible para una aplicación normal. El URI
+ * entregado por el selector es la autorización explícita para leer el pendrive.
+ */
 class UsbContentManager(
     private val context: Context
-): UsbImporter {
-
-    private val imageExtensions = listOf("png", "jpg", "jpeg", "webp", "mp4")
+) : UsbImporter {
 
     override suspend fun forceScan(): UsbScanResult = withContext(Dispatchers.IO) {
 
         val roots = listOf(
             File("/storage"),
             File("/mnt/media_rw"),
-            File("/mnt/runtime/default")
+            File("/mnt/runtime/default"),
+            File("/mnt/runtime/read"),
+            File("/mnt/runtime/write")
         )
 
-        var carteleriaFound = false
+        val destinationRoot = ContentStorage.ensureRootDirectory(context)
+
         var importedCount = 0
+        var carteleriaFound = false
 
         roots.forEach { root ->
 
-            val dirs = root.listFiles()?.filter { it.isDirectory } ?: return@forEach
+            val children = try {
+                root.listFiles()
+            } catch (e: Exception) {
+                return@forEach
+            } ?: return@forEach
 
-            dirs.forEach { dir ->
+            children.forEach { device ->
 
-                val carteleriaDir = File(dir, "Carteleria")
+                if (!device.isDirectory)
+                    return@forEach
 
-                if (carteleriaDir.exists() && carteleriaDir.isDirectory) {
+                val carteleria =
+                    File(device, "Carteleria")
 
-                    carteleriaFound = true
+                if (!carteleria.exists() || !carteleria.isDirectory)
+                    return@forEach
 
-                    val destRoot = ContentStorage.ensureRootDirectory(context)
+                carteleriaFound = true
 
-                    carteleriaDir.listFiles()?.forEach { sourceFolder ->
+                val folders = try {
+                    carteleria.listFiles()
+                } catch (e: Exception) {
+                    null
+                }
 
-                        if (!sourceFolder.isDirectory) return@forEach
+                folders?.forEach { sourceFolder ->
 
-                        val destFolder = File(destRoot, sourceFolder.name)
-                        if (!destFolder.exists()) destFolder.mkdirs()
+                    if (!sourceFolder.isDirectory)
+                        return@forEach
 
-                        sourceFolder.listFiles()?.forEach { file ->
+                    val destinationFolder =
+                        File(destinationRoot, sourceFolder.name)
 
-                            if (!file.isFile) return@forEach
-                            if (file.extension.lowercase() !in imageExtensions) return@forEach
+                    destinationFolder.mkdirs()
 
-                            val destFile = File(destFolder, file.name)
+                    val files = try {
+                        sourceFolder.listFiles()
+                    } catch (e: Exception) {
+                        null
+                    }
 
-                            if (!destFile.exists()) {
-                                file.copyTo(destFile)
+                    files?.forEach { file ->
+
+                        if (!file.isFile)
+                            return@forEach
+
+                        val extension =
+                            file.extension.lowercase()
+
+                        if (extension !in SUPPORTED_MEDIA_EXTENSIONS)
+                            return@forEach
+
+                        val destination =
+                            File(destinationFolder, file.name)
+
+                        if (!destination.exists()) {
+                            try {
+                                file.copyTo(destination)
                                 importedCount++
+                            } catch (_: Exception) {
                             }
                         }
                     }
@@ -65,134 +106,164 @@ class UsbContentManager(
             }
         }
 
-        if (!carteleriaFound) return@withContext UsbScanResult.NoCarteleriaFolder
+        when {
+            importedCount > 0 ->
+                UsbScanResult.Imported(importedCount)
 
-        if (importedCount == 0) {
-            UsbScanResult.NoChanges
-        } else {
-            UsbScanResult.Imported(importedCount)
+            carteleriaFound ->
+                UsbScanResult.NoChanges
+
+            else -> {
+                scanViaMediaStore()
+            }
         }
     }
 
     override suspend fun importFromUri(uri: Uri): UsbScanResult = withContext(Dispatchers.IO) {
+        val selectedRoot = DocumentFile.fromTreeUri(context, uri)
+            ?: return@withContext UsbScanResult.NoUsbFound
 
-        val root = DocumentFile.fromTreeUri(context, uri)
-            ?: return@withContext UsbScanResult.NoChanges
+        // Conserva la estructura histórica: si existe Carteleria en la carpeta
+        // elegida, esa carpeta es la fuente. Si no existe, se importa la carpeta
+        // que el usuario eligió, sin exigir ningún nombre determinado.
+        val sourceRoot = selectedRoot.carteleriaChildOrSelf()
+        val destinationRoot = ContentStorage.ensureRootDirectory(context)
+        val destinationFolder = File(destinationRoot, sourceRoot.safeName())
+            .apply { mkdirs() }
 
-        var importedCount = 0
+        val importedCount = copyMediaFiles(
+            directory = sourceRoot,
+            destinationFolder = destinationFolder,
+            depth = ROOT_DEPTH
+        )
 
-        val destRoot = ContentStorage.ensureRootDirectory(context)
-
-        root.listFiles()?.forEach { folder ->
-
-            if (!folder.isDirectory) return@forEach
-
-            val destFolder = File(destRoot, folder.name ?: return@forEach)
-            if (!destFolder.exists()) destFolder.mkdirs()
-
-            folder.listFiles()?.forEach { file ->
-
-                if (!file.isFile) return@forEach
-
-                val extension = file.name?.substringAfterLast(".", "")?.lowercase()
-                if (extension !in imageExtensions) return@forEach
-
-                val destFile = File(destFolder, file.name ?: return@forEach)
-
-                if (!destFile.exists()) {
-
-                    context.contentResolver.openInputStream(file.uri)?.use { input ->
-                        destFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
-                    }
-
-                    importedCount++
-                }
-            }
-        }
-
-        if (importedCount == 0) {
-            UsbScanResult.NoChanges
-        } else {
+        if (importedCount > 0) {
             UsbScanResult.Imported(importedCount)
+        } else {
+            UsbScanResult.NoChanges
         }
     }
 
+    /**
+     * Conservado por compatibilidad con el contrato anterior. MediaStore no es
+     * apropiado para descubrir automáticamente el contenido de un pendrive:
+     * sólo debe leerse el árbol que el usuario seleccionó con SAF.
+     */
     override suspend fun scanViaMediaStore(): UsbScanResult = withContext(Dispatchers.IO) {
 
         val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.RELATIVE_PATH
+            MediaStore.Files.FileColumns.DISPLAY_NAME,
+            MediaStore.Files.FileColumns.RELATIVE_PATH
         )
 
-        val selection = "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
-        val selectionArgs = arrayOf("%Carteleria%")
-
         val cursor = context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            MediaStore.Files.getContentUri("external"),
             projection,
-            selection,
-            selectionArgs,
+            null,
+            null,
             null
         ) ?: return@withContext UsbScanResult.NoUsbFound
 
-        var importedCount = 0
-        val destRoot = ContentStorage.ensureRootDirectory(context)
+        val builder = StringBuilder()
 
         cursor.use {
 
-            val idColumn = it.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val nameColumn = it.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            val pathColumn = it.getColumnIndexOrThrow(MediaStore.Images.Media.RELATIVE_PATH)
+            val nameColumn =
+                it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
 
-            while (it.moveToNext()) {
+            val pathColumn =
+                it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.RELATIVE_PATH)
 
-                val id = it.getLong(idColumn)
-                val name = it.getString(nameColumn)
-                val relativePath = it.getString(pathColumn)
+            var count = 0
 
-                val contentUri = MediaStore.Images.Media
-                    .EXTERNAL_CONTENT_URI
-                    .buildUpon()
-                    .appendPath(id.toString())
-                    .build()
+            while (it.moveToNext() && count < 30) {
 
-                val folderName = relativePath
-                    ?.substringAfter("Carteleria/")
-                    ?.substringBefore("/")
-                    ?: "Default"
+                builder.appendLine(
+                    "${it.getString(pathColumn)} -> ${it.getString(nameColumn)}"
+                )
 
-                val destFolder = File(destRoot, folderName)
-                if (!destFolder.exists()) destFolder.mkdirs()
+                count++
+            }
+        }
 
-                val destFile = File(destFolder, name)
+        UsbScanResult.Debug(builder.toString())
+    }
 
-                if (!destFile.exists()) {
+    private fun DocumentFile.carteleriaChildOrSelf(): DocumentFile = when {
+        name.equals(CARTELERIA_DIRECTORY_NAME, ignoreCase = true) -> this
+        else -> findFile(CARTELERIA_DIRECTORY_NAME)?.takeIf { it.isDirectory } ?: this
+    }
 
-                    context.contentResolver.openInputStream(contentUri)?.use { input ->
-                        destFile.outputStream().use { output ->
-                            input.copyTo(output)
-                        }
+    private fun copyMediaFiles(
+        directory: DocumentFile,
+        destinationFolder: File,
+        depth: Int
+    ): Int {
+        var importedCount = 0
+
+        directory.listFiles().forEach { entry ->
+            when {
+                entry.isFile && entry.isSupportedMedia() -> {
+                    val fileName = entry.name ?: return@forEach
+                    val destination = File(destinationFolder, fileName)
+
+                    // El comportamiento se mantiene idempotente: una nueva
+                    // importación no pisa un archivo que ya usa ese nombre.
+                    if (!destination.exists() && copyToAppStorage(entry, destination)) {
+                        importedCount++
                     }
+                }
 
-                    importedCount++
+                // depth = 0 corresponde a la carpeta elegida. Se admiten sus
+                // subcarpetas en los niveles 1, 2 y 3, pero no se baja más.
+                entry.isDirectory && depth < MAX_DIRECTORY_DEPTH -> {
+                    importedCount += copyMediaFiles(entry, destinationFolder, depth + 1)
                 }
             }
         }
 
-        if (importedCount == 0) {
-            UsbScanResult.NoUsbFound
-        } else {
-            UsbScanResult.Imported(importedCount)
-        }
+        return importedCount
+    }
+
+    private fun copyToAppStorage(source: DocumentFile, destination: File): Boolean = try {
+        context.contentResolver.openInputStream(source.uri)?.use { input ->
+            destination.outputStream().use { output -> input.copyTo(output) }
+        } != null
+    } catch (_: SecurityException) {
+        false
+    } catch (_: java.io.IOException) {
+        // Puede ocurrir si se desconecta el pendrive durante la copia.
+        destination.delete()
+        false
+    }
+
+    private fun DocumentFile.isSupportedMedia(): Boolean {
+        val extension = name?.substringAfterLast('.', missingDelimiterValue = "")?.lowercase()
+        return extension in SUPPORTED_MEDIA_EXTENSIONS
+    }
+
+    private fun DocumentFile.safeName(): String = name
+        ?.trim()
+        ?.takeIf { it.isNotEmpty() }
+        ?.replace(Regex("[\\\\/:*?\"<>|]"), "_")
+        ?: DEFAULT_IMPORT_FOLDER_NAME
+
+    private companion object {
+        const val CARTELERIA_DIRECTORY_NAME = "Carteleria"
+        const val DEFAULT_IMPORT_FOLDER_NAME = "Contenido USB"
+        const val ROOT_DEPTH = 0
+        const val MAX_DIRECTORY_DEPTH = 3
+        val SUPPORTED_MEDIA_EXTENSIONS = setOf(
+            "png", "jpg", "jpeg", "webp", "gif", "bmp",
+            "mp4", "webm", "mkv", "3gp", "mov"
+        )
     }
 }
 
 sealed class UsbScanResult {
-    object NoUsbFound : UsbScanResult()
-    object NoCarteleriaFolder : UsbScanResult()
-    object NoChanges : UsbScanResult()
+    data object NoUsbFound : UsbScanResult()
+    data object NoCarteleriaFolder : UsbScanResult()
+    data object NoChanges : UsbScanResult()
     data class Imported(val count: Int) : UsbScanResult()
+    data class Debug(val message: String): UsbScanResult()
 }

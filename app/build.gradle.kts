@@ -11,7 +11,7 @@ android {
     defaultConfig {
         applicationId = "com.litvy.carteleria"
         minSdk = 23
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 15
         versionName = "2.1"
     }
@@ -24,6 +24,7 @@ android {
     buildTypes {
         release {
             isMinifyEnabled = true
+            isShrinkResources = true
 
             ndk {
                 debugSymbolLevel = "FULL"

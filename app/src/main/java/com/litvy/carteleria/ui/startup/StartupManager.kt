@@ -1,3 +1,5 @@
+package com.litvy.carteleria.ui.startup
+
 class StartupManager {
 
     suspend fun initialize() {

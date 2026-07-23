@@ -2,6 +2,7 @@ package com.litvy.carteleria.ui.slideshow
 
 import com.litvy.carteleria.R
 import android.app.Activity
+import android.content.Intent
 import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -129,6 +130,7 @@ fun SlideShowScreen(
     var destinationFolderPath by remember { mutableStateOf<String?>(null) }
     var showDestinationDialog by remember { mutableStateOf(false) }
     var showDestinationNewFolderDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     val importFromFilesLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenMultipleDocuments()
@@ -149,7 +151,6 @@ fun SlideShowScreen(
         }
     }
     val canUseTouchImports = remember { TouchDeviceDetector.shouldShowTouchRemote(context) }
-    val scope = rememberCoroutineScope()
     val exitHandler = remember(scope) {
         ExitHandler(
             context = context,
@@ -216,6 +217,26 @@ fun SlideShowScreen(
 
     val externalMenuViewModel = remember {
         ExternalMenuViewModel(externalUseCases)
+    }
+    val importFromUsbTreeLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree()
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        try {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        } catch (_: SecurityException) {
+            // Algunos administradores de archivos no entregan permisos persistentes,
+            // pero el permiso temporal sigue siendo suficiente para esta importaci?n.
+        }
+
+        scope.launch {
+            val imported = viewModel.importUsbTreeAndReturnResult(uri)
+            if (imported) externalMenuViewModel.reloadCurrentView()
+        }
     }
     val externalMenuState by externalMenuViewModel.state.collectAsState()
 
@@ -542,8 +563,19 @@ fun SlideShowScreen(
                     inputHandler.closeMenu()
                 },
                 onForceUsbScan = {
+
                     scope.launch {
+
                         val imported = viewModel.forceUsbScanAndReturnResult()
+
+                        if (!imported) {
+                            try {
+                                importFromUsbTreeLauncher.launch(null)
+                            } catch (_: Throwable) {
+                                // El ViewModel ya mostró el mensaje correspondiente.
+                            }
+                        }
+
                         if (imported) {
                             externalMenuViewModel.reloadCurrentView()
                         }
